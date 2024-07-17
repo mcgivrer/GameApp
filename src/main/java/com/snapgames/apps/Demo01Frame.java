@@ -38,6 +38,16 @@ import java.util.concurrent.ConcurrentHashMap;
  */
 public class Demo01Frame extends JPanel implements KeyListener {
 
+    /**
+     * <p>The {@link Entity} class is the Core object for any Scene.</p>
+     *
+     * <p>Each on-screen moving (or not) object is
+     * an Entity.  the game loop will take care of it and update its position accordingly to physical
+     * constraints applied on.</p>
+     *
+     * @author Frédéric Delorme
+     * @since 1.0.0
+     */
     public static class Entity extends Rectangle2D.Double {
         private static int index = 0;
         public int id = index++;
@@ -156,6 +166,15 @@ public class Demo01Frame extends JPanel implements KeyListener {
 
     }
 
+    /**
+     * <p>The {@link Behavior} interface allows new behaviors processing to any Entity when defining the Scene.</p>
+     *
+     * <p>Each behavior linked to an Entity will be processed during the 4 steps of the game loop:
+     * <code>create</code>, <code>input</code>, <code>update</code> and <code>render</code>.</p>
+     *
+     * @author Frédéric Delorme
+     * @since 1.0.0
+     */
     public interface Behavior {
         void create(Demo01Frame app);
 
@@ -166,11 +185,27 @@ public class Demo01Frame extends JPanel implements KeyListener {
         void draw(Demo01Frame app, Entity e, Graphics2D g);
     }
 
+    /**
+     * <p>The {@link World} object helps define the context where all the Entity's instances will evolve during loop.</p>
+     *
+     * <p>It defines te play area and the current gravity to be applied to all objects contained by the play area.</p>
+     *
+     * @author Frédéric Delorme
+     * @since 1.0.0
+     */
     public static class World {
         public Rectangle2D playArea = new Rectangle2D.Double(0, 0, 640, 480);
         public double gravity = 0.981;
     }
 
+    /**
+     * <p>The {@link Material} object is used to set the material's constants used by an {@link Entity} during te physic processing.</p>
+     *
+     * <p>The material define first a name for a material, the density, the elasticity and the roughness for contact.</p>
+     *
+     * @author Frédéric Delorme
+     * @since 1.0.0
+     */
     public static class Material {
         public static Material DEFAULT = new Material("default", 1.0, 1.0, 1.0);
         public String name;
@@ -186,6 +221,16 @@ public class Demo01Frame extends JPanel implements KeyListener {
         }
     }
 
+    /**
+     * <p>The {@link TextObject} is an enhanced {@link Entity} used to display Text on screen.</p>
+     *
+     * <p>It adds a <code>text</code> and a <code>value</code> to the {@link Entity} Attributes to be displayed on screen.
+     * A simple text can be used &nd it will be directly drawn on screen. If a value object is set, the text must
+     * contain the {@link String#format(String, Object...)} conversion operation to be applied on to be displayed.</p>
+     *
+     * @author Frédéric Delorme
+     * @since 1.0.0
+     */
     public static class TextObject extends Entity {
         public String text;
         public Object value;
