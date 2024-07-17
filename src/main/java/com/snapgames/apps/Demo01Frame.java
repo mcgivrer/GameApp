@@ -234,6 +234,7 @@ public class Demo01Frame extends JPanel implements KeyListener {
     public static class TextObject extends Entity {
         public String text;
         public Object value;
+        public Font font;
 
         public TextObject(String name) {
             super(name);
@@ -254,6 +255,11 @@ public class Demo01Frame extends JPanel implements KeyListener {
                 return String.format(text, value);
             }
             return text;
+        }
+
+        public TextObject setFont(Font f) {
+            this.font = f;
+            return this;
         }
 
     }
@@ -328,7 +334,7 @@ public class Demo01Frame extends JPanel implements KeyListener {
         }
     }
 
-    private void parseConfiguration() {
+    public void parseConfiguration() {
         // set the default FPS for the game
         FPS = Integer.parseInt(config.getProperty("app.render.fps", "60"));
         // is exit because of test mode requested ?
@@ -354,7 +360,7 @@ public class Demo01Frame extends JPanel implements KeyListener {
         world.gravity = Double.parseDouble(config.getProperty("app.world.gravity", "0.0981"));
     }
 
-    private void loadConfiguration() throws IOException {
+    public void loadConfiguration() throws IOException {
         config.load(this.getClass().getResourceAsStream("/config.properties"));
         config.forEach((k, v) -> {
             info("Configuration| key [%s]=[%s]", k, v);
@@ -372,10 +378,20 @@ public class Demo01Frame extends JPanel implements KeyListener {
 
     /*----- Manage current Scene -----*/
 
-    private void createScene() {
+    public void createScene() {
+        Font textFont = null;
+        try {
+            textFont = Font.createFont(
+                    Font.TRUETYPE_FONT,
+                    this.getClass().getResourceAsStream("/fonts/upheavtt.ttf"));
+
+        } catch (FontFormatException | IOException e) {
+            error("Unable to read font file:%s", e.getMessage());
+        }
         add(new TextObject("score")
                 .setText("%05d")
                 .setValue(0)
+                .setFont(textFont.deriveFont(18.0f))
                 .setPosition(20, 32)
                 .setBorderColor(Color.WHITE)
                 .setStickToCamera(true)
@@ -384,7 +400,7 @@ public class Demo01Frame extends JPanel implements KeyListener {
                 .setPosition(world.playArea.getWidth() * 0.5,
                         world.playArea.getHeight() * 0.5)
                 .setSize(16, 16)
-                .setPriority(1)
+                .setPriority(200)
                 .setMaterial(new Material("Player_MAT", 1.0, 0.998, 0.998))
                 .setMass(80.0));
 
@@ -401,18 +417,18 @@ public class Demo01Frame extends JPanel implements KeyListener {
         }
     }
 
-    private void resetScene() {
+    public void resetScene() {
         entities.clear();
         createScene();
     }
 
-    private void add(Entity entity) {
+    public void add(Entity entity) {
         entities.put(entity.name, entity);
     }
 
     /*----- Game loop -----*/
 
-    private void loop() {
+    public void loop() {
         long startTime = System.currentTimeMillis();
         long previousTime = startTime;
         long delay = 0;
@@ -431,7 +447,7 @@ public class Demo01Frame extends JPanel implements KeyListener {
         }
     }
 
-    private void input() {
+    public void input() {
         Entity player = entities.get("player");
         double speed = 0.025;
         if (isKeyPressed(KeyEvent.VK_UP) && !player.isAttribute("jump")) {
@@ -449,58 +465,108 @@ public class Demo01Frame extends JPanel implements KeyListener {
         }
     }
 
-    private void update(double delay) {
+    public void update(double delay) {
         entities.values().stream()
                 .filter(e -> e.isActive() && !e.isStickToCamera())
                 .forEach(e -> {
-                    e.forces.add(new Point2D.Double(0, world.gravity * 0.1));
-                    e.forces.forEach(f -> {
-                        e.ax += f.getX();
-                        e.ay += f.getY();
-                    });
-                    e.ax = Math.abs(e.ax) > 1.0 ? Math.signum(e.ax) : e.ax;
-                    e.ay = Math.abs(e.ay) > 1.0 ? Math.signum(e.ay) : e.ay;
-
-                    e.dx = e.ax / delay;
-                    e.dy = e.ay * e.mass / delay;
-
-                    e.dx = Math.abs(e.dx) > 4.0 ? Math.signum(e.dx) : e.dx;
-                    e.dy = Math.abs(e.dy) > 4.0 ? Math.signum(e.dy) : e.dy;
-
-
-                    e.x += e.dx * delay;
-                    e.y += (e.dy) * delay;
-
-                    if (!world.playArea.contains(e)) {
-                        if (e.x < 0.0) {
-                            e.x = 0.0;
-                            e.dx = -e.dx * e.material.elasticity * e.material.roughness;
-                            e.ax = 0.0;
-                        }
-                        if (e.y < 0.0) {
-                            e.y = 0.0;
-                            e.dy = -e.dy * e.material.elasticity * e.material.roughness;
-                            e.removeAttribute("jump");
-                            e.ay = 0.0;
-                        }
-                        if (e.x > world.playArea.getWidth() - e.width) {
-                            e.x = world.playArea.getWidth() - e.width;
-                            e.dx = -e.dx * e.material.elasticity * e.material.roughness;
-                            e.ax = 0.0;
-                        }
-                        if (e.y > world.playArea.getHeight() - e.height) {
-                            e.y = world.playArea.getHeight() - e.height;
-                            e.dy = -e.dy * e.material.elasticity * e.material.roughness;
-                            e.ay = 0.0;
-                        }
-                    }
-                    e.ax *= e.material.roughness;
-                    e.ay *= e.material.roughness;
-                    e.forces.clear();
+                    applyPhysics(delay, e);
+                    controlPlayAreaBoundaries(e);
                 });
     }
 
-    private void render() {
+    /**
+     * The applyPhysics method updates the physics properties of an {@link Entity}
+     * object based on the forces acting on it, the delay time,
+     * and the {@link Entity}'s material properties.
+     * <ul>
+     *     <li>Adds gravity to the entity's forces.</li>
+     *     <li>Accumulates all forces to update the entity's acceleration.</li>
+     *     <li>Limits the acceleration to a maximum of 1.0.</li>
+     *     <li>Calculates the velocity based on the acceleration and delay.</li>
+     *     <li>Limits the velocity to a maximum of 4.0.</li>
+     *     <li>Applies material roughness to the acceleration.</li>
+     *     <li>Updates the entity's position based on the velocity and delay.</li>
+     *     <li>Clears the forces acting on the entity.</li>
+     * </ul>
+     *
+     * @param delay the elapsed time since previous call.
+     * @param e     the Entity to be updated
+     */
+    public void applyPhysics(double delay, Entity e) {
+        e.forces.add(new Point2D.Double(0, world.gravity * 0.1));
+        for (Point2D f : e.forces) {
+            e.ax += f.getX();
+            e.ay += f.getY();
+        }
+        e.ax = Math.abs(e.ax) > 1.0 ? Math.signum(e.ax) : e.ax;
+        e.ay = Math.abs(e.ay) > 1.0 ? Math.signum(e.ay) : e.ay;
+
+        e.dx = e.ax / delay;
+        e.dy = e.ay * e.mass / delay;
+
+        e.dx = Math.abs(e.dx) > 4.0 ? Math.signum(e.dx) : e.dx;
+        e.dy = Math.abs(e.dy) > 4.0 ? Math.signum(e.dy) : e.dy;
+
+        e.ax *= e.material.roughness;
+        e.ay *= e.material.roughness;
+
+        e.x += e.dx * delay;
+        e.y += (e.dy) * delay;
+
+        e.forces.clear();
+    }
+
+    /**
+     * The controlPlayAreaBoundaries method ensures that an {@link Entity} remains
+     * within the defined play area boundaries.
+     * If the entity moves outside the play area, its position and velocity are adjusted
+     * to keep it within bounds, applying elasticity and roughness properties
+     * of the entity's {@link Material}.
+     *
+     * @param e the Entity to be checked and corrected.
+     */
+    public void controlPlayAreaBoundaries(Entity e) {
+        if (!world.playArea.contains(e)) {
+            if (e.x < 0.0) {
+                e.x = 0.0;
+                e.dx = -e.dx * e.material.elasticity * e.material.roughness;
+                e.ax = 0.0;
+            }
+            if (e.y < 0.0) {
+                e.y = 0.0;
+                e.dy = -e.dy * e.material.elasticity * e.material.roughness;
+                e.removeAttribute("jump");
+                e.ay = 0.0;
+            }
+            if (e.x > world.playArea.getWidth() - e.width) {
+                e.x = world.playArea.getWidth() - e.width;
+                e.dx = -e.dx * e.material.elasticity * e.material.roughness;
+                e.ax = 0.0;
+            }
+            if (e.y > world.playArea.getHeight() - e.height) {
+                e.y = world.playArea.getHeight() - e.height;
+                e.dy = -e.dy * e.material.elasticity * e.material.roughness;
+                e.ay = 0.0;
+            }
+        }
+    }
+
+    /**
+     * The render method is responsible for drawing the current state of
+     * the game onto the screen. It prepares the graphics context,
+     * applies rendering hints, clears the screen, and then draws all active entities,
+     * adjusting for camera position and ensuring proper layering.
+     * <ul>
+     *     <li>Create a Graphics2D object from the buffer and set rendering hints.</li>
+     *     <li>Clear the screen with the background color.</li>
+     *     <li>Adjust the graphics context to center the player entity.</li>
+     *     <li>Draw the play area boundaries.</li>
+     *     <li>Draw all active entities that are not fixed to the camera.</li>
+     *     <li>Reset the graphics context and draw entities fixed to the camera.</li>
+     *     <li>Draw the buffer to the window and display it.</li>
+     * </ul>
+     */
+    public void render() {
         Graphics2D g = buffer.createGraphics();
         g.setRenderingHints(Map.of(RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_ON,
                 RenderingHints.KEY_TEXT_ANTIALIASING, RenderingHints.VALUE_TEXT_ANTIALIAS_ON));
@@ -508,7 +574,9 @@ public class Demo01Frame extends JPanel implements KeyListener {
         g.clearRect(0, 0, buffer.getWidth(), buffer.getHeight());
         // move Camera
         Entity player = entities.get("player");
-        g.translate((buffer.getWidth() * 0.5) - player.getX(), (buffer.getHeight() * 0.5) - player.getY());
+        if (Optional.ofNullable(player).isPresent()) {
+            g.translate((buffer.getWidth() * 0.5) - player.getX(), (buffer.getHeight() * 0.5) - player.getY());
+        }
         // draw play area limits
         g.setColor(Color.GRAY);
         g.drawRect(0, 0, (int) world.playArea.getWidth(), (int) world.playArea.getHeight());
@@ -518,8 +586,9 @@ public class Demo01Frame extends JPanel implements KeyListener {
                 .forEach(e -> {
                     drawEntity(e, g);
                 });
-        g.translate((-buffer.getWidth() * 0.5) + player.getX(), (-buffer.getHeight() * 0.5) + player.getY());
-
+        if (Optional.ofNullable(player).isPresent()) {
+            g.translate((-buffer.getWidth() * 0.5) + player.getX(), (-buffer.getHeight() * 0.5) + player.getY());
+        }
         // draw all objects stick to camera.
         entities.values().stream().filter(e -> e.isActive() && e.isStickToCamera())
                 .sorted(Comparator.comparingInt(a -> a.priority))
@@ -535,19 +604,19 @@ public class Demo01Frame extends JPanel implements KeyListener {
 
     /*----- objects rendering -----*/
 
-    private static void drawEntity(Entity e, Graphics2D g) {
+    public void drawEntity(Entity e, Graphics2D g) {
         switch (e.getClass().getSimpleName()) {
             case "Entity" -> {
                 g.setColor(e.fillColor);
                 g.fill(e);
                 g.setColor(e.borderColor);
                 g.draw(e);
-
             }
             case "TextObject" -> {
-                g.setColor(e.borderColor);
-                g.drawString(((TextObject) e).getText(), (int) e.getX(), (int) e.getY());
-
+                TextObject te = (TextObject) e;
+                g.setColor(te.borderColor);
+                g.setFont(te.font);
+                g.drawString(te.getText(), (int) te.getX(), (int) te.getY());
             }
         }
     }
@@ -611,6 +680,11 @@ public class Demo01Frame extends JPanel implements KeyListener {
             case KeyEvent.VK_Z -> {
                 if (e.isControlDown()) {
                     resetScene();
+                }
+            }
+            case KeyEvent.VK_G -> {
+                if (e.isControlDown()) {
+                    world.gravity *= -1;
                 }
             }
             default -> {
