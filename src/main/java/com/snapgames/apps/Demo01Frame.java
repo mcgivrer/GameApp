@@ -159,7 +159,7 @@ public class Demo01Frame extends JPanel implements KeyListener {
     private JFrame window;
     private BufferedImage buffer;
     private static final int FPS = 60;
-    
+
     private boolean[] keys = new boolean[1024];
 
     private World world = new World();
@@ -380,6 +380,11 @@ public class Demo01Frame extends JPanel implements KeyListener {
                 RenderingHints.KEY_TEXT_ANTIALIASING, RenderingHints.VALUE_TEXT_ANTIALIAS_ON));
         g.setBackground(backGroundColor);
         g.clearRect(0, 0, buffer.getWidth(), buffer.getHeight());
+        Entity player = entities.get("player");
+        g.translate((buffer.getWidth() * 0.5) - player.getX(), (buffer.getHeight() * 0.5) - player.getY());
+        // draw play area limits
+        g.setColor(Color.GRAY);
+        g.drawRect(0, 0, (int) world.playArea.getWidth(), (int) world.playArea.getHeight());
         //draw everything
         entities.values().stream().filter(Entity::isActive)
                 .sorted(Comparator.comparingInt(a -> a.priority))
@@ -389,8 +394,7 @@ public class Demo01Frame extends JPanel implements KeyListener {
                     g.setColor(e.borderColor);
                     g.draw(e);
                 });
-
-
+        g.translate((-buffer.getWidth() * 0.5) + player.getX(), (-buffer.getHeight() * 0.5) + player.getY());
         Graphics g2s = window.getBufferStrategy().getDrawGraphics();
         g2s.drawImage(buffer, 0, 0, window.getWidth(), window.getHeight(),
                 0, 0, buffer.getWidth(), buffer.getHeight(), null);
