@@ -15,7 +15,23 @@ import java.util.List;
 import java.util.concurrent.ConcurrentHashMap;
 
 /**
- * Main class for Project Demo01
+ * Main class for Project {@link Demo01Frame}
+ *
+ * <p>This class is the main class for a java game template. It initialize default components and services
+ * to make a basic 2D game with a standard game loop:
+ * <ul>
+ *     <li><code>input</code> to capture and process gamer inputs,</li>
+ *     <li><code>update</code> to compute {@link Entity} moves and {@link Behavior}'s into the game {@link World}</li>
+ *     <li><code>render</code> to draw ann {@link Entity}'son internal buffer, then sync on the {@link JFrame} with a buffer strategy</li>
+ * </ul></p>
+ *
+ * <p>It also provide some subclasses as components:
+ * <ul>
+ *     <li>{@link Entity} is the basic default Entity for a game object,</li>
+ *     <li>{@link World} defines the Game context with  its play area and gravity,</li>
+ *     <li>{@link Material} set physics constants for a specific material behavior assign to an {@link Entity},</li>
+ *     <li>{@link Behavior} is an interface API to enhance {@link Entity} default processing with new specific behavior.</li>
+ * </ul></p>
  *
  * @author Frédéric Delorme frederic.delorme@gmail.com
  * @since 1.0.0
@@ -45,8 +61,11 @@ public class Demo01Frame extends JPanel implements KeyListener {
         // mass
         public double mass = 1.0;
 
+        public boolean stickToCamera = false;
 
-        private Map<String, Object> attributes = new ConcurrentHashMap<>();
+        public List<Behavior> behaviors = new ArrayList<>();
+
+        private Map<String, Object> attributes = new HashMap<>();
 
         public Entity(String name) {
             this.name = name;
@@ -81,6 +100,11 @@ public class Demo01Frame extends JPanel implements KeyListener {
             return this;
         }
 
+        public Entity setStickToCamera(boolean s) {
+            this.stickToCamera = s;
+            return this;
+        }
+
         public Entity setActive(boolean a) {
             this.active = a;
             return this;
@@ -98,6 +122,10 @@ public class Demo01Frame extends JPanel implements KeyListener {
 
         public boolean isActive() {
             return active;
+        }
+
+        public boolean isStickToCamera() {
+            return this.stickToCamera;
         }
 
         public Entity setMaterial(Material m) {
@@ -128,6 +156,16 @@ public class Demo01Frame extends JPanel implements KeyListener {
 
     }
 
+    public interface Behavior {
+        void create(Demo01Frame app);
+
+        void input(Demo01Frame app, Entity e);
+
+        void update(Demo01Frame app, Entity e, double elapsed);
+
+        void draw(Demo01Frame app, Entity e, Graphics2D g);
+    }
+
     public static class World {
         public Rectangle2D playArea = new Rectangle2D.Double(0, 0, 640, 480);
         public double gravity = 0.981;
@@ -148,9 +186,35 @@ public class Demo01Frame extends JPanel implements KeyListener {
         }
     }
 
+    public static class TextObject extends Entity {
+        public String text;
+        public Object value;
+
+        public TextObject(String name) {
+            super(name);
+        }
+
+        public TextObject setText(String t) {
+            this.text = t;
+            return this;
+        }
+
+        public TextObject setValue(Object t) {
+            this.value = t;
+            return this;
+        }
+
+        public String getText() {
+            if (text.contains("%") && value != null) {
+                return String.format(text, value);
+            }
+            return text;
+        }
+
+    }
+
     private ResourceBundle messages = ResourceBundle.getBundle("i18n/messages");
     private Properties config = new Properties();
-
     private static boolean exit = false;
     private static int debug = 0;
     private static String debugFilter = "";
@@ -158,7 +222,7 @@ public class Demo01Frame extends JPanel implements KeyListener {
 
     private JFrame window;
     private BufferedImage buffer;
-    private static final int FPS = 60;
+    private int FPS = 60;
 
     private boolean[] keys = new boolean[1024];
 
@@ -168,6 +232,9 @@ public class Demo01Frame extends JPanel implements KeyListener {
 
     private Color backGroundColor = Color.BLACK;
 
+    /**
+     * Create the Demo01Frame class and identify current java context.
+     */
     public Demo01Frame() {
         info("Initialization application %s (%s) %n- running on JDK %s %n- at %s %n- with classpath = %s%n",
                 messages.getString("app.name"),
@@ -184,6 +251,8 @@ public class Demo01Frame extends JPanel implements KeyListener {
         loop();
         dispose();
     }
+
+    /*----- Initialization and configuration -----*/
 
     private void init(String[] args) {
         List<String> lArgs = Arrays.asList(args);
@@ -215,6 +284,8 @@ public class Demo01Frame extends JPanel implements KeyListener {
     }
 
     private void parseConfiguration() {
+        // set the default FPS for the game
+        FPS = Integer.parseInt(config.getProperty("app.render.fps", "60"));
         // is exit because of test mode requested ?
         exit = Boolean.parseBoolean(config.getProperty("app.exit", "false"));
         // create the window
@@ -225,14 +296,14 @@ public class Demo01Frame extends JPanel implements KeyListener {
         ));
         // create the drawing buffer
         buffer = new BufferedImage(
-                Integer.parseInt(config.getProperty("app.window.width", "320")),
-                Integer.parseInt(config.getProperty("app.window.height", "240")),
+                Integer.parseInt(config.getProperty("app.render.buffer.width", "320")),
+                Integer.parseInt(config.getProperty("app.render.buffer.height", "240")),
                 BufferedImage.TYPE_INT_ARGB
         );
         // world size
         world.playArea = new Rectangle2D.Double(0, 0,
-                Integer.parseInt(config.getProperty("app.world.playarea.width", "320")),
-                Integer.parseInt(config.getProperty("app.world.playarea.height", "240"))
+                Integer.parseInt(config.getProperty("app.world.play.area.width", "320")),
+                Integer.parseInt(config.getProperty("app.world.play.area.height", "240"))
         );
         // world gravity
         world.gravity = Double.parseDouble(config.getProperty("app.world.gravity", "0.0981"));
@@ -254,8 +325,16 @@ public class Demo01Frame extends JPanel implements KeyListener {
         window.setVisible(true);
     }
 
+    /*----- Manage current Scene -----*/
 
     private void createScene() {
+        add(new TextObject("score")
+                .setText("%05d")
+                .setValue(0)
+                .setPosition(20, 32)
+                .setBorderColor(Color.WHITE)
+                .setStickToCamera(true)
+        );
         add(new Entity("player")
                 .setPosition(world.playArea.getWidth() * 0.5,
                         world.playArea.getHeight() * 0.5)
@@ -272,7 +351,7 @@ public class Demo01Frame extends JPanel implements KeyListener {
                     .setPriority(100 + i)
                     .setFillColor(Color.RED)
                     .setAcceleration(0.025 - (Math.random() * 0.05), 0.025 - (Math.random() * 0.05))
-                    .setMaterial(new Material("Enemy_MAT", 1.0, 0.99996, 0.99998))
+                    .setMaterial(new Material("Enemy_MAT", 1.0, 1.0, 1.0))
                     .setMass(2.0 + (5.0 * Math.random())));
         }
     }
@@ -285,6 +364,8 @@ public class Demo01Frame extends JPanel implements KeyListener {
     private void add(Entity entity) {
         entities.put(entity.name, entity);
     }
+
+    /*----- Game loop -----*/
 
     private void loop() {
         long startTime = System.currentTimeMillis();
@@ -309,7 +390,7 @@ public class Demo01Frame extends JPanel implements KeyListener {
         Entity player = entities.get("player");
         double speed = 0.025;
         if (isKeyPressed(KeyEvent.VK_UP) && !player.isAttribute("jump")) {
-            player.forces.add(new Point2D.Double(0, -(speed * 20.0)));
+            player.forces.add(new Point2D.Double(0, -(speed * 10.0)));
             player.setAttribute("jump", true);
         }
         if (isKeyPressed(KeyEvent.VK_DOWN)) {
@@ -325,7 +406,7 @@ public class Demo01Frame extends JPanel implements KeyListener {
 
     private void update(double delay) {
         entities.values().stream()
-                .filter(Entity::isActive)
+                .filter(e -> e.isActive() && !e.isStickToCamera())
                 .forEach(e -> {
                     e.forces.add(new Point2D.Double(0, world.gravity * 0.1));
                     e.forces.forEach(f -> {
@@ -380,37 +461,67 @@ public class Demo01Frame extends JPanel implements KeyListener {
                 RenderingHints.KEY_TEXT_ANTIALIASING, RenderingHints.VALUE_TEXT_ANTIALIAS_ON));
         g.setBackground(backGroundColor);
         g.clearRect(0, 0, buffer.getWidth(), buffer.getHeight());
+        // move Camera
         Entity player = entities.get("player");
         g.translate((buffer.getWidth() * 0.5) - player.getX(), (buffer.getHeight() * 0.5) - player.getY());
         // draw play area limits
         g.setColor(Color.GRAY);
         g.drawRect(0, 0, (int) world.playArea.getWidth(), (int) world.playArea.getHeight());
         //draw everything
-        entities.values().stream().filter(Entity::isActive)
+        entities.values().stream().filter(e -> e.isActive() && !e.isStickToCamera())
                 .sorted(Comparator.comparingInt(a -> a.priority))
                 .forEach(e -> {
-                    g.setColor(e.fillColor);
-                    g.fill(e);
-                    g.setColor(e.borderColor);
-                    g.draw(e);
+                    drawEntity(e, g);
                 });
         g.translate((-buffer.getWidth() * 0.5) + player.getX(), (-buffer.getHeight() * 0.5) + player.getY());
+
+        // draw all objects stick to camera.
+        entities.values().stream().filter(e -> e.isActive() && e.isStickToCamera())
+                .sorted(Comparator.comparingInt(a -> a.priority))
+                .forEach(e -> {
+                    drawEntity(e, g);
+                });
+
         Graphics g2s = window.getBufferStrategy().getDrawGraphics();
         g2s.drawImage(buffer, 0, 0, window.getWidth(), window.getHeight(),
                 0, 0, buffer.getWidth(), buffer.getHeight(), null);
         window.getBufferStrategy().show();
     }
 
+    /*----- objects rendering -----*/
+
+    private static void drawEntity(Entity e, Graphics2D g) {
+        switch (e.getClass().getSimpleName()) {
+            case "Entity" -> {
+                g.setColor(e.fillColor);
+                g.fill(e);
+                g.setColor(e.borderColor);
+                g.draw(e);
+
+            }
+            case "TextObject" -> {
+                g.setColor(e.borderColor);
+                g.drawString(((TextObject) e).getText(), (int) e.getX(), (int) e.getY());
+
+            }
+        }
+    }
+
+    /*----- releasing objects and resources -----*/
 
     private void dispose() {
         window.dispose();
         info("End of application ");
     }
 
+    /*----- Game start entry point -----*/
+
     public static void main(String[] argc) {
         Demo01Frame app = new Demo01Frame();
         app.run(argc);
     }
+
+    /*----- Logger API -----*/
 
     public static void log(String level, String message, Object... args) {
         if (loggerFilter.contains(level)) {
@@ -431,6 +542,8 @@ public class Demo01Frame extends JPanel implements KeyListener {
         log("ERR", message, args);
     }
 
+
+    /*----- manage keys input -----*/
     @Override
     public void keyTyped(KeyEvent e) {
 
