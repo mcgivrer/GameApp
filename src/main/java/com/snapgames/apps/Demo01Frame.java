@@ -77,6 +77,8 @@ public class Demo01Frame extends JPanel implements KeyListener {
 
         private Map<String, Object> attributes = new HashMap<>();
 
+        public Shape shape = new Rectangle2D.Double();
+
         public Entity(String name) {
             this.name = name;
         }
@@ -194,8 +196,23 @@ public class Demo01Frame extends JPanel implements KeyListener {
      * @since 1.0.0
      */
     public static class World {
+        public String name = "default_world";
         public Rectangle2D playArea = new Rectangle2D.Double(0, 0, 640, 480);
         public double gravity = 0.981;
+        public Material material = Material.DEFAULT;
+        public Color playAreaColor = new Color(0.0f, 0.0f, 0.3f);
+
+
+        public World(String name) {
+            this.name = name;
+        }
+
+        public World(String name, double gravity, Rectangle2D.Double playArea, Material playAreaLimitMaterial) {
+            this.name = name;
+            this.gravity = gravity;
+            this.playArea = playArea;
+            this.material = playAreaLimitMaterial;
+        }
     }
 
     /**
@@ -264,6 +281,47 @@ public class Demo01Frame extends JPanel implements KeyListener {
 
     }
 
+    /**
+     * The {@link Camera} object will be used to track a {@link Camera#target}
+     * The targeted {@link Entity} will be keep on the display center according the {@link Camera#tweenFactor}.
+     *
+     * @author Frédéric Delorme
+     * @since 1.0.0
+     */
+    public static class Camera extends Entity {
+        private Entity target;
+        private double tweenFactor;
+        private Rectangle2D viewport = new Rectangle2D.Double();
+
+        public Camera(String name) {
+            super(name);
+        }
+
+        public Camera setTarget(Entity target) {
+            this.target = target;
+            return this;
+        }
+
+        public Camera setTweenFactor(double tf) {
+            this.tweenFactor = tf;
+            return this;
+        }
+
+        public void update(double dt) {
+            if (Optional.ofNullable(target).isPresent()) {
+                this.x += Math
+                    .ceil((target.x + (target.width * 0.5) - ((viewport.getWidth()) * 0.5) - this.x)
+                        * tweenFactor * Math.min(dt, 10));
+                this.y += Math
+                    .ceil((target.y + (target.height * 0.5) - ((viewport.getHeight()) * 0.5) - this.y)
+                        * tweenFactor * Math.min(dt, 10));
+
+                this.viewport.setRect(this.x, this.y, this.getWidth(),
+                    this.getHeight());
+            }
+        }
+    }
+
     private ResourceBundle messages = ResourceBundle.getBundle("i18n/messages");
     private Properties config = new Properties();
     private static boolean exit = false;
@@ -277,14 +335,15 @@ public class Demo01Frame extends JPanel implements KeyListener {
 
     private boolean[] keys = new boolean[1024];
 
-    private World world = new World();
+    private World world = new World("earth", 0.981, new Rectangle2D.Double(), Material.DEFAULT);
 
     private Map<String, Entity> entities = new ConcurrentHashMap<>();
+    private Camera activeCamera;
 
     private Color backGroundColor = Color.BLACK;
 
     /**
-     * Create the Demo01Frame class and identify current java context.
+     * Create the Demo01Frame class and identify the current java context.
      */
     public Demo01Frame() {
         info("Initialization application %s (%s) %n- running on JDK %s %n- at %s %n- with classpath = %s%n",
@@ -339,6 +398,7 @@ public class Demo01Frame extends JPanel implements KeyListener {
         FPS = Integer.parseInt(config.getProperty("app.render.fps", "60"));
         // is exit because of test mode requested ?
         exit = Boolean.parseBoolean(config.getProperty("app.exit", "false"));
+        debug = Integer.parseInt(config.getProperty("app.debug.level", "0"));
         // create the window
         window = new JFrame(config.getProperty("app.window.title", "Demo01"));
         window.setPreferredSize(new Dimension(
@@ -396,13 +456,15 @@ public class Demo01Frame extends JPanel implements KeyListener {
             .setBorderColor(Color.WHITE)
             .setStickToCamera(true)
         );
-        add(new Entity("player")
+
+        Entity player = new Entity("player")
             .setPosition(world.playArea.getWidth() * 0.5,
                 world.playArea.getHeight() * 0.5)
             .setSize(16, 16)
             .setPriority(200)
             .setMaterial(new Material("Player_MAT", 1.0, 0.998, 0.998))
-            .setMass(80.0));
+            .setMass(80.0);
+        add(player);
 
         for (int i = 0; i < 100; i++) {
             add(new Entity("enemy_" + i)
@@ -415,8 +477,26 @@ public class Demo01Frame extends JPanel implements KeyListener {
                 .setMaterial(new Material("Enemy_MAT", 1.0, 1.0, 1.0))
                 .setMass(2.0 + (5.0 * Math.random())));
         }
+        setActiveCamera((Camera)
+            new Camera("cam01")
+                .setTarget(player)
+                .setTweenFactor(0.002)
+                .setSize(320, 240));
     }
 
+    /**
+     * Define the current active {@link Camera}.
+     *
+     * @param cam the new {@link Camera} to activate.
+     */
+    private void setActiveCamera(Camera cam) {
+        this.activeCamera = cam;
+
+    }
+
+    /**
+     * Reset current Scene.
+     */
     public void resetScene() {
         entities.clear();
         createScene();
@@ -431,28 +511,56 @@ public class Demo01Frame extends JPanel implements KeyListener {
     public void loop() {
         long startTime = System.currentTimeMillis();
         long previousTime = startTime;
-        long delay = 0;
+        long delay = 1;
+
+        long updateFrames = 0;
+        long updateTime = 0;
+        long currentUPS = 0;
+
+        long renderTime = 0;
+        long renderFrames = 0;
+        long currentFPS = 0;
+
+        Map<String, Object> stats = new ConcurrentHashMap<>();
         while (!exit) {
             startTime = System.currentTimeMillis();
             input();
             delay = startTime - previousTime;
+            updateTime += delay;
+            if (updateTime > 1000) {
+                currentUPS = updateFrames;
+                updateFrames = 0;
+                updateTime = 0;
+            } else {
+                updateFrames++;
+            }
             update(delay);
-            render();
+            renderTime += delay;
+            if (renderTime > 1000) {
+                currentFPS = renderFrames;
+                renderFrames = 0;
+                renderTime = 0;
+            } else {
+                renderFrames++;
+            }
+            render(stats);
             try {
                 Thread.sleep(delay > 1000 / FPS ? 1 : 1000 / FPS - delay);
             } catch (InterruptedException e) {
                 throw new RuntimeException(e);
             }
             previousTime = startTime;
+            stats.put("fps", currentFPS);
+            stats.put("ups", currentUPS);
+            stats.put("frame", delay);
         }
     }
 
     public void input() {
         Entity player = entities.get("player");
         double speed = 0.025;
-        if (isKeyPressed(KeyEvent.VK_UP) && !player.isAttribute("jump")) {
-            player.forces.add(new Point2D.Double(0, -(speed * 10.0)));
-            player.setAttribute("jump", true);
+        if (isKeyPressed(KeyEvent.VK_UP)) {
+            player.forces.add(new Point2D.Double(0, -(speed * 2.0)));
         }
         if (isKeyPressed(KeyEvent.VK_DOWN)) {
             player.forces.add(new Point2D.Double(0, speed));
@@ -466,12 +574,17 @@ public class Demo01Frame extends JPanel implements KeyListener {
     }
 
     public void update(double delay) {
+        // update all entities not stick to activeCamera.
         entities.values().stream()
-            .filter(e -> e.isActive() && !e.isStickToCamera())
+            .filter(e -> !e.isStickToCamera())
             .forEach(e -> {
                 applyPhysics(delay, e);
                 controlPlayAreaBoundaries(e);
             });
+        // update camera position
+        if (Optional.ofNullable(activeCamera).isPresent()) {
+            activeCamera.update(delay);
+        }
     }
 
     /**
@@ -529,23 +642,22 @@ public class Demo01Frame extends JPanel implements KeyListener {
         if (!world.playArea.contains(e)) {
             if (e.x < 0.0) {
                 e.x = 0.0;
-                e.dx = -e.dx * e.material.elasticity * e.material.roughness;
+                e.dx = -e.dx * e.material.elasticity * world.material.roughness * world.material.elasticity;
                 e.ax = 0.0;
             }
             if (e.y < 0.0) {
                 e.y = 0.0;
-                e.dy = -e.dy * e.material.elasticity * e.material.roughness;
-                e.removeAttribute("jump");
+                e.dy = -e.dy * e.material.elasticity * world.material.roughness * world.material.elasticity;
                 e.ay = 0.0;
             }
             if (e.x > world.playArea.getWidth() - e.width) {
                 e.x = world.playArea.getWidth() - e.width;
-                e.dx = -e.dx * e.material.elasticity * e.material.roughness;
+                e.dx = -e.dx * e.material.elasticity * world.material.roughness * world.material.elasticity;
                 e.ax = 0.0;
             }
             if (e.y > world.playArea.getHeight() - e.height) {
                 e.y = world.playArea.getHeight() - e.height;
-                e.dy = -e.dy * e.material.elasticity * e.material.roughness;
+                e.dy = -e.dy * e.material.elasticity * world.material.roughness * world.material.elasticity;
                 e.ay = 0.0;
             }
         }
@@ -566,7 +678,7 @@ public class Demo01Frame extends JPanel implements KeyListener {
      *     <li>Draw the buffer to the window and display it.</li>
      * </ul>
      */
-    public void render() {
+    public void render(Map<String, Object> stats) {
         Graphics2D g = buffer.createGraphics();
         g.setRenderingHints(Map.of(RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_ON,
             RenderingHints.KEY_TEXT_ANTIALIASING, RenderingHints.VALUE_TEXT_ANTIALIAS_ON));
@@ -574,31 +686,49 @@ public class Demo01Frame extends JPanel implements KeyListener {
         g.clearRect(0, 0, buffer.getWidth(), buffer.getHeight());
         // move Camera
         Entity player = entities.get("player");
-        if (Optional.ofNullable(player).isPresent()) {
-            g.translate((buffer.getWidth() * 0.5) - player.getX(), (buffer.getHeight() * 0.5) - player.getY());
+        if (Optional.ofNullable(activeCamera).isPresent()) {
+            g.translate(-activeCamera.x, -activeCamera.y);
         }
         // draw play area limits
-        g.setColor(Color.GRAY);
-        g.drawRect(0, 0, (int) world.playArea.getWidth(), (int) world.playArea.getHeight());
+        if (debug > 0) {
+            g.setColor(Color.GRAY);
+            g.drawRect(0, 0, (int) world.playArea.getWidth(), (int) world.playArea.getHeight());
+        }
+        g.setColor(world.playAreaColor);
+        g.fillRect(0, 0, (int) world.playArea.getWidth(), (int) world.playArea.getHeight());
+
         //draw everything
         entities.values().stream().filter(e -> e.isActive() && !e.isStickToCamera())
             .sorted(Comparator.comparingInt(a -> a.priority))
             .forEach(e -> {
                 drawEntity(e, g);
             });
-        if (Optional.ofNullable(player).isPresent()) {
-            g.translate((-buffer.getWidth() * 0.5) + player.getX(), (-buffer.getHeight() * 0.5) + player.getY());
+        if (Optional.ofNullable(activeCamera).isPresent()) {
+            g.translate(activeCamera.x, activeCamera.y);
         }
-        // draw all objects stick to camera.
+        // draw all objects stick to the Camera.
         entities.values().stream().filter(e -> e.isActive() && e.isStickToCamera())
             .sorted(Comparator.comparingInt(a -> a.priority))
             .forEach(e -> {
                 drawEntity(e, g);
             });
+        g.dispose();
 
         Graphics g2s = window.getBufferStrategy().getDrawGraphics();
         g2s.drawImage(buffer, 0, 0, window.getWidth(), window.getHeight(),
             0, 0, buffer.getWidth(), buffer.getHeight(), null);
+        if (debug > 0) {
+            g2s.setColor(Color.ORANGE);
+            g2s.drawString(String.format("[ fps:%d / ups:%d / e:%d / nbObj:%d / active:%d]",
+                    stats.get("fps"),
+                    stats.get("ups"),
+                    stats.get("delay"),
+                    (long) entities.values().size(),
+                    (long) entities.values().stream().filter(Entity::isActive).count()),
+                10, window.getHeight() - 10
+            );
+        }
+        g2s.dispose();
         window.getBufferStrategy().show();
     }
 
