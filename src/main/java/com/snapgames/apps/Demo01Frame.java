@@ -288,11 +288,11 @@ public class Demo01Frame extends JPanel implements KeyListener {
      */
     public Demo01Frame() {
         info("Initialization application %s (%s) %n- running on JDK %s %n- at %s %n- with classpath = %s%n",
-                messages.getString("app.name"),
-                messages.getString("app.version"),
-                System.getProperty("java.version"),
-                System.getProperty("java.home"),
-                System.getProperty("java.class.path"));
+            messages.getString("app.name"),
+            messages.getString("app.version"),
+            System.getProperty("java.version"),
+            System.getProperty("java.home"),
+            System.getProperty("java.class.path"));
     }
 
     public void run(String[] args) {
@@ -305,7 +305,7 @@ public class Demo01Frame extends JPanel implements KeyListener {
 
     /*----- Initialization and configuration -----*/
 
-    private void init(String[] args) {
+    public void init(String[] args) {
         List<String> lArgs = Arrays.asList(args);
         lArgs.forEach(s -> {
             info(String.format("Configuration|Argument: %s", s));
@@ -342,19 +342,19 @@ public class Demo01Frame extends JPanel implements KeyListener {
         // create the window
         window = new JFrame(config.getProperty("app.window.title", "Demo01"));
         window.setPreferredSize(new Dimension(
-                Integer.parseInt(config.getProperty("app.window.width", "640")),
-                Integer.parseInt(config.getProperty("app.window.height", "480"))
+            Integer.parseInt(config.getProperty("app.window.width", "640")),
+            Integer.parseInt(config.getProperty("app.window.height", "480"))
         ));
         // create the drawing buffer
         buffer = new BufferedImage(
-                Integer.parseInt(config.getProperty("app.render.buffer.width", "320")),
-                Integer.parseInt(config.getProperty("app.render.buffer.height", "240")),
-                BufferedImage.TYPE_INT_ARGB
+            Integer.parseInt(config.getProperty("app.render.buffer.width", "320")),
+            Integer.parseInt(config.getProperty("app.render.buffer.height", "240")),
+            BufferedImage.TYPE_INT_ARGB
         );
         // world size
         world.playArea = new Rectangle2D.Double(0, 0,
-                Integer.parseInt(config.getProperty("app.world.play.area.width", "320")),
-                Integer.parseInt(config.getProperty("app.world.play.area.height", "240"))
+            Integer.parseInt(config.getProperty("app.world.play.area.width", "320")),
+            Integer.parseInt(config.getProperty("app.world.play.area.height", "240"))
         );
         // world gravity
         world.gravity = Double.parseDouble(config.getProperty("app.world.gravity", "0.0981"));
@@ -367,7 +367,7 @@ public class Demo01Frame extends JPanel implements KeyListener {
         });
     }
 
-    private void initializeDisplay() {
+    public void initializeDisplay() {
         window.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
         window.setContentPane(this);
         window.pack();
@@ -382,38 +382,38 @@ public class Demo01Frame extends JPanel implements KeyListener {
         Font textFont = null;
         try {
             textFont = Font.createFont(
-                    Font.TRUETYPE_FONT,
-                    this.getClass().getResourceAsStream("/fonts/upheavtt.ttf"));
+                Font.TRUETYPE_FONT,
+                this.getClass().getResourceAsStream("/fonts/upheavtt.ttf"));
 
         } catch (FontFormatException | IOException e) {
             error("Unable to read font file:%s", e.getMessage());
         }
         add(new TextObject("score")
-                .setText("%05d")
-                .setValue(0)
-                .setFont(textFont.deriveFont(18.0f))
-                .setPosition(20, 32)
-                .setBorderColor(Color.WHITE)
-                .setStickToCamera(true)
+            .setText("%05d")
+            .setValue(0)
+            .setFont(textFont.deriveFont(18.0f))
+            .setPosition(20, 32)
+            .setBorderColor(Color.WHITE)
+            .setStickToCamera(true)
         );
         add(new Entity("player")
-                .setPosition(world.playArea.getWidth() * 0.5,
-                        world.playArea.getHeight() * 0.5)
-                .setSize(16, 16)
-                .setPriority(200)
-                .setMaterial(new Material("Player_MAT", 1.0, 0.998, 0.998))
-                .setMass(80.0));
+            .setPosition(world.playArea.getWidth() * 0.5,
+                world.playArea.getHeight() * 0.5)
+            .setSize(16, 16)
+            .setPriority(200)
+            .setMaterial(new Material("Player_MAT", 1.0, 0.998, 0.998))
+            .setMass(80.0));
 
         for (int i = 0; i < 100; i++) {
             add(new Entity("enemy_" + i)
-                    .setPosition(world.playArea.getWidth() * Math.random(),
-                            world.playArea.getHeight() * Math.random())
-                    .setSize(8, 8)
-                    .setPriority(100 + i)
-                    .setFillColor(Color.RED)
-                    .setAcceleration(0.025 - (Math.random() * 0.05), 0.025 - (Math.random() * 0.05))
-                    .setMaterial(new Material("Enemy_MAT", 1.0, 1.0, 1.0))
-                    .setMass(2.0 + (5.0 * Math.random())));
+                .setPosition(world.playArea.getWidth() * Math.random(),
+                    world.playArea.getHeight() * Math.random())
+                .setSize(8, 8)
+                .setPriority(100 + i)
+                .setFillColor(Color.RED)
+                .setAcceleration(0.025 - (Math.random() * 0.05), 0.025 - (Math.random() * 0.05))
+                .setMaterial(new Material("Enemy_MAT", 1.0, 1.0, 1.0))
+                .setMass(2.0 + (5.0 * Math.random())));
         }
     }
 
@@ -467,11 +467,11 @@ public class Demo01Frame extends JPanel implements KeyListener {
 
     public void update(double delay) {
         entities.values().stream()
-                .filter(e -> e.isActive() && !e.isStickToCamera())
-                .forEach(e -> {
-                    applyPhysics(delay, e);
-                    controlPlayAreaBoundaries(e);
-                });
+            .filter(e -> e.isActive() && !e.isStickToCamera())
+            .forEach(e -> {
+                applyPhysics(delay, e);
+                controlPlayAreaBoundaries(e);
+            });
     }
 
     /**
@@ -569,7 +569,7 @@ public class Demo01Frame extends JPanel implements KeyListener {
     public void render() {
         Graphics2D g = buffer.createGraphics();
         g.setRenderingHints(Map.of(RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_ON,
-                RenderingHints.KEY_TEXT_ANTIALIASING, RenderingHints.VALUE_TEXT_ANTIALIAS_ON));
+            RenderingHints.KEY_TEXT_ANTIALIASING, RenderingHints.VALUE_TEXT_ANTIALIAS_ON));
         g.setBackground(backGroundColor);
         g.clearRect(0, 0, buffer.getWidth(), buffer.getHeight());
         // move Camera
@@ -582,23 +582,23 @@ public class Demo01Frame extends JPanel implements KeyListener {
         g.drawRect(0, 0, (int) world.playArea.getWidth(), (int) world.playArea.getHeight());
         //draw everything
         entities.values().stream().filter(e -> e.isActive() && !e.isStickToCamera())
-                .sorted(Comparator.comparingInt(a -> a.priority))
-                .forEach(e -> {
-                    drawEntity(e, g);
-                });
+            .sorted(Comparator.comparingInt(a -> a.priority))
+            .forEach(e -> {
+                drawEntity(e, g);
+            });
         if (Optional.ofNullable(player).isPresent()) {
             g.translate((-buffer.getWidth() * 0.5) + player.getX(), (-buffer.getHeight() * 0.5) + player.getY());
         }
         // draw all objects stick to camera.
         entities.values().stream().filter(e -> e.isActive() && e.isStickToCamera())
-                .sorted(Comparator.comparingInt(a -> a.priority))
-                .forEach(e -> {
-                    drawEntity(e, g);
-                });
+            .sorted(Comparator.comparingInt(a -> a.priority))
+            .forEach(e -> {
+                drawEntity(e, g);
+            });
 
         Graphics g2s = window.getBufferStrategy().getDrawGraphics();
         g2s.drawImage(buffer, 0, 0, window.getWidth(), window.getHeight(),
-                0, 0, buffer.getWidth(), buffer.getHeight(), null);
+            0, 0, buffer.getWidth(), buffer.getHeight(), null);
         window.getBufferStrategy().show();
     }
 
@@ -623,7 +623,7 @@ public class Demo01Frame extends JPanel implements KeyListener {
 
     /*----- releasing objects and resources -----*/
 
-    private void dispose() {
+    public void dispose() {
         window.dispose();
         info("End of application ");
     }

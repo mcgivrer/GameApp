@@ -27,6 +27,10 @@ or you can execute the command line :
 $> java -jar target/Demo01-1.0.0.jar
 ```
 
+![This is the default result for a DemoAppTemplate execution](src/docs/images/screenshot-1.png "This is the default result for a DemoAppTemplate execution")
+
+_figure 1 - This is the default result for a DemoAppTemplate execution_
+
 Now, the following keys act as :
 
 | key                          | Description                                   |
