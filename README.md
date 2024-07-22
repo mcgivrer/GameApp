@@ -42,6 +42,7 @@ Now, the following keys act as :
 | <kbd>DOWN</kbd>              | Move player down                              | 
 | <kbd>LEFT</kbd>              | Move player left                              | 
 | <kbd>RIGHT</kbd>             | Move player right                             | 
+| <kbd>PAGE_UP</kbd>           | Add 1à new enemies                            | 
 
 ### Configuration
 

@@ -1,5 +1,6 @@
 package com.snapgames.apps;
 
+import javax.imageio.ImageIO;
 import javax.swing.*;
 import java.awt.*;
 import java.awt.event.KeyEvent;
@@ -282,7 +283,8 @@ public class Demo01Frame extends JPanel implements KeyListener {
     }
 
     /**
-     * The {@link Camera} object will be used to track a {@link Camera#target}
+     * <p>The {@link Camera} object will be used to track a {@link Camera#target}</p>
+     * <p>
      * The targeted {@link Entity} will be keep on the display center according the {@link Camera#tweenFactor}.
      *
      * @author Frédéric Delorme
@@ -439,20 +441,22 @@ public class Demo01Frame extends JPanel implements KeyListener {
     /*----- Manage current Scene -----*/
 
     public void createScene() {
-        Font textFont = null;
-        try {
-            textFont = Font.createFont(
-                Font.TRUETYPE_FONT,
-                this.getClass().getResourceAsStream("/fonts/upheavtt.ttf"));
+        Font scoreFont = getResource("/fonts/upheavtt.ttf");
+        Font textFont = getResource("/fonts/Minecraftia-Regular.ttf");
 
-        } catch (FontFormatException | IOException e) {
-            error("Unable to read font file:%s", e.getMessage());
-        }
         add(new TextObject("score")
             .setText("%05d")
             .setValue(0)
-            .setFont(textFont.deriveFont(18.0f))
+            .setFont(scoreFont.deriveFont(18.0f))
             .setPosition(20, 32)
+            .setBorderColor(Color.WHITE)
+            .setStickToCamera(true)
+        );
+        add(new TextObject("Life")
+            .setText("%01d")
+            .setValue(3)
+            .setFont(textFont.deriveFont(8.0f))
+            .setPosition(buffer.getWidth() - 32, 32)
             .setBorderColor(Color.WHITE)
             .setStickToCamera(true)
         );
@@ -462,26 +466,31 @@ public class Demo01Frame extends JPanel implements KeyListener {
                 world.playArea.getHeight() * 0.5)
             .setSize(16, 16)
             .setPriority(200)
-            .setMaterial(new Material("Player_MAT", 1.0, 0.998, 0.998))
-            .setMass(80.0);
+            .setMaterial(new Material("Player_MAT", 1.0, 0.998, 0.98))
+            .setMass(10.0);
         add(player);
 
-        for (int i = 0; i < 100; i++) {
-            add(new Entity("enemy_" + i)
-                .setPosition(world.playArea.getWidth() * Math.random(),
-                    world.playArea.getHeight() * Math.random())
-                .setSize(8, 8)
-                .setPriority(100 + i)
-                .setFillColor(Color.RED)
-                .setAcceleration(0.025 - (Math.random() * 0.05), 0.025 - (Math.random() * 0.05))
-                .setMaterial(new Material("Enemy_MAT", 1.0, 1.0, 1.0))
-                .setMass(2.0 + (5.0 * Math.random())));
-        }
+        generateEntities("enemy_", 20);
+
         setActiveCamera((Camera)
             new Camera("cam01")
                 .setTarget(player)
                 .setTweenFactor(0.002)
                 .setSize(320, 240));
+    }
+
+    private void generateEntities(String rootName, int nbEntities) {
+        for (int i = 0; i < nbEntities; i++) {
+            add(new Entity(rootName + Entity.index)
+                .setPosition(world.playArea.getWidth() * Math.random(),
+                    world.playArea.getHeight() * Math.random())
+                .setSize(8, 8)
+                .setPriority(100 + i)
+                .setFillColor(Color.RED)
+                .setAcceleration(0.25 - (Math.random() * 0.5), 0.25 - (Math.random() * 0.5))
+                .setMaterial(new Material("Enemy_MAT", 1.0, 0.98, 1.0))
+                .setMass(2.0 + (5.0 * Math.random())));
+        }
     }
 
     /**
@@ -492,6 +501,37 @@ public class Demo01Frame extends JPanel implements KeyListener {
     private void setActiveCamera(Camera cam) {
         this.activeCamera = cam;
 
+    }
+
+    /**
+     * Retrieve a resource from a path.
+     * <p>
+     * it can be a Font (ttf) or an image (jpg, png);
+     *
+     * @param path path to the resource to be loaded.
+     * @param <T>  the type of the resource.
+     * @return the corresponding resource. It can be a {@link Font} or a {@link BufferedImage}.
+     */
+    public static <T> T getResource(String path) {
+        try {
+            String ext = path.substring(path.lastIndexOf(".") + 1).toLowerCase();
+            switch (ext) {
+                case "ttf" -> {
+                    return (T) Font.createFont(
+                        Font.TRUETYPE_FONT,
+                        Demo01Frame.class.getResourceAsStream(path));
+                }
+                case "png", "jpg" -> {
+                    return (T) ImageIO.read(Demo01Frame.class.getResourceAsStream(path));
+                }
+                default -> {
+                    return null;
+                }
+            }
+        } catch (FontFormatException | IOException e) {
+            error("Unable to read font file:%s", e.getMessage());
+        }
+        return null;
     }
 
     /**
@@ -552,7 +592,7 @@ public class Demo01Frame extends JPanel implements KeyListener {
             previousTime = startTime;
             stats.put("fps", currentFPS);
             stats.put("ups", currentUPS);
-            stats.put("frame", delay);
+            stats.put("ft", delay);
         }
     }
 
@@ -643,22 +683,22 @@ public class Demo01Frame extends JPanel implements KeyListener {
             if (e.x < 0.0) {
                 e.x = 0.0;
                 e.dx = -e.dx * e.material.elasticity * world.material.roughness * world.material.elasticity;
-                e.ax = 0.0;
+                e.ax = -e.ax * e.material.elasticity * world.material.roughness * world.material.elasticity;
             }
             if (e.y < 0.0) {
                 e.y = 0.0;
                 e.dy = -e.dy * e.material.elasticity * world.material.roughness * world.material.elasticity;
-                e.ay = 0.0;
+                e.ay = -e.ay * e.material.elasticity * world.material.roughness * world.material.elasticity;
             }
             if (e.x > world.playArea.getWidth() - e.width) {
                 e.x = world.playArea.getWidth() - e.width;
                 e.dx = -e.dx * e.material.elasticity * world.material.roughness * world.material.elasticity;
-                e.ax = 0.0;
+                e.ax = -e.ax * e.material.elasticity * world.material.roughness * world.material.elasticity;
             }
             if (e.y > world.playArea.getHeight() - e.height) {
                 e.y = world.playArea.getHeight() - e.height;
                 e.dy = -e.dy * e.material.elasticity * world.material.roughness * world.material.elasticity;
-                e.ay = 0.0;
+                e.ay = -e.ay;
             }
         }
     }
@@ -719,12 +759,13 @@ public class Demo01Frame extends JPanel implements KeyListener {
             0, 0, buffer.getWidth(), buffer.getHeight(), null);
         if (debug > 0) {
             g2s.setColor(Color.ORANGE);
-            g2s.drawString(String.format("[ fps:%d / ups:%d / e:%d / nbObj:%d / active:%d]",
+            g2s.drawString(String.format("[ dbg:%01d / fps:%03d ups:%03d ft:%03d / nbObj:%04d active:%04d ]",
+                    debug,
                     stats.get("fps"),
                     stats.get("ups"),
-                    stats.get("delay"),
+                    stats.get("ft"),
                     (long) entities.values().size(),
-                    (long) entities.values().stream().filter(Entity::isActive).count()),
+                    entities.values().stream().filter(Entity::isActive).count()),
                 10, window.getHeight() - 10
             );
         }
@@ -816,6 +857,14 @@ public class Demo01Frame extends JPanel implements KeyListener {
                 if (e.isControlDown()) {
                     world.gravity *= -1;
                 }
+            }
+            case KeyEvent.VK_D -> {
+                if (e.isControlDown()) {
+                    debug = (debug < 5) ? debug + 1 : 0;
+                }
+            }
+            case KeyEvent.VK_PAGE_UP -> {
+                generateEntities("enemy_", 10);
             }
             default -> {
                 // Nothing to do here.
