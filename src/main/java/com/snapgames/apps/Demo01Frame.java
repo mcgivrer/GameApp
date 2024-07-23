@@ -103,7 +103,7 @@ public class Demo01Frame extends JPanel implements KeyListener {
         // add any attribute object to this entity.
         private Map<String, Object> attributes = new HashMap<>();
 
-        public Shape shape = new Rectangle2D.Double();
+        public Shape shape = new Double();
 
         // this entity has children!
         public List<Entity> child = new ArrayList<>();
@@ -205,8 +205,8 @@ public class Demo01Frame extends JPanel implements KeyListener {
             return this;
         }
 
-        public Entity add(Entity child) {
-            child.add(child);
+        public Entity add(Entity c) {
+            child.add(c);
             return this;
         }
     }
@@ -343,6 +343,9 @@ public class Demo01Frame extends JPanel implements KeyListener {
         public String text;
         public Object value;
         public Font font;
+        public Color textColor = Color.WHITE;
+
+        public Align textAlign;
 
         public TextObject(String name) {
             super(name);
@@ -355,6 +358,16 @@ public class Demo01Frame extends JPanel implements KeyListener {
 
         public TextObject setValue(Object t) {
             this.value = t;
+            return this;
+        }
+
+        public TextObject setTextColor(Color tc) {
+            this.textColor = tc;
+            return this;
+        }
+
+        public TextObject setTextAlign(Align a) {
+            this.textAlign = a;
             return this;
         }
 
@@ -383,7 +396,7 @@ public class Demo01Frame extends JPanel implements KeyListener {
     public static class Camera extends Entity {
         private Entity target;
         private double tweenFactor;
-        private Rectangle2D viewport = new Rectangle2D.Double();
+        private Rectangle2D viewport = new Double();
 
         public Camera(String name) {
             super(name);
@@ -414,6 +427,13 @@ public class Demo01Frame extends JPanel implements KeyListener {
         }
     }
 
+    public enum Align {
+        LEFT,
+        RIGHT,
+        TOP,
+        BOTTOM,
+        CENTER;
+    }
 
     /**
      * A {@link DialogBox} entity will create a dialog with a text. Adding child Button will add new operations
@@ -422,20 +442,89 @@ public class Demo01Frame extends JPanel implements KeyListener {
      * By default, a DialogBox is not active; it must be activated to be displayed.
      */
     public static class DialogBox extends TextObject {
+        public int margin = 2;
+        public int padding = 2;
 
         public DialogBox(String name) {
             super(name);
+            this.width = 100;
+            this.height = 48;
+            this.active = false;
+            setFillColor(Color.BLUE);
+            setBorderColor(Color.CYAN);
+            setTextColor(Color.WHITE);
+
+            add(new Behavior() {
+                @Override
+                public void create(Demo01Frame app, Entity e) {
+
+                    add(new Button("OK")
+                        .setAlign(Align.RIGHT)
+                        .setTextAlign(Align.CENTER)
+                        .setText(messages.getString("app.dialog.button.ok"))
+                        .setTextColor(Color.WHITE)
+                        .setFillColor(Color.LIGHT_GRAY)
+                        .setBorderColor(Color.GRAY)
+                        .setSize(40, 12));
+
+                    add(new Button("Cancel")
+                        .setAlign(Align.LEFT)
+                        .setText(messages.getString("app.dialog.button.cancel"))
+                        .setTextAlign(Align.CENTER)
+                        .setTextColor(Color.WHITE)
+                        .setFillColor(Color.LIGHT_GRAY)
+                        .setBorderColor(Color.GRAY)
+                        .setSize(40, 12));
+                }
+            });
+            add(new Behavior() {
+                @Override
+                public void update(Demo01Frame app, Entity e, double elapsed) {
+                    e.child.forEach(c -> {
+                        switch (c.getClass().getSimpleName()) {
+                            case "Button" -> {
+                                switch (((Button) c).align) {
+                                    case LEFT -> {
+                                        c.x = e.x + margin + padding;
+                                        c.y = e.y - (margin + padding);
+                                    }
+                                    case RIGHT -> {
+                                        c.x = (e.x + e.width) - (margin + padding);
+                                        c.y = e.y - (margin + padding);
+                                    }
+                                }
+                            }
+                            default -> {
+                                // nothing to de thaaaaaa....
+                            }
+                        }
+                    });
+                }
+            });
+        }
+
+        public DialogBox setVisible(boolean visible) {
+            setActive(visible);
+            return this;
         }
     }
 
     public static class Button extends TextObject {
+        public Align align;
 
         public Button(String name) {
             super(name);
+            this.align = Align.LEFT;
         }
+
+        public Button setAlign(Align a) {
+            this.align = a;
+            return this;
+        }
+
     }
 
-    private ResourceBundle messages = ResourceBundle.getBundle("i18n/messages");
+    private static ResourceBundle messages = ResourceBundle.getBundle("i18n/messages");
     private Properties config = new Properties();
     private static boolean exit = false;
     private static int debug = 0;
@@ -632,6 +721,8 @@ public class Demo01Frame extends JPanel implements KeyListener {
                             (int) world.playArea.getHeight(), (int) world.playArea.getHeight() - 20);
                     }
                 }));
+
+        add(new DialogBox("exitConfirmBox").setText(messages.getString("app.dialog.exit.message")));
     }
 
     private void generateEntities(String rootName, int nbEntities) {
@@ -1034,7 +1125,8 @@ public class Demo01Frame extends JPanel implements KeyListener {
         switch (k.getKeyCode()) {
             // exit application on ESCAPE
             case KeyEvent.VK_ESCAPE -> {
-                exit = true;
+                DialogBox db = (DialogBox) entities.get("exitConfirmBox");
+                db.setVisible(true);
             }
             // reset the scene on CTRL+Z
             case KeyEvent.VK_Z -> {
