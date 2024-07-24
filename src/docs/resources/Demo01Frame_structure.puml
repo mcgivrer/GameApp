@@ -1,0 +1,150 @@
+@startuml
+
+/' diagram meta data start
+config=StructureConfiguration;
+{
+  "projectClassification": {
+    "searchMode": "OpenProject", // OpenProject, AllProjects
+    "includedProjects": "",
+    "pathEndKeywords": "*.impl",
+    "isClientPath": "",
+    "isClientName": "",
+    "isTestPath": "",
+    "isTestName": "",
+    "isMappingPath": "",
+    "isMappingName": "",
+    "isDataAccessPath": "",
+    "isDataAccessName": "",
+    "isDataStructurePath": "",
+    "isDataStructureName": "",
+    "isInterfaceStructuresPath": "",
+    "isInterfaceStructuresName": "",
+    "isEntryPointPath": "",
+    "isEntryPointName": "",
+    "treatFinalFieldsAsMandatory": false
+  },
+  "graphRestriction": {
+    "classPackageExcludeFilter": "",
+    "classPackageIncludeFilter": "com.snapgames.apps",
+    "classNameExcludeFilter": "",
+    "classNameIncludeFilter": "",
+    "methodNameExcludeFilter": "",
+    "methodNameIncludeFilter": "",
+    "removeByInheritance": "", // inheritance/annotation based filtering is done in a second step
+    "removeByAnnotation": "",
+    "removeByClassPackage": "", // cleanup the graph after inheritance/annotation based filtering is done
+    "removeByClassName": "",
+    "cutMappings": false,
+    "cutEnum": true,
+    "cutTests": true,
+    "cutClient": true,
+    "cutDataAccess": true,
+    "cutInterfaceStructures": true,
+    "cutDataStructures": true,
+    "cutGetterAndSetter": true,
+    "cutConstructors": true
+  },
+  "graphTraversal": {
+    "forwardDepth": 3,
+    "backwardDepth": 3,
+    "classPackageExcludeFilter": "",
+    "classPackageIncludeFilter": "",
+    "classNameExcludeFilter": "",
+    "classNameIncludeFilter": "",
+    "methodNameExcludeFilter": "",
+    "methodNameIncludeFilter": "",
+    "hideMappings": false,
+    "hideDataStructures": false,
+    "hidePrivateMethods": true,
+    "hideInterfaceCalls": true, // indirection: implementation -> interface (is hidden) -> implementation
+    "onlyShowApplicationEntryPoints": false, // root node is included
+    "useMethodCallsForStructureDiagram": "ForwardOnly" // ForwardOnly, BothDirections, No
+  },
+  "details": {
+    "aggregation": "GroupByClass", // ByClass, GroupByClass, None
+    "showClassGenericTypes": true,
+    "showMethods": true,
+    "showMethodParameterNames": true,
+    "showMethodParameterTypes": true,
+    "showMethodReturnType": true,
+    "showPackageLevels": 2,
+    "showDetailedClassStructure": true
+  },
+  "rootClass": "com.snapgames.apps.Demo01Frame",
+  "extensionCallbackMethod": "" // qualified.class.name#methodName - signature: public static String method(String)
+}
+diagram meta data end '/
+
+
+
+digraph g {
+    rankdir="TB"
+    splines=polyline
+    
+
+'nodes 
+subgraph cluster_229871927 { 
+   	label=snapgames
+	labeljust=l
+	fillcolor="#ececec"
+	style=filled
+   
+   subgraph cluster_1500486857 { 
+   	label=apps
+	labeljust=l
+	fillcolor="#d8d8d8"
+	style=filled
+   
+   Demo01Frame2012618538[
+	label=<<TABLE BORDER="1" CELLBORDER="0" CELLPADDING="4" CELLSPACING="0">
+<TR><TD ALIGN="LEFT" >(C)Demo01Frame</TD></TR>
+<HR/>
+<TR><TD ALIGN="LEFT" >-   FPS: int [1]</TD></TR>
+<TR><TD ALIGN="LEFT" >-   backGroundColor: Color [0..1]</TD></TR>
+<TR><TD ALIGN="LEFT" >-   buffer: BufferedImage [0..1]</TD></TR>
+<TR><TD ALIGN="LEFT" >-   config: Properties [0..*]</TD></TR>
+<TR><TD ALIGN="LEFT" >-   entities: Map&lt;String, Entity&gt; [0..*]</TD></TR>
+<TR><TD ALIGN="LEFT" >-   keys: boolean[] [0..*]</TD></TR>
+<TR><TD ALIGN="LEFT" >-   messages: ResourceBundle [0..1]</TD></TR>
+<TR><TD ALIGN="LEFT" >-   window: JFrame [0..1]</TD></TR>
+<TR><TD ALIGN="LEFT" >-   world: World [0..1]</TD></TR>
+<HR/>
+<TR><TD ALIGN="LEFT" >+ add(entity: Entity)</TD></TR>
+<TR><TD ALIGN="LEFT" ># applyPhysics(delay: double, e: Entity)</TD></TR>
+<TR><TD ALIGN="LEFT" ># controlPlayAreaBoundaries(e: Entity)</TD></TR>
+<TR><TD ALIGN="LEFT" ># createScene()</TD></TR>
+<TR><TD ALIGN="LEFT" ># dispose()</TD></TR>
+<TR><TD ALIGN="LEFT" ># drawEntity(e: Entity, g: Graphics2D)</TD></TR>
+<TR><TD ALIGN="LEFT" >+ error(message: String, args: Object...)</TD></TR>
+<TR><TD ALIGN="LEFT" >+ info(message: String, args: Object...)</TD></TR>
+<TR><TD ALIGN="LEFT" ># init(args: String[])</TD></TR>
+<TR><TD ALIGN="LEFT" ># initializeDisplay()</TD></TR>
+<TR><TD ALIGN="LEFT" ># input()</TD></TR>
+<TR><TD ALIGN="LEFT" >+ isKeyPressed(keyCode: int): boolean</TD></TR>
+<TR><TD ALIGN="LEFT" >+ keyPressed(e: KeyEvent)</TD></TR>
+<TR><TD ALIGN="LEFT" >+ keyReleased(e: KeyEvent)</TD></TR>
+<TR><TD ALIGN="LEFT" >+ keyTyped(e: KeyEvent)</TD></TR>
+<TR><TD ALIGN="LEFT" ># loadConfiguration()</TD></TR>
+<TR><TD ALIGN="LEFT" >+ log(level: String, message: String, args: Object...)</TD></TR>
+<TR><TD ALIGN="LEFT" ># loop()</TD></TR>
+<TR><TD ALIGN="LEFT" >+ main(argc: String[])</TD></TR>
+<TR><TD ALIGN="LEFT" ># parseConfiguration()</TD></TR>
+<TR><TD ALIGN="LEFT" ># render()</TD></TR>
+<TR><TD ALIGN="LEFT" >+ resetScene()</TD></TR>
+<TR><TD ALIGN="LEFT" >+ run(args: String[])</TD></TR>
+<TR><TD ALIGN="LEFT" ># update(delay: double)</TD></TR>
+<TR><TD ALIGN="LEFT" >+ warn(message: String, args: Object...)</TD></TR>
+</TABLE>>
+	style=filled
+	margin=0
+	shape=plaintext
+	fillcolor="#FFFFFF"
+];
+} 
+} 
+
+'edges    
+
+    
+}
+@enduml

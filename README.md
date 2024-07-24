@@ -27,16 +27,22 @@ or you can execute the command line :
 $> java -jar target/Demo01-1.0.0.jar
 ```
 
+![This is the default result for a DemoAppTemplate execution](src/docs/images/screenshot-1.png "This is the default result for a DemoAppTemplate execution")
+
+_figure 1 - This is the default result for a DemoAppTemplate execution_
+
 Now, the following keys act as :
 
 | key                          | Description                                   |
 |------------------------------|-----------------------------------------------|
 | <kbd>ESCAPE</kbd>            | Exit the <code>Demo01Frame</code> application | 
 | <kbd>CTRL</kbd>+<kbd>Z</kbd> | Reset the current Scene                       | 
+| <kbd>CTRL</kbd>+<kbd>G</kbd> | Reverse the current Scene Gravity             | 
 | <kbd>UP</kbd>                | Move player up                                | 
 | <kbd>DOWN</kbd>              | Move player down                              | 
 | <kbd>LEFT</kbd>              | Move player left                              | 
 | <kbd>RIGHT</kbd>             | Move player right                             | 
+| <kbd>PAGE_UP</kbd>           | Add 1à new enemies                            | 
 
 ### Configuration
 
