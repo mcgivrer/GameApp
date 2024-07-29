@@ -11,33 +11,38 @@ import java.awt.image.BufferedImage;
 import java.io.IOException;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
-import java.util.*;
 import java.util.List;
+import java.util.*;
 import java.util.concurrent.ConcurrentHashMap;
 
 /**
  * Main class for Project {@link Demo01Frame}
  *
- * <p>This class is the main class for a java game template. It initialize default components and services
+ * <p>This class is the main class for a java game template.
+ * It initialize default components and services
  * to make a basic 2D game with a standard game loop:
  * <ul>
  *     <li><code>input</code> to capture and process gamer inputs,</li>
- *     <li><code>update</code> to compute {@link Entity} moves and {@link Behavior}'s into the game {@link World}</li>
- *     <li><code>render</code> to draw ann {@link Entity}'son internal buffer, then sync on the {@link JFrame} with a buffer strategy</li>
+ *     <li><code>update</code> to compute {@link Entity} moves and {@link Behavior}'s
+ *     into the game {@link World}</li>
+ *     <li><code>render</code> to draw ann {@link Entity}'son internal buffer,
+ *     then sync on the {@link JFrame} with a buffer strategy</li>
  * </ul></p>
  *
  * <p>It also provide some subclasses as components:
  * <ul>
  *     <li>{@link Entity} is the basic default Entity for a game object,</li>
  *     <li>{@link World} defines the Game context with  its play area and gravity,</li>
- *     <li>{@link Material} set physics constants for a specific material behavior assign to an {@link Entity},</li>
- *     <li>{@link Behavior} is an interface API to enhance {@link Entity} default processing with new specific behavior.</li>
+ *     <li>{@link Material} set physics constants for a specific material
+ *     behavior assign to an {@link Entity},</li>
+ *     <li>{@link Behavior} is an interface API to enhance {@link Entity}
+ *     default processing with new specific behavior.</li>
  * </ul></p>
  *
  * @author Frédéric Delorme frederic.delorme@gmail.com
  * @since 1.0.0
  */
-public class Demo01Frame extends JPanel implements KeyListener {
+public class Demo01Frame implements KeyListener {
 
     /**
      * <p>The {@link Entity} class is the Core object for any Scene.</p>
@@ -103,10 +108,11 @@ public class Demo01Frame extends JPanel implements KeyListener {
         // add any attribute object to this entity.
         private Map<String, Object> attributes = new HashMap<>();
 
-        public Shape shape = new Double();
+        public Shape shape = new Rectangle2D.Double();
 
         // this entity has children!
         public List<Entity> child = new ArrayList<>();
+        private Entity parent;
 
         /**
          * Create a brand new {@link Entity} with its name.
@@ -200,14 +206,315 @@ public class Demo01Frame extends JPanel implements KeyListener {
             attributes.remove(attrName);
         }
 
+        /**
+         * Add a {@link Behavior} to this {@link Entity}.
+         *
+         * @param behavior the specific {@link Behavior} to be added.
+         * @return the updated {@link Entity}.
+         */
         public Entity add(Behavior behavior) {
             behaviors.add(behavior);
             return this;
         }
 
+        /**
+         * Add a child {@link Entity}
+         *
+         * @param c the child {@link Entity} to be added to.
+         * @return the updated parent {@link Entity}.
+         */
         public Entity add(Entity c) {
             child.add(c);
+            c.setParent(this);
             return this;
+        }
+
+        private Entity setParent(Entity p) {
+            this.parent = p;
+            return this;
+        }
+
+        public Entity getParent() {
+            return parent;
+        }
+
+        public boolean isRelativeToParent() {
+            return this.relativeToParent;
+        }
+
+        public void setChildVisible(boolean b) {
+            child.forEach(c -> c.setActive(b));
+        }
+    }
+
+    /**
+     * Possible {@link GameObject} nature
+     *
+     * <p>it can be one of the following nature per {@link GameObject}:
+     * <ul>
+     *     <li><code>DOT</code> a simple dot,</li>
+     *     <li><code>LINE</code> a line,</li>
+     *     <li><code>RECTANGLE</code> a rectangle,</li>
+     *     <li><code>ELLIPSE</code> an ellipse,</li>
+     *     <li><code>POLYGON</code> a polygone.</li>
+     * </ul></p>
+     */
+    public enum GameObjectNature {
+        /**
+         * A simple dot at <code>(x,y)</code> of size <code>w</code> where <code>h=w</code>
+         */
+        DOT,
+        /**
+         * A line from <code>(x,y)</code> to <code>(x+w,y+h)</code>.
+         */
+        LINE,
+        /**
+         * A {@link Rectangle2D} at <code>(x,y)</code> of size <code>(w,h)</code>.
+         */
+        RECTANGLE,
+        /**
+         * An {@link java.awt.geom.Ellipse2D} at <code>(x,y)</code> with radius of <code>(rx=w,ry=h)</code>.
+         */
+        ELLIPSE,
+        /**
+         * A {@link Polygon} build of lines at <code>(x,y)</code>.Its size <code>(w,h)</code>
+         * is computed at first display time.
+         */
+        POLYGON;
+    }
+
+    /**
+     * A {@link GameObject} is an {@link Entity} with a specific {@link Shape}
+     * according to its {@link GameObjectNature}.
+     *
+     * @author Frédéric Delorme
+     * @since 1.0.0
+     */
+    public static class GameObject extends Entity {
+
+        public GameObjectNature nature = GameObjectNature.RECTANGLE;
+
+        /**
+         * Create a brand new {@link GameObject} with its name.
+         *
+         * @param name name of this new {@link GameObject}.
+         */
+        public GameObject(String name) {
+            super(name);
+        }
+
+        public GameObject setNature(GameObjectNature n) {
+            this.nature = n;
+            return this;
+        }
+    }
+
+    /**
+     * An {@link ImageObject} is basically an {@link Entity} supporting {@link BufferedImage} drawing.
+     *
+     * @author Frédéric Delorme
+     * @since 1.0.0
+     */
+    public static class ImageObject extends Entity {
+
+        public BufferedImage image;
+
+        /**
+         * Create a brand new {@link ImageObject} with its name.
+         *
+         * @param name name of this new {@link ImageObject}.
+         */
+        public ImageObject(String name) {
+            super(name);
+        }
+
+        public ImageObject setImage(BufferedImage img) {
+            this.image = img;
+            return this;
+        }
+
+        public BufferedImage getImage() {
+            return this.image;
+        }
+    }
+
+    /**
+     * {@link AnimationFrames} is a list of frames to animate a Sprite (coming soon) or an {@link ImageObject}.
+     *
+     * <p>It defines frames for each step of the animation with their display duration.</p>
+     *
+     * @author Frédéric Delorme
+     * @see Animations
+     * @since 1.0.0
+     */
+    public static class AnimationFrames {
+        List<BufferedImage> frames = new ArrayList<>();
+        List<Integer> timeFrames = new ArrayList<>();
+        double elapsedTime = 0;
+        int currentFrame = 0;
+
+        AnimationFrames(List<BufferedImage> frames, List<Integer> timeFrames) {
+            this.frames = frames;
+            this.timeFrames = timeFrames;
+        }
+
+        /**
+         * Update the currentFrame according to elapsed time since previous call.
+         *
+         * @param delay elapsed time since previous call.
+         */
+        public void update(double delay) {
+            elapsedTime += delay;
+            if (elapsedTime > timeFrames.get(currentFrame)) {
+                currentFrame = (currentFrame + 1 < frames.size() ? currentFrame + 1 : 0);
+                elapsedTime = 0;
+            }
+        }
+
+        /**
+         * Return the current active frame for this AnimationFrames.
+         *
+         * <p>According to elapsed time, it returns the corresponding frame for the {@link AnimationFrames}.</p>
+         *
+         * @return BufferedImage corresponding to the current active frame.
+         */
+        public BufferedImage getImage() {
+            return this.frames.get(currentFrame);
+        }
+
+
+        /**
+         * Reset this {@link AnimationFrames} to its first frame.
+         */
+        public void reset() {
+            currentFrame = 0;
+        }
+
+        /**
+         * Load all the frames from a broader image by slicing each frame from it.
+         *
+         * <p></p>source is image source and table is list of integer structured like [x,y,w,h,t] for each frame
+         * to slice from the source image where
+         * <ul>
+         *     <li><code>(x,y)</code> is position of the frame in the source image,</li>
+         *     <li><code>(w,h)</code> is the size of the extracted frame,</li>
+         *     <li><code>(t)</code> is the duration for that frame.</li>
+         * </ul>
+         *
+         * @param source source for images
+         * @param table  list of [x,y,w,h,t] structures.
+         * @return a brand new AnimationFrames instance.
+         */
+        public static AnimationFrames load(BufferedImage source, int[] table) {
+            if (source != null) {
+                List<BufferedImage> images = new ArrayList<>();
+                List<Integer> timeFrames = new ArrayList<>();
+                for (int idx = 0; idx < table.length; idx += 5) {
+                    int x = table[idx];
+                    int y = table[idx + 1];
+                    int w = table[idx + 2];
+                    int h = table[idx + 3];
+                    int timeFrame = table[idx + 4];
+                    images.add(source.getSubimage(x, y, w, h));
+                    timeFrames.add(timeFrame);
+                }
+                return new AnimationFrames(images, timeFrames);
+            }
+            return null;
+        }
+    }
+
+    /**
+     * {@link Animations} are a set
+     * of {@link AnimationFrames} indexed
+     * with a readable name as <code>animationKey.</code>
+     * <p>
+     * <ul>
+     *     <li>The {@link Animations#update(double)} method manages the frame cycling for the active {@link AnimationFrames}.</li>
+     *     <li>{@link Animations#getImage()} will return the current active frame.</li>
+     * </ul>
+     *
+     * @author Frédéric Delorme
+     * @since 1.0.0
+     */
+    public static class Animations {
+        Map<String, AnimationFrames> animationsFrames = new HashMap<>();
+        private String activeAnimationKey = "default";
+        private int currentImage;
+
+        /**
+         * Update the current active {@link AnimationFrames} according to elapsed time.
+         *
+         * @param elapsed the elapsed time since previous call.
+         * @return the updated {@link Animations} instance.
+         */
+        public Animations update(double elapsed) {
+            if (Optional.ofNullable(animationsFrames).isPresent()
+                && Optional.ofNullable(activeAnimationKey).isPresent()) {
+                AnimationFrames anim = animationsFrames.get(activeAnimationKey);
+                anim.update(elapsed);
+            }
+            return this;
+        }
+
+        /**
+         * Define the current active animation.
+         *
+         * @param activeAnimationKey the key name for the {@link AnimationFrames} to be activated.
+         */
+        public void setActiveAnimation(String activeAnimationKey) {
+            this.activeAnimationKey = activeAnimationKey;
+        }
+
+        /**
+         * Return the current frame from the active AnimationFrames.
+         *
+         * @return the BufferedImage corresponding to the current active animation.
+         */
+        public BufferedImage getImage() {
+            return this.animationsFrames.get(activeAnimationKey).getImage();
+        }
+
+        /**
+         * Reset the current active {@link AnimationFrames} to its first frame.
+         */
+        public void reset() {
+            if (Optional.ofNullable(animationsFrames).isPresent()
+                && Optional.ofNullable(activeAnimationKey).isPresent()) {
+                this.animationsFrames.get(activeAnimationKey).reset();
+            }
+        }
+    }
+
+    /**
+     * A new Entity supporting Animations.
+     *
+     * @author Frédéric Delorme
+     * @since 1.0.0
+     */
+    public static class AnimatedObject extends Entity {
+
+        private Animations animations = new Animations();
+
+        /**
+         * Create a brand new {@link AnimatedObject} with its name.
+         *
+         * @param name name of this new {@link AnimatedObject}.
+         */
+        public AnimatedObject(String name) {
+            super(name);
+        }
+
+        public Animations getAnimations() {
+            return animations;
+        }
+
+        public BufferedImage getImage() {
+            return animations.getImage();
+        }
+
+        public void update(double elapsed) {
+            animations.update(elapsed);
         }
     }
 
@@ -421,8 +728,9 @@ public class Demo01Frame extends JPanel implements KeyListener {
                     .ceil((target.y + (target.height * 0.5) - ((viewport.getHeight()) * 0.5) - this.y)
                         * tweenFactor * Math.min(dt, 10));
 
-                this.viewport.setRect(this.x, this.y, this.getWidth(),
-                    this.getHeight());
+                this.viewport.setRect(
+                    this.x, this.y,
+                    this.getWidth(), this.getHeight());
             }
         }
     }
@@ -430,9 +738,41 @@ public class Demo01Frame extends JPanel implements KeyListener {
     public enum Align {
         LEFT,
         RIGHT,
+        CENTER,
         TOP,
-        BOTTOM,
-        CENTER;
+        BOTTOM;
+    }
+
+    public static class AlignBehavior implements Behavior {
+        @Override
+        public void update(Demo01Frame app, Entity e, double elapsed) {
+            e.child.forEach(c -> {
+                switch (c.getClass().getSimpleName()) {
+                    case "Button", "TextBox" -> {
+                        switch (((Button) c).align) {
+                            case LEFT -> {
+                                c.x = e.x + DialogBox.margin + DialogBox.padding;
+                                c.y = e.y + e.height - (c.height + DialogBox.margin + DialogBox.padding);
+                            }
+                            case RIGHT -> {
+                                c.x = (e.x + e.width) - (c.width + DialogBox.margin + DialogBox.padding);
+                                c.y = e.y + e.height - (c.height + DialogBox.margin + DialogBox.padding);
+                            }
+                            case CENTER -> {
+                                c.x = (e.x + (e.width * 0.5)) - (DialogBox.margin + DialogBox.padding);
+                                c.y = e.y + e.height - (c.height + DialogBox.margin + DialogBox.padding);
+                            }
+                            default -> {
+                                // processing TOP,BOTTOM will come later...
+                            }
+                        }
+                    }
+                    default -> {
+                        // nothing to do thaaaaaa....
+                    }
+                }
+            });
+        }
     }
 
     /**
@@ -442,70 +782,44 @@ public class Demo01Frame extends JPanel implements KeyListener {
      * By default, a DialogBox is not active; it must be activated to be displayed.
      */
     public static class DialogBox extends TextObject {
-        public int margin = 2;
-        public int padding = 2;
+        public static int margin = 2;
+        public static int padding = 2;
 
         public DialogBox(String name) {
             super(name);
-            this.width = 100;
-            this.height = 48;
-            this.active = false;
+            setSize(100, 48);
+            setPosition((buffer.getWidth() - this.width) * 0.5, (buffer.getHeight() - this.height) * 0.5);
+            setVisible(false);
+            setStickToCamera(true);
             setFillColor(Color.BLUE);
             setBorderColor(Color.CYAN);
             setTextColor(Color.WHITE);
 
-            add(new Behavior() {
-                @Override
-                public void create(Demo01Frame app, Entity e) {
+            // Add the required button OK
+            add(new Button("OK")
+                .setAlign(Align.RIGHT)
+                .setTextAlign(Align.CENTER)
+                .setText(messages.getString("app.dialog.button.ok"))
+                .setTextColor(Color.WHITE)
+                .setFillColor(Color.LIGHT_GRAY)
+                .setBorderColor(Color.GRAY)
+                .setSize(40, 12));
 
-                    add(new Button("OK")
-                        .setAlign(Align.RIGHT)
-                        .setTextAlign(Align.CENTER)
-                        .setText(messages.getString("app.dialog.button.ok"))
-                        .setTextColor(Color.WHITE)
-                        .setFillColor(Color.LIGHT_GRAY)
-                        .setBorderColor(Color.GRAY)
-                        .setSize(40, 12));
+            // Add the required button Cancel
+            add(new Button("Cancel")
+                .setAlign(Align.LEFT)
+                .setText(messages.getString("app.dialog.button.cancel"))
+                .setTextAlign(Align.CENTER)
+                .setTextColor(Color.WHITE)
+                .setFillColor(Color.LIGHT_GRAY)
+                .setBorderColor(Color.GRAY)
+                .setSize(40, 12));
 
-                    add(new Button("Cancel")
-                        .setAlign(Align.LEFT)
-                        .setText(messages.getString("app.dialog.button.cancel"))
-                        .setTextAlign(Align.CENTER)
-                        .setTextColor(Color.WHITE)
-                        .setFillColor(Color.LIGHT_GRAY)
-                        .setBorderColor(Color.GRAY)
-                        .setSize(40, 12));
-                }
-            });
-            add(new Behavior() {
-                @Override
-                public void update(Demo01Frame app, Entity e, double elapsed) {
-                    e.child.forEach(c -> {
-                        switch (c.getClass().getSimpleName()) {
-                            case "Button" -> {
-                                switch (((Button) c).align) {
-                                    case LEFT -> {
-                                        c.x = e.x + margin + padding;
-                                        c.y = e.y - (margin + padding);
-                                    }
-                                    case RIGHT -> {
-                                        c.x = (e.x + e.width) - (margin + padding);
-                                        c.y = e.y - (margin + padding);
-                                    }
-                                }
-                            }
-                            default -> {
-                                // nothing to de thaaaaaa....
-                            }
-                        }
-                    });
-                }
-            });
+            add(new AlignBehavior());
         }
 
-        public DialogBox setVisible(boolean visible) {
+        public void setVisible(boolean visible) {
             setActive(visible);
-            return this;
         }
     }
 
@@ -514,7 +828,8 @@ public class Demo01Frame extends JPanel implements KeyListener {
 
         public Button(String name) {
             super(name);
-            this.align = Align.LEFT;
+            setStickToCamera(true);
+            setAlign(Align.LEFT);
         }
 
         public Button setAlign(Align a) {
@@ -532,8 +847,9 @@ public class Demo01Frame extends JPanel implements KeyListener {
     private static String loggerFilter = "ERR,WARN,INFO";
 
     private JFrame window;
-    private BufferedImage buffer;
+    private static BufferedImage buffer;
     private int FPS = 60;
+    private int UPS = 120;
 
     private boolean[] keys = new boolean[1024];
 
@@ -563,14 +879,13 @@ public class Demo01Frame extends JPanel implements KeyListener {
         init(args);
         initializeDisplay();
         createScene();
-        resetScene();
         loop();
         dispose();
     }
 
     /*----- Initialization and configuration -----*/
 
-    public void init(String[] args) {
+    private void init(String[] args) {
         List<String> lArgs = Arrays.asList(args);
         lArgs.forEach(s -> {
             info(String.format("Configuration|Argument: %s", s));
@@ -635,11 +950,11 @@ public class Demo01Frame extends JPanel implements KeyListener {
 
     public void initializeDisplay() {
         window.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
-        window.setContentPane(this);
+        window.setIconImage(getResource("/images/thor-hammer.png"));
         window.pack();
-        window.createBufferStrategy(3);
         window.addKeyListener(this);
         window.setVisible(true);
+        window.createBufferStrategy(3);
     }
 
     /*----- Manage current Scene -----*/
@@ -647,6 +962,12 @@ public class Demo01Frame extends JPanel implements KeyListener {
     public void createScene() {
         Font scoreFont = getResource("/fonts/upheavtt.ttf");
         Font textFont = getResource("/fonts/Minecraftia-Regular.ttf");
+
+        add(new ImageObject("forest")
+            .setImage(getResource("/images/backgrounds/forest.jpg"))
+            .setPosition(0, 0)
+            .setSize(world.playArea.getWidth(), world.playArea.getHeight())
+        );
 
         add(new TextObject("score")
             .setText("%05d")
@@ -676,6 +997,8 @@ public class Demo01Frame extends JPanel implements KeyListener {
                 }
             })
         );
+
+        generateEntities("enemy_", 20);
 
         Entity player = new Entity("player")
             .setPosition(world.playArea.getWidth() * 0.5,
@@ -722,7 +1045,26 @@ public class Demo01Frame extends JPanel implements KeyListener {
                     }
                 }));
 
-        add(new DialogBox("exitConfirmBox").setText(messages.getString("app.dialog.exit.message")));
+        add(new DialogBox("exitConfirmBox")
+            .setText(messages.getString("app.dialog.exit.message"))
+            .setFont(textFont.deriveFont(8.0f))
+            .setTextColor(Color.WHITE)
+            .setSize(140, 40)
+            .setFillColor(Color.DARK_GRAY)
+            .setBorderColor(Color.BLACK)
+            .add(new Behavior() {
+                @Override
+                public void onKeyReleased(Demo01Frame app, Entity e, KeyEvent k) {
+                    if (k.getKeyCode() == KeyEvent.VK_Y) {
+                        exit = true;
+                    }
+                    if (k.getKeyCode() == KeyEvent.VK_N) {
+                        exit = false;
+                        ((DialogBox) e).setVisible(false);
+                    }
+                }
+            })
+        );
     }
 
     private void generateEntities(String rootName, int nbEntities) {
@@ -788,6 +1130,11 @@ public class Demo01Frame extends JPanel implements KeyListener {
         createScene();
     }
 
+    /**
+     * Add an {@link Entity} to the current scene.
+     *
+     * @param entity the new {@link Entity} to be added to the current scene.
+     */
     public void add(Entity entity) {
         entity.behaviors.forEach(b -> {
             b.create(this, entity);
@@ -822,8 +1169,9 @@ public class Demo01Frame extends JPanel implements KeyListener {
                 updateTime = 0;
             } else {
                 updateFrames++;
+                update(delay);
+
             }
-            update(delay);
             renderTime += delay;
             if (renderTime > 1000) {
                 currentFPS = renderFrames;
@@ -831,10 +1179,10 @@ public class Demo01Frame extends JPanel implements KeyListener {
                 renderTime = 0;
             } else {
                 renderFrames++;
+                render(stats);
             }
-            render(stats);
             try {
-                Thread.sleep(delay > 1000 / FPS ? 1 : 1000 / FPS - delay);
+                Thread.sleep(delay > 1000 / UPS ? 1 : 1000 / UPS - delay);
             } catch (InterruptedException e) {
                 throw new RuntimeException(e);
             }
@@ -858,8 +1206,7 @@ public class Demo01Frame extends JPanel implements KeyListener {
 
     public void update(double delay) {
         // update all entities not stick to activeCamera.
-        entities.values().stream()
-            .filter(e -> !e.isStickToCamera())
+        entities.values()
             .forEach(e -> {
                 updateEntity(delay, e);
             });
@@ -870,22 +1217,34 @@ public class Demo01Frame extends JPanel implements KeyListener {
                 b.update(this, activeCamera, delay);
             });
         }
+
+        // update camera position
+        if (Optional.ofNullable(activeCamera).isPresent()) {
+            activeCamera.update(delay);
+            activeCamera.behaviors.forEach(b -> {
+                b.update(this, activeCamera, delay);
+            });
+        }
     }
 
     private void updateEntity(double delay, Entity e) {
-        applyPhysics(delay, e);
-        controlPlayAreaBoundaries(e);
+        if (!e.isStickToCamera()) {
+            applyPhysics(delay, e);
+            controlPlayAreaBoundaries(e);
+        }
         e.behaviors.forEach(b -> {
             b.update(this, e, delay);
         });
         // proceed with child entities (if any).
         e.child.forEach(c -> updateEntity(delay, c));
+
     }
 
     /**
-     * The applyPhysics method updates the physics properties of an {@link Entity}
-     * object based on the forces acting on it, the delay time,
-     * and the {@link Entity}'s material properties.
+     * The {@link Demo01Frame#applyPhysics(double, Entity)} method updates the
+     * physics properties of an {@link Entity} object based on the forces acting
+     * on it, the delay time, and the {@link Entity}'s material properties.
+     *
      * <ul>
      *     <li>Adds gravity to the entity's forces.</li>
      *     <li>Accumulates all forces to update the entity's acceleration.</li>
@@ -1006,6 +1365,7 @@ public class Demo01Frame extends JPanel implements KeyListener {
             .forEach(e -> {
                 drawEntity(e, g);
             });
+
         // draw all Behaviors about active camera.
         if (Optional.ofNullable(activeCamera).isPresent()) {
             activeCamera.behaviors.forEach(b -> {
@@ -1043,17 +1403,136 @@ public class Demo01Frame extends JPanel implements KeyListener {
                 g.setColor(e.borderColor);
                 g.draw(e);
             }
+            case "GameObject" -> {
+                drawGameObject(g, (GameObject) e);
+            }
+            case "AnimatedObject" -> {
+                drawAnimatedObject(g, (AnimatedObject) e);
+            }
+            case "ImageObject" -> {
+                drawImageObject(g, (ImageObject) e);
+            }
             case "TextObject" -> {
-                TextObject te = (TextObject) e;
-                g.setColor(te.borderColor);
-                g.setFont(te.font);
-                g.drawString(te.getText(), (int) te.getX(), (int) te.getY());
+                drawTextBox(g, (TextObject) e);
+            }
+            case "DialogBox" -> {
+                drawDialogBox(g, (DialogBox) e);
+            }
+            case "Button" -> {
+                drawButton(g, (Button) e);
             }
         }
         e.behaviors.forEach(b -> {
             b.draw(this, e, g);
         });
         e.child.forEach(c -> drawEntity(c, g));
+    }
+
+    private void drawAnimatedObject(Graphics2D g, AnimatedObject ao) {
+        // TODO Create the AnimatedObject drawing method
+    }
+
+    private void drawImageObject(Graphics2D g, ImageObject io) {
+        g.drawImage(
+            io.getImage(),
+            (int) io.getX(), (int) io.getY(),
+            (int) io.getWidth(), (int) io.getHeight(),
+            null);
+    }
+
+    private void drawGameObject(Graphics2D g, GameObject go) {
+        // TODO Create the GameObject drawing method
+    }
+
+    private static void drawTextBox(Graphics2D g, TextObject te) {
+        g.setColor(te.textColor);
+        if (Optional.ofNullable(te.font).isPresent()) {
+            g.setFont(te.font);
+        }
+        g.drawString(te.getText(), (int) te.getX(), (int) te.getY());
+    }
+
+    private void drawButton(Graphics2D g, Button te) {
+
+        int x = (int) ((Optional.ofNullable(te.getParent()).isPresent() && te.isRelativeToParent())
+            ? (te.getParent().getX() + te.getX())
+            : te.getX());
+
+        int y = (int) ((Optional.ofNullable(te.getParent()).isPresent() && te.isRelativeToParent())
+            ? (te.getParent().getY() + te.getY())
+            : te.getY());
+
+        if (Optional.ofNullable(te.font).isPresent()) {
+            g.setFont(te.font);
+        }
+
+        int fontHeight = g.getFontMetrics().getHeight();
+        int textWidth = g.getFontMetrics().stringWidth(te.getText());
+        int yOffset = g.getFontMetrics().getDescent();
+
+        te.setSize(te.getWidth(), fontHeight + 2 * DialogBox.margin);
+
+        drawEdgeRectangle(g, te);
+
+        g.setColor(te.textColor);
+        g.drawString(
+            te.getText(),
+            x + (int) ((te.getWidth() - textWidth) * 0.5) + DialogBox.margin,
+            y + DialogBox.margin + fontHeight - yOffset);
+    }
+
+    private static void drawEdgeRectangle(Graphics2D g, Entity te) {
+
+        int x = (int) ((Optional.ofNullable(te.getParent()).isPresent() && te.isRelativeToParent())
+            ? (te.getParent().getX() + te.getX())
+            : te.getX());
+
+        int y = (int) ((Optional.ofNullable(te.getParent()).isPresent() && te.isRelativeToParent())
+            ? (te.getParent().getY() + te.getY())
+            : te.getY());
+        g.setColor(Color.GRAY);
+        g.fillRect(x, y, (int) te.getWidth(), (int) te.getHeight());
+
+        g.setColor(Color.LIGHT_GRAY);
+        g.drawLine(
+            (int) te.getX(), (int) te.getY(),
+            (int) (x + te.getWidth()), (int) te.getY());
+        g.drawLine(
+            (int) te.getX(), (int) (te.getY()),
+            (int) (te.getX()), (int) (te.getY() + te.getHeight()));
+
+        g.setColor(Color.DARK_GRAY);
+        g.drawLine((int) te.getX(), (int) (te.getY() + te.getHeight()), (int) (x + te.getWidth()), (int) (te.getY() + te.getHeight()));
+        g.drawLine((int) (te.getX() + te.getWidth()), (int) te.getY(), (int) (x + te.getWidth()), (int) (te.getY() + te.getHeight()));
+
+        g.setColor(new Color(0.10f, 0.10f, 0.10f));
+        g.drawRect(x - 1, y - 1, (int) (te.getWidth() + 2), (int) (te.getHeight() + 2));
+
+        g.setColor(Color.GRAY);
+        g.drawLine(
+            (int) (te.getX() + te.getWidth()), (int) (te.getY()),
+            (int) (te.getX() + te.getWidth()), (int) (te.getY()));
+        g.drawLine(
+            (int) (te.getX()), (int) (te.getY() + te.getHeight()),
+            (int) (te.getX()), (int) (te.getY() + te.getHeight()));
+    }
+
+    private static void drawDialogBox(Graphics2D g, DialogBox db) {
+        if (Optional.ofNullable(db.font).isPresent()) {
+            g.setFont(db.font);
+        }
+        int textHeight = g.getFontMetrics().getHeight();
+        int textWidth = g.getFontMetrics().stringWidth(db.getText());
+
+        g.setColor(Color.GRAY);
+        g.fillRect((int) db.getX(), (int) db.getY(), (int) db.getWidth(), (int) db.getHeight());
+
+        g.setColor(db.borderColor);
+        g.drawRect((int) db.getX(), (int) db.getY(), (int) db.getWidth(), (int) db.getHeight());
+
+        g.setColor(db.textColor);
+        g.drawString(db.getText(), (int) (db.getX() + (db.getWidth() - textWidth) * 0.5 - DialogBox.margin * 2),
+            (int) (db.getY() + (db.getHeight() * 0.30) + DialogBox.margin + DialogBox.padding));
     }
 
     /*----- releasing objects and resources -----*/
@@ -1127,6 +1606,7 @@ public class Demo01Frame extends JPanel implements KeyListener {
             case KeyEvent.VK_ESCAPE -> {
                 DialogBox db = (DialogBox) entities.get("exitConfirmBox");
                 db.setVisible(true);
+                db.setChildVisible(true);
             }
             // reset the scene on CTRL+Z
             case KeyEvent.VK_Z -> {
