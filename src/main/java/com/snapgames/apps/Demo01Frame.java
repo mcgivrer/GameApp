@@ -9,6 +9,7 @@ import java.awt.geom.Point2D;
 import java.awt.geom.Rectangle2D;
 import java.awt.image.BufferedImage;
 import java.io.FileInputStream;
+import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.net.URISyntaxException;
 import java.nio.file.Files;
@@ -991,10 +992,15 @@ public class Demo01Frame implements KeyListener {
      * @throws IOException in case of issue during file reading.
      */
     public void loadConfiguration(String configFilePath) throws IOException, URISyntaxException {
-        String rootPath = this.getClass().getClassLoader().getResource("/").getPath();
-        config.load(new FileInputStream(rootPath + "/" + configFilePath));
-        config.load(this.getClass().getResourceAsStream(configFilePath));
-        info("Reading JAR contained configuration from file %s", configFilePath);
+        Path rootPath = Paths.get(this.getClass().getProtectionDomain().getCodeSource().getLocation().toURI()).toRealPath();
+        try {
+            config.load(new FileInputStream(rootPath.toString() + "/configuration.properties"));
+            info("Reading configuration from file configuration.properties at side JAR");
+
+        } catch (IOException ioe) {
+            config.load(this.getClass().getResourceAsStream(configFilePath));
+            info("Reading JAR contained configuration from file %s", configFilePath);
+        }
 
         config.forEach((k, v) -> {
             info("Configuration| loading key [%s] set to [%s]", k, v);
