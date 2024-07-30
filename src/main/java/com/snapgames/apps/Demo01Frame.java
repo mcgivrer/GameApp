@@ -720,6 +720,8 @@ public class Demo01Frame implements KeyListener {
 
         public Camera setTarget(Entity target) {
             this.target = target;
+            setPosition(target.getX(), target.getY());
+            this.y = target.y;
             return this;
         }
 
@@ -744,6 +746,9 @@ public class Demo01Frame implements KeyListener {
         }
     }
 
+    /**
+     * define the alignment for the affected Entity relative to its parent one.
+     */
     public enum Align {
         LEFT,
         RIGHT,
@@ -752,6 +757,14 @@ public class Demo01Frame implements KeyListener {
         BOTTOM;
     }
 
+
+    /**
+     * This {@link Behavior} implementation is used to automatically move child {@link TextObject} and {@link Button}
+     * to their new position according to the {@link Align} attribute.
+     *
+     * @author Frédéric Delorme
+     * @since 1.0.0
+     */
     public static class AlignBehavior implements Behavior {
         @Override
         public void update(Demo01Frame app, Entity e, double elapsed) {
