@@ -583,6 +583,15 @@ public class Demo01Frame implements KeyListener {
          */
         default void onKeyReleased(Demo01Frame app, Entity e, KeyEvent k) {
         }
+
+        /**
+         * On activation of the {@link Entity}, this Behavior is processed.
+         *
+         * @param app the parent application
+         * @param e   the concerned {@link Entity}
+         */
+        default void onActivate(Demo01Frame app, Entity e) {
+        }
     }
 
     /**
@@ -723,10 +732,10 @@ public class Demo01Frame implements KeyListener {
             if (Optional.ofNullable(target).isPresent()) {
                 this.x += Math
                     .ceil((target.x + (target.width * 0.5) - ((viewport.getWidth()) * 0.5) - this.x)
-                        * tweenFactor * Math.min(dt, 10));
+                        * tweenFactor * Math.min(dt, 1));
                 this.y += Math
                     .ceil((target.y + (target.height * 0.5) - ((viewport.getHeight()) * 0.5) - this.y)
-                        * tweenFactor * Math.min(dt, 10));
+                        * tweenFactor * Math.min(dt, 1));
 
                 this.viewport.setRect(
                     this.x, this.y,
@@ -841,7 +850,11 @@ public class Demo01Frame implements KeyListener {
 
     private static ResourceBundle messages = ResourceBundle.getBundle("i18n/messages");
     private Properties config = new Properties();
+
     private static boolean exit = false;
+    private static boolean pause = false;
+
+
     private static int debug = 0;
     private static String debugFilter = "";
     private static String loggerFilter = "ERR,WARN,INFO";
@@ -902,7 +915,18 @@ public class Demo01Frame implements KeyListener {
                 }
                 case "exit", "x" -> {
                     config.setProperty("app.exit", keyVal[1]);
-
+                }
+                case "debug", "d" -> {
+                    config.setProperty("app.debug.level", keyVal[1]);
+                }
+                case "ups" -> {
+                    config.setProperty("app.update.ups", keyVal[1]);
+                }
+                case "fps" -> {
+                    config.setProperty("app.render.fps", keyVal[1]);
+                }
+                default -> {
+                    error("This argument %s is unknown", s);
                 }
             }
         });
@@ -917,6 +941,8 @@ public class Demo01Frame implements KeyListener {
     public void parseConfiguration() {
         // set the default FPS for the game
         FPS = Integer.parseInt(config.getProperty("app.render.fps", "60"));
+        // set the default processing update pace for the game
+        UPS = Integer.parseInt(config.getProperty("app.update.ups", "60"));
         // is exit because of test mode requested ?
         exit = Boolean.parseBoolean(config.getProperty("app.exit", "false"));
         debug = Integer.parseInt(config.getProperty("app.debug.level", "0"));
@@ -1054,6 +1080,12 @@ public class Demo01Frame implements KeyListener {
             .setBorderColor(Color.BLACK)
             .add(new Behavior() {
                 @Override
+                public void onActivate(Demo01Frame app, Entity e) {
+                    setPause(true);
+                }
+            })
+            .add(new Behavior() {
+                @Override
                 public void onKeyReleased(Demo01Frame app, Entity e, KeyEvent k) {
                     if (k.getKeyCode() == KeyEvent.VK_Y) {
                         exit = true;
@@ -1061,6 +1093,7 @@ public class Demo01Frame implements KeyListener {
                     if (k.getKeyCode() == KeyEvent.VK_N) {
                         exit = false;
                         ((DialogBox) e).setVisible(false);
+                        setPause(false);
                     }
                 }
             })
@@ -1142,6 +1175,14 @@ public class Demo01Frame implements KeyListener {
         entities.put(entity.name, entity);
     }
 
+    public void activateEntity(Entity e, boolean a) {
+        e.setActive(a);
+        e.behaviors.forEach(b -> b.onActivate(this, e));
+        e.child.forEach(c -> {
+            activateEntity(c, a);
+        });
+    }
+
     /*----- Game loop -----*/
 
     public void loop() {
@@ -1181,8 +1222,11 @@ public class Demo01Frame implements KeyListener {
                 renderFrames++;
                 render(stats);
             }
+
             try {
                 Thread.sleep(delay > 1000 / UPS ? 1 : 1000 / UPS - delay);
+            } catch (IllegalArgumentException iae) {
+                error("Unable to wait for a negative number of ms !");
             } catch (InterruptedException e) {
                 throw new RuntimeException(e);
             }
@@ -1193,10 +1237,22 @@ public class Demo01Frame implements KeyListener {
         }
     }
 
+    private static boolean isPause() {
+        return pause;
+    }
+
+    /**
+     * Process all input management on the current scene {@link Entity}'s.
+     */
     public void input() {
         entities.values().stream().filter(Entity::isActive).forEach(this::processInputBehaviorForEntity);
     }
 
+    /**
+     * Apply all the {@link Behavior#input()} to the {@link Entity}.
+     *
+     * @param e the {@link Entity} to be processed abut input management.
+     */
     private void processInputBehaviorForEntity(Entity e) {
         e.behaviors.forEach(b -> {
             b.input(this, e);
@@ -1204,6 +1260,13 @@ public class Demo01Frame implements KeyListener {
         e.child.forEach(this::processInputBehaviorForEntity);
     }
 
+    /**
+     * Update all entities from the current scene
+     *
+     * <p>It will refresh their status, position, velocity and acceleration, and active state.</p>
+     *
+     * @param delay The elapsed time since previous call.
+     */
     public void update(double delay) {
         // update all entities not stick to activeCamera.
         entities.values()
@@ -1227,8 +1290,16 @@ public class Demo01Frame implements KeyListener {
         }
     }
 
+    /**
+     * According to the {@link Entity} state and nature,
+     *
+     * <p>This {@link Entity} will be fully updated on physics, state and collision.</p>
+     *
+     * @param delay the elapsed time since previous call (in ms)
+     * @param e     the {@link Entity} instance to be updated.
+     */
     private void updateEntity(double delay, Entity e) {
-        if (!e.isStickToCamera()) {
+        if (!e.isStickToCamera() && !isPause()) {
             applyPhysics(delay, e);
             controlPlayAreaBoundaries(e);
         }
@@ -1237,7 +1308,6 @@ public class Demo01Frame implements KeyListener {
         });
         // proceed with child entities (if any).
         e.child.forEach(c -> updateEntity(delay, c));
-
     }
 
     /**
@@ -1549,6 +1619,10 @@ public class Demo01Frame implements KeyListener {
         app.run(argc);
     }
 
+    public static void setPause(boolean p) {
+        pause = p;
+    }
+
     /*----- Logger API -----*/
 
     public static void log(String level, String message, Object... args) {
@@ -1605,8 +1679,7 @@ public class Demo01Frame implements KeyListener {
             // exit application on ESCAPE
             case KeyEvent.VK_ESCAPE -> {
                 DialogBox db = (DialogBox) entities.get("exitConfirmBox");
-                db.setVisible(true);
-                db.setChildVisible(true);
+                activateEntity(db, true);
             }
             // reset the scene on CTRL+Z
             case KeyEvent.VK_Z -> {
@@ -1623,6 +1696,9 @@ public class Demo01Frame implements KeyListener {
                 if (k.isControlDown()) {
                     debug = (debug < 5) ? debug + 1 : 0;
                 }
+            }
+            case KeyEvent.VK_P, KeyEvent.VK_PAUSE -> {
+                setPause(!isPause());
             }
             case KeyEvent.VK_PAGE_UP -> {
                 generateEntities("enemy_", 10);
