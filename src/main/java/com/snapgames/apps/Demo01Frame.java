@@ -8,7 +8,12 @@ import java.awt.event.KeyListener;
 import java.awt.geom.Point2D;
 import java.awt.geom.Rectangle2D;
 import java.awt.image.BufferedImage;
+import java.io.FileInputStream;
 import java.io.IOException;
+import java.net.URISyntaxException;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.nio.file.Paths;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
 import java.util.List;
@@ -96,8 +101,8 @@ public class Demo01Frame implements KeyListener {
         // mass
         public double mass = 1.0;
 
-        // this Entity will be stick to camera viewport.
-        public boolean stickToCamera = false;
+        // this Entity will be relative to camera viewport.
+        public boolean relativeToCamera = false;
 
         // use for child entity for update/rendering operation.
         public boolean relativeToParent = false;
@@ -152,8 +157,8 @@ public class Demo01Frame implements KeyListener {
             return this;
         }
 
-        public Entity setStickToCamera(boolean s) {
-            this.stickToCamera = s;
+        public Entity setRelativeToCamera(boolean s) {
+            this.relativeToCamera = s;
             return this;
         }
 
@@ -176,8 +181,8 @@ public class Demo01Frame implements KeyListener {
             return active;
         }
 
-        public boolean isStickToCamera() {
-            return this.stickToCamera;
+        public boolean isRelativeToCamera() {
+            return this.relativeToCamera;
         }
 
         public Entity setMaterial(Material m) {
@@ -720,8 +725,6 @@ public class Demo01Frame implements KeyListener {
 
         public Camera setTarget(Entity target) {
             this.target = target;
-            setPosition(target.getX(), target.getY());
-            this.y = target.y;
             return this;
         }
 
@@ -732,22 +735,19 @@ public class Demo01Frame implements KeyListener {
 
         public void update(double dt) {
             if (Optional.ofNullable(target).isPresent()) {
-                this.x += Math
-                    .ceil((target.x + (target.width * 0.5) - ((viewport.getWidth()) * 0.5) - this.x)
+                this.x += Math.ceil(
+                    (target.getX() + (target.getWidth() * 0.5) - ((viewport.getWidth()) * 0.5) - this.getX())
                         * tweenFactor * Math.min(dt, 1));
-                this.y += Math
-                    .ceil((target.y + (target.height * 0.5) - ((viewport.getHeight()) * 0.5) - this.y)
+                this.y += Math.ceil(
+                    (target.getY() + (target.getHeight() * 0.5) - ((viewport.getHeight()) * 0.5) - this.getY())
                         * tweenFactor * Math.min(dt, 1));
-
-                this.viewport.setRect(
-                    this.x, this.y,
-                    this.getWidth(), this.getHeight());
+                this.viewport.setRect(this);
             }
         }
     }
 
     /**
-     * define the alignment for the affected Entity relative to its parent one.
+     * Define the alignment for the affected Entity relative to its parent one.
      */
     public enum Align {
         LEFT,
@@ -812,7 +812,7 @@ public class Demo01Frame implements KeyListener {
             setSize(100, 48);
             setPosition((buffer.getWidth() - this.width) * 0.5, (buffer.getHeight() - this.height) * 0.5);
             setVisible(false);
-            setStickToCamera(true);
+            setRelativeToCamera(true);
             setFillColor(Color.BLUE);
             setBorderColor(Color.CYAN);
             setTextColor(Color.WHITE);
@@ -850,7 +850,7 @@ public class Demo01Frame implements KeyListener {
 
         public Button(String name) {
             super(name);
-            setStickToCamera(true);
+            setRelativeToCamera(true);
             setAlign(Align.LEFT);
         }
 
@@ -944,10 +944,12 @@ public class Demo01Frame implements KeyListener {
             }
         });
         try {
-            loadConfiguration();
+            loadConfiguration("/config.properties");
             parseConfiguration();
         } catch (IOException e) {
             info("Configuration|Unable to read configuration file: %s", e.getMessage());
+        } catch (URISyntaxException e) {
+            throw new RuntimeException(e);
         }
     }
 
@@ -958,6 +960,7 @@ public class Demo01Frame implements KeyListener {
         UPS = Integer.parseInt(config.getProperty("app.update.ups", "60"));
         // is exit because of test mode requested ?
         exit = Boolean.parseBoolean(config.getProperty("app.exit", "false"));
+        // define debug output level, on console.
         debug = Integer.parseInt(config.getProperty("app.debug.level", "0"));
         // create the window
         window = new JFrame(config.getProperty("app.window.title", "Demo01"));
@@ -980,10 +983,21 @@ public class Demo01Frame implements KeyListener {
         world.gravity = Double.parseDouble(config.getProperty("app.world.gravity", "0.0981"));
     }
 
-    public void loadConfiguration() throws IOException {
-        config.load(this.getClass().getResourceAsStream("/config.properties"));
+    /**
+     * Read the configuration file from the configFilePath in the JAR or for Test,
+     * or directly from an external file configuration.properties
+     *
+     * @param configFilePath path to the configuration file to be loaded
+     * @throws IOException in case of issue during file reading.
+     */
+    public void loadConfiguration(String configFilePath) throws IOException, URISyntaxException {
+        String rootPath = this.getClass().getClassLoader().getResource("/").getPath();
+        config.load(new FileInputStream(rootPath + "/" + configFilePath));
+        config.load(this.getClass().getResourceAsStream(configFilePath));
+        info("Reading JAR contained configuration from file %s", configFilePath);
+
         config.forEach((k, v) -> {
-            info("Configuration| key [%s]=[%s]", k, v);
+            info("Configuration| loading key [%s] set to [%s]", k, v);
         });
     }
 
@@ -1014,7 +1028,7 @@ public class Demo01Frame implements KeyListener {
             .setFont(scoreFont.deriveFont(18.0f))
             .setPosition(20, 32)
             .setBorderColor(Color.WHITE)
-            .setStickToCamera(true)
+            .setRelativeToCamera(true)
             .add(new Behavior() {
                 @Override
                 public void input(Demo01Frame app, Entity e) {
@@ -1028,7 +1042,7 @@ public class Demo01Frame implements KeyListener {
             .setFont(textFont.deriveFont(8.0f))
             .setPosition(buffer.getWidth() - 32, 32)
             .setBorderColor(Color.WHITE)
-            .setStickToCamera(true)
+            .setRelativeToCamera(true)
             .add(new Behavior() {
                 @Override
                 public void input(Demo01Frame app, Entity e) {
@@ -1312,7 +1326,7 @@ public class Demo01Frame implements KeyListener {
      * @param e     the {@link Entity} instance to be updated.
      */
     private void updateEntity(double delay, Entity e) {
-        if (!e.isStickToCamera() && !isPause()) {
+        if (!e.isRelativeToCamera() && !isPause()) {
             applyPhysics(delay, e);
             controlPlayAreaBoundaries(e);
         }
@@ -1434,7 +1448,7 @@ public class Demo01Frame implements KeyListener {
             g.drawRect(0, 0, (int) world.playArea.getWidth(), (int) world.playArea.getHeight());
         }
         //draw everything
-        entities.values().stream().filter(e -> e.isActive() && !e.isStickToCamera())
+        entities.values().stream().filter(e -> e.isActive() && !e.isRelativeToCamera())
             .sorted(Comparator.comparingInt(a -> a.priority))
             .forEach(e -> {
                 drawEntity(e, g);
@@ -1443,7 +1457,7 @@ public class Demo01Frame implements KeyListener {
             g.translate(activeCamera.x, activeCamera.y);
         }
         // draw all objects stick to the Camera.
-        entities.values().stream().filter(e -> e.isActive() && e.isStickToCamera())
+        entities.values().stream().filter(e -> e.isActive() && e.isRelativeToCamera())
             .sorted(Comparator.comparingInt(a -> a.priority))
             .forEach(e -> {
                 drawEntity(e, g);
