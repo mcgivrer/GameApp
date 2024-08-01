@@ -3,16 +3,13 @@ package com.snapgames.apps;
 import javax.imageio.ImageIO;
 import javax.swing.*;
 import java.awt.*;
-import java.awt.event.KeyEvent;
-import java.awt.event.KeyListener;
+import java.awt.event.*;
 import java.awt.geom.Point2D;
 import java.awt.geom.Rectangle2D;
 import java.awt.image.BufferedImage;
 import java.io.FileInputStream;
-import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.net.URISyntaxException;
-import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.time.LocalDateTime;
@@ -32,7 +29,7 @@ import java.util.concurrent.ConcurrentHashMap;
  *     <li><code>update</code> to compute {@link Entity} moves and {@link Behavior}'s
  *     into the game {@link World}</li>
  *     <li><code>render</code> to draw ann {@link Entity}'son internal buffer,
- *     then sync on the {@link JFrame} with a buffer strategy</li>
+ *     then sync on the {@link javax.swing.JFrame} with a buffer strategy</li>
  * </ul></p>
  *
  * <p>It also provide some subclasses as components:
@@ -48,7 +45,7 @@ import java.util.concurrent.ConcurrentHashMap;
  * @author Frédéric Delorme frederic.delorme@gmail.com
  * @since 1.0.0
  */
-public class Demo01Frame implements KeyListener {
+public class Demo01Frame implements KeyListener, MouseListener, MouseWheelListener {
 
     /**
      * <p>The {@link Entity} class is the Core object for any Scene.</p>
@@ -598,6 +595,40 @@ public class Demo01Frame implements KeyListener {
          */
         default void onActivate(Demo01Frame app, Entity e) {
         }
+
+        /**
+         * On mouse entering the {@link Entity} area
+         *
+         * @param app    the parent application
+         * @param e      the concerned {@link Entity}
+         * @param mouseX mouse X position
+         * @param mouseY mouse y position
+         */
+        default void onMouseIn(Demo01Frame app, Entity e, double mouseX, double mouseY) {
+        }
+
+        /**
+         * On mouse moving out of the {@link Entity} area
+         *
+         * @param app    the parent application
+         * @param e      the concerned {@link Entity}
+         * @param mouseX mouse X position
+         * @param mouseY mouse y position
+         */
+        default void onMouseOut(Demo01Frame app, Entity e, double mouseX, double mouseY) {
+        }
+
+        /**
+         * On mouse button click on the Entity area
+         *
+         * @param app      the parent application
+         * @param e        the concerned {@link Entity}
+         * @param mouseX   mouse X position
+         * @param mouseY   mouse y position
+         * @param buttonId the button number that has been clicked.
+         */
+        default void onMouseClick(Demo01Frame app, Entity e, double mouseX, double mouseY, int buttonId) {
+        }
     }
 
     /**
@@ -748,7 +779,23 @@ public class Demo01Frame implements KeyListener {
     }
 
     /**
-     * Define the alignment for the affected Entity relative to its parent one.
+     * Define the alignment for the affected {@link Entity} relative to its <code>parent</code> one.
+     *
+     * <p>Align enumeration is used to set automatic position relatively to the
+     * <code>parent</code> {@link Entity} with {@link AlignBehavior}</p>
+     * <p>Example:
+     * <pre>
+     *     Button bt = new Button("MyButton")
+     *       .setParent(myDialogBox)
+     *       .setAlign(Align.LEFT);
+     * </pre>
+     * </p>
+     * <p>This created button will be align on the internal left of the parent Entity,
+     * taking care of {@link UIObject#margin} and {@link UIObject#padding}.</p>
+     *
+     * @see TextObject
+     * @see Button
+     * @see AlignBehavior
      */
     public enum Align {
         LEFT,
@@ -757,7 +804,6 @@ public class Demo01Frame implements KeyListener {
         TOP,
         BOTTOM;
     }
-
 
     /**
      * This {@link Behavior} implementation is used to automatically move child {@link TextObject} and {@link Button}
@@ -774,16 +820,16 @@ public class Demo01Frame implements KeyListener {
                     case "Button", "TextBox" -> {
                         switch (((Button) c).align) {
                             case LEFT -> {
-                                c.x = e.x + DialogBox.margin + DialogBox.padding;
-                                c.y = e.y + e.height - (c.height + DialogBox.margin + DialogBox.padding);
+                                c.x = e.x + UIObject.margin + UIObject.padding;
+                                c.y = e.y + e.height - (c.height + UIObject.margin + UIObject.padding);
                             }
                             case RIGHT -> {
-                                c.x = (e.x + e.width) - (c.width + DialogBox.margin + DialogBox.padding);
-                                c.y = e.y + e.height - (c.height + DialogBox.margin + DialogBox.padding);
+                                c.x = (e.x + e.width) - (c.width + UIObject.margin + UIObject.padding);
+                                c.y = e.y + e.height - (c.height + UIObject.margin + UIObject.padding);
                             }
                             case CENTER -> {
-                                c.x = (e.x + (e.width * 0.5)) - (DialogBox.margin + DialogBox.padding);
-                                c.y = e.y + e.height - (c.height + DialogBox.margin + DialogBox.padding);
+                                c.x = (e.x + (e.width * 0.5)) - (UIObject.margin + UIObject.padding);
+                                c.y = e.y + e.height - (c.height + UIObject.margin + UIObject.padding);
                             }
                             default -> {
                                 // processing TOP,BOTTOM will come later...
@@ -798,6 +844,11 @@ public class Demo01Frame implements KeyListener {
         }
     }
 
+    public static class UIObject {
+        public static int margin = 2;
+        public static int padding = 2;
+    }
+
     /**
      * A {@link DialogBox} entity will create a dialog with a text. Adding child Button will add new operations
      * to activate some processing.
@@ -805,8 +856,6 @@ public class Demo01Frame implements KeyListener {
      * By default, a DialogBox is not active; it must be activated to be displayed.
      */
     public static class DialogBox extends TextObject {
-        public static int margin = 2;
-        public static int padding = 2;
 
         public DialogBox(String name) {
             super(name);
@@ -1573,15 +1622,15 @@ public class Demo01Frame implements KeyListener {
         int textWidth = g.getFontMetrics().stringWidth(te.getText());
         int yOffset = g.getFontMetrics().getDescent();
 
-        te.setSize(te.getWidth(), fontHeight + 2 * DialogBox.margin);
+        te.setSize(te.getWidth(), fontHeight + 2 * UIObject.margin);
 
         drawEdgeRectangle(g, te);
 
         g.setColor(te.textColor);
         g.drawString(
             te.getText(),
-            x + (int) ((te.getWidth() - textWidth) * 0.5) + DialogBox.margin,
-            y + DialogBox.margin + fontHeight - yOffset);
+            x + (int) ((te.getWidth() - textWidth) * 0.5) + UIObject.margin,
+            y + UIObject.margin + fontHeight - yOffset);
     }
 
     private static void drawEdgeRectangle(Graphics2D g, Entity te) {
@@ -1634,8 +1683,8 @@ public class Demo01Frame implements KeyListener {
         g.drawRect((int) db.getX(), (int) db.getY(), (int) db.getWidth(), (int) db.getHeight());
 
         g.setColor(db.textColor);
-        g.drawString(db.getText(), (int) (db.getX() + (db.getWidth() - textWidth) * 0.5 - DialogBox.margin * 2),
-            (int) (db.getY() + (db.getHeight() * 0.30) + DialogBox.margin + DialogBox.padding));
+        g.drawString(db.getText(), (int) (db.getX() + (db.getWidth() - textWidth) * 0.5 - UIObject.margin * 2),
+            (int) (db.getY() + (db.getHeight() * 0.30) + UIObject.margin + UIObject.padding));
     }
 
     /*----- releasing objects and resources -----*/
@@ -1747,4 +1796,35 @@ public class Demo01Frame implements KeyListener {
         return keys[keyCode];
     }
 
+    /*----- Mouse event management -----*/
+
+    @Override
+    public void mouseClicked(MouseEvent e) {
+
+    }
+
+    @Override
+    public void mousePressed(MouseEvent e) {
+
+    }
+
+    @Override
+    public void mouseReleased(MouseEvent e) {
+
+    }
+
+    @Override
+    public void mouseEntered(MouseEvent e) {
+
+    }
+
+    @Override
+    public void mouseExited(MouseEvent e) {
+
+    }
+
+    @Override
+    public void mouseWheelMoved(MouseWheelEvent e) {
+
+    }
 }
