@@ -630,6 +630,30 @@ public class Demo01Frame implements KeyListener, MouseListener, MouseWheelListen
          */
         default void onMouseClick(Demo01Frame app, Entity e, double mouseX, double mouseY, int buttonId) {
         }
+
+        /**
+         * On the mouse button pressed on the {@link Entity} area, this Behavior is processed.
+         *
+         * @param app      the parent application
+         * @param e        the concerned {@link Entity}
+         * @param mouseX   mouse X position
+         * @param mouseY   mouse y position
+         * @param buttonId the button number that has been clicked.
+         */
+        default void onMousePressed(Demo01Frame app, Entity e, double mouseX, double mouseY, int buttonId) {
+        }
+
+        /**
+         * On the mouse button released on the {@link Entity} area, this Behavior is processed.
+         *
+         * @param app      the parent application
+         * @param e        the concerned {@link Entity}
+         * @param mouseX   mouse X position
+         * @param mouseY   mouse y position
+         * @param buttonId the button number that has been clicked.
+         */
+        default void onMouseReleased(Demo01Frame app, Entity e, double mouseX, double mouseY, int buttonId) {
+        }
     }
 
     /**
@@ -855,7 +879,19 @@ public class Demo01Frame implements KeyListener, MouseListener, MouseWheelListen
         public static int margin = 2;
         public static int padding = 2;
         public static Color mouseOnColor = Color.LIGHT_GRAY;
+        public static Color mousePressedColor = mouseOnColor;
         public static Color mouseOutColor = Color.GRAY;
+        public static Color mouseReleasedColor = mouseOutColor;
+
+        @Override
+        default void onMousePressed(Demo01Frame app, Entity e, double mouseX, double mouseY, int buttonId) {
+            e.setFillColor(mousePressedColor);
+        }
+
+        @Override
+        default void onMouseReleased(Demo01Frame app, Entity e, double mouseX, double mouseY, int buttonId) {
+            e.setFillColor(mouseReleasedColor);
+        }
 
         @Override
         default void onMouseIn(Demo01Frame app, Entity e, double mouseX, double mouseY) {
@@ -865,6 +901,7 @@ public class Demo01Frame implements KeyListener, MouseListener, MouseWheelListen
         @Override
         default void onMouseOut(Demo01Frame app, Entity e, double mouseX, double mouseY) {
             e.setFillColor(mouseOutColor);
+
         }
     }
 
@@ -1173,13 +1210,14 @@ public class Demo01Frame implements KeyListener, MouseListener, MouseWheelListen
                 .setFillColor(Color.DARK_GRAY)
                 .setBorderColor(Color.BLACK)
                 .setActive(false)
+                .setPriority(10)
                 .add(new Behavior() {
                     @Override
                     public void onActivate(Demo01Frame app, Entity e) {
                         setPause(true);
                     }
                 })
-                .add(new Behavior() {
+                .add(new UIObject() {
                     @Override
                     public void onKeyReleased(Demo01Frame app, Entity e, KeyEvent k) {
                         if (k.getKeyCode() == KeyEvent.VK_Y) {
@@ -1204,7 +1242,8 @@ public class Demo01Frame implements KeyListener, MouseListener, MouseWheelListen
                 .setBorderColor(Color.GRAY)
                 .setActive(false)
                 .setSize(40, 12)
-                .add(new Behavior() {
+                .setPriority(20)
+                .add(new UIObject() {
                     @Override
                     public void onMouseClick(Demo01Frame app, Entity e, double mouseX, double mouseY, int buttonId) {
                         exit = true;
@@ -1222,11 +1261,12 @@ public class Demo01Frame implements KeyListener, MouseListener, MouseWheelListen
                 .setBorderColor(Color.GRAY)
                 .setActive(false)
                 .setSize(40, 12)
-                .add(new Behavior() {
+                .setPriority(20)
+                .add(new UIObject() {
                     @Override
                     public void onMouseClick(Demo01Frame app, Entity e, double mouseX, double mouseY, int buttonId) {
                         exit = false;
-                        DialogBox db = (DialogBox) entities.get("exitConfirmBox");
+                        DialogBox db = (DialogBox) getEntity("exitConfirmBox");
                         db.setVisible(false);
                         setPause(false);
                         e.setFillColor(Color.CYAN);
@@ -1237,6 +1277,10 @@ public class Demo01Frame implements KeyListener, MouseListener, MouseWheelListen
         // add the button to the dialog box.
         exitConfirmation.add(okButton);
         exitConfirmation.add(cancelButton);
+    }
+
+    public <T extends Entity> T getEntity(String entityName) {
+        return (T) entities.get(entityName);
     }
 
     private void generateEntities(String rootName, int nbEntities) {
@@ -1338,7 +1382,7 @@ public class Demo01Frame implements KeyListener, MouseListener, MouseWheelListen
         long currentFPS = 0;
 
         Map<String, Object> stats = new ConcurrentHashMap<>();
-        while (!exit) {
+        do {
             startTime = System.currentTimeMillis();
             input();
             delay = startTime - previousTime;
@@ -1373,7 +1417,7 @@ public class Demo01Frame implements KeyListener, MouseListener, MouseWheelListen
             stats.put("fps", currentFPS);
             stats.put("ups", currentUPS);
             stats.put("ft", delay);
-        }
+        } while (!exit);
     }
 
     private static boolean isPause() {
@@ -1548,7 +1592,7 @@ public class Demo01Frame implements KeyListener, MouseListener, MouseWheelListen
         g.setBackground(backGroundColor);
         g.clearRect(0, 0, buffer.getWidth(), buffer.getHeight());
         // move Camera
-        Entity player = entities.get("player");
+        Entity player = getEntity("player");
         if (Optional.ofNullable(activeCamera).isPresent()) {
             g.translate(-activeCamera.x, -activeCamera.y);
         }
@@ -1844,7 +1888,7 @@ public class Demo01Frame implements KeyListener, MouseListener, MouseWheelListen
         switch (k.getKeyCode()) {
             // exit application on ESCAPE
             case KeyEvent.VK_ESCAPE -> {
-                DialogBox db = (DialogBox) entities.get("exitConfirmBox");
+                DialogBox db = (DialogBox) getEntity("exitConfirmBox");
                 activateEntity(db, true);
             }
             // reset the scene on CTRL+Z
@@ -1884,28 +1928,47 @@ public class Demo01Frame implements KeyListener, MouseListener, MouseWheelListen
 
     @Override
     public void mouseClicked(MouseEvent e) {
-        entities.values().stream()
-                .filter(entity -> entity.contains(mouseX, mouseY))
-                .forEach(entity -> {
-                    info("Entity %s has been clicked", entity.name);
-                    entity.behaviors
-                            .forEach(b -> b.onMouseClick(this, entity, mouseX, mouseY, e.getButton()));
-                });
+        if (getEntityClicked(mouseX, mouseY).isPresent()) {
+            Entity entityClicked = getEntityClicked(mouseX, mouseY).get();
+            info("Entity %s has been clicked", entityClicked.name);
+            entityClicked.behaviors
+                    .forEach(b -> b.onMouseClick(this, entityClicked, mouseX, mouseY, e.getButton()));
+        }
+    }
+
+    private Optional<Entity> getEntityClicked(double mouseX, double mouseY) {
+        Optional<Entity> entityClicked = entities.values().stream()
+                .filter(entity -> Arrays.stream(entity.getClass().getInterfaces()).filter(i -> i.equals(UIObject.class)).findFirst().isPresent()
+                        && entity.isActive()
+                        && entity.contains(mouseX, mouseY)).sorted((a, b) -> Integer.compare(b.priority, a.priority)).findFirst();
+
+        return entityClicked;
     }
 
     @Override
     public void mousePressed(MouseEvent e) {
+        if (getEntityClicked(mouseX, mouseY).isPresent()) {
+            Entity entityClicked = getEntityClicked(mouseX, mouseY).get();
+            info("Entity %s has been clicked", entityClicked.name);
+            entityClicked.behaviors
+                    .forEach(b -> b.onMousePressed(this, entityClicked, mouseX, mouseY, e.getButton()));
+        }
     }
 
     @Override
     public void mouseReleased(MouseEvent e) {
-
+        if (getEntityClicked(mouseX, mouseY).isPresent()) {
+            Entity entityClicked = getEntityClicked(mouseX, mouseY).get();
+            info("Entity %s has been clicked", entityClicked.name);
+            entityClicked.behaviors
+                    .forEach(b -> b.onMouseReleased(this, entityClicked, mouseX, mouseY, e.getButton()));
+        }
     }
 
     @Override
     public void mouseEntered(MouseEvent e) {
         entities.values().stream()
-                .filter(entity -> entity.contains(mouseX, mouseY))
+                .filter(entity -> entity.isActive() && entity.contains(mouseX, mouseY))
                 .forEach(entity -> entity.behaviors
                         .forEach(b -> b.onMouseIn(this, entity, mouseX, mouseY)));
     }
@@ -1913,7 +1976,7 @@ public class Demo01Frame implements KeyListener, MouseListener, MouseWheelListen
     @Override
     public void mouseExited(MouseEvent e) {
         entities.values().stream()
-                .filter(entity -> entity.contains(mouseX, mouseY))
+                .filter(entity -> entity.isActive() && entity.contains(mouseX, mouseY))
                 .forEach(entity -> {
                     entity.behaviors
                             .forEach(b -> b.onMouseOut(this, entity, mouseX, mouseY));
@@ -1936,5 +1999,25 @@ public class Demo01Frame implements KeyListener, MouseListener, MouseWheelListen
         this.realMouseY = e.getY();
         this.mouseX = (realMouseX * ((double) buffer.getWidth() / window.getWidth()));
         this.mouseY = (realMouseY * ((double) buffer.getHeight() / window.getHeight()));
+
+        if (getEntityClicked(mouseX, mouseY).isPresent()) {
+            Entity entityClicked = getEntityClicked(mouseX, mouseY).get();
+
+            if (entityClicked.getAttribute("mouse_hover", false)) {
+                entityClicked.behaviors
+                        .forEach(b -> b.onMouseOut(this, entityClicked, mouseX, mouseY));
+
+                info("Mouse get out of the entity  %s", entityClicked.name);
+                entityClicked.setAttribute("mouse_hover", false);
+            } else {
+                if (entityClicked.getAttribute("mouse_hover", true)) {
+                    entityClicked.behaviors
+                            .forEach(b -> b.onMouseIn(this, entityClicked, mouseX, mouseY));
+                    entityClicked.setAttribute("mouse_hover", true);
+                }
+
+                info("Mouse enter over the entity  %s", entityClicked.name);
+            }
+        }
     }
 }
