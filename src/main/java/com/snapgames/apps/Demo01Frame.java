@@ -1136,7 +1136,7 @@ public class Demo01Frame implements KeyListener, MouseListener, MouseWheelListen
 
     public void run(String[] args) {
         init(args);
-        initializeDisplay();
+        prepareDisplay();
         createScene();
         loop();
         dispose();
@@ -1267,7 +1267,7 @@ public class Demo01Frame implements KeyListener, MouseListener, MouseWheelListen
         }
     }
 
-    public void initializeDisplay() {
+    public void prepareDisplay() {
         window.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
         window.setIconImage(getResource("/images/thor-hammer.png"));
         window.pack();
@@ -1590,9 +1590,10 @@ public class Demo01Frame implements KeyListener, MouseListener, MouseWheelListen
                 updateTime = 0;
             } else {
                 updateFrames++;
-                update(delay);
 
             }
+            update(delay);
+
             renderTime += delay;
             if (renderTime > 1000) {
                 currentFPS = renderFrames;
@@ -1600,8 +1601,8 @@ public class Demo01Frame implements KeyListener, MouseListener, MouseWheelListen
                 renderTime = 0;
             } else {
                 renderFrames++;
-                render(stats);
             }
+            render(stats);
 
             try {
                 Thread.sleep(delay > 1000 / UPS ? 1 : 1000 / UPS - delay);
@@ -1710,26 +1711,33 @@ public class Demo01Frame implements KeyListener, MouseListener, MouseWheelListen
      * @param e     the Entity to be updated
      */
     public void applyPhysics(double delay, Entity e) {
+        // add World's gravity.
         e.forces.add(new Point2D.Double(0, world.gravity * 0.1));
+        // apply all forces
         for (Point2D f : e.forces) {
             e.ax += f.getX();
             e.ay += f.getY();
         }
+
+        // compute resulting acceleration
         e.ax = Math.abs(e.ax) > 1.0 ? Math.signum(e.ax) : e.ax;
         e.ay = Math.abs(e.ay) > 1.0 ? Math.signum(e.ay) : e.ay;
 
+        //compute resulting velocity
         e.dx = e.ax / delay;
         e.dy = e.ay * e.mass / delay;
-
         e.dx = Math.abs(e.dx) > 4.0 ? Math.signum(e.dx) : e.dx;
         e.dy = Math.abs(e.dy) > 4.0 ? Math.signum(e.dy) : e.dy;
 
+        // apply possible material characteristics on acceleration
         e.ax *= e.material.roughness;
         e.ay *= e.material.roughness;
 
+        // compute new position.
         e.x += e.dx * delay;
         e.y += (e.dy) * delay;
 
+        // reset forces applied to the object.
         e.forces.clear();
     }
 
