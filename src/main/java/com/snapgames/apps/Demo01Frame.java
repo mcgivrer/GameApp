@@ -3,14 +3,15 @@ package com.snapgames.apps;
 import javax.imageio.ImageIO;
 import javax.swing.*;
 import java.awt.*;
-import java.awt.event.KeyEvent;
-import java.awt.event.KeyListener;
+import java.awt.event.*;
 import java.awt.geom.Point2D;
 import java.awt.geom.Rectangle2D;
 import java.awt.image.BufferedImage;
-import java.io.*;
+import java.io.File;
+import java.io.FileInputStream;
+import java.io.IOException;
+import java.io.InputStream;
 import java.net.URISyntaxException;
-import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.time.LocalDateTime;
@@ -30,7 +31,7 @@ import java.util.concurrent.ConcurrentHashMap;
  *     <li><code>update</code> to compute {@link Entity} moves and {@link Behavior}'s
  *     into the game {@link World}</li>
  *     <li><code>render</code> to draw ann {@link Entity}'son internal buffer,
- *     then sync on the {@link JFrame} with a buffer strategy</li>
+ *     then sync on the {@link javax.swing.JFrame} with a buffer strategy</li>
  * </ul></p>
  *
  * <p>It also provide some subclasses as components:
@@ -46,7 +47,8 @@ import java.util.concurrent.ConcurrentHashMap;
  * @author Frédéric Delorme frederic.delorme@gmail.com
  * @since 1.0.0
  */
-public class Demo01Frame implements KeyListener {
+public class Demo01Frame implements KeyListener, MouseListener, MouseWheelListener, MouseMotionListener {
+
 
     /**
      * <p>The {@link Entity} class is the Core object for any Scene.</p>
@@ -596,6 +598,64 @@ public class Demo01Frame implements KeyListener {
          */
         default void onActivate(Demo01Frame app, Entity e) {
         }
+
+        /**
+         * On mouse entering the {@link Entity} area, this Behavior is processed.
+         *
+         * @param app    the parent application
+         * @param e      the concerned {@link Entity}
+         * @param mouseX mouse X position
+         * @param mouseY mouse y position
+         */
+        default void onMouseIn(Demo01Frame app, Entity e, double mouseX, double mouseY) {
+        }
+
+        /**
+         * On mouse moving out of the {@link Entity} area, this Behavior is processed.
+         *
+         * @param app    the parent application
+         * @param e      the concerned {@link Entity}
+         * @param mouseX mouse X position
+         * @param mouseY mouse y position
+         */
+        default void onMouseOut(Demo01Frame app, Entity e, double mouseX, double mouseY) {
+        }
+
+        /**
+         * On the mouse button clicked on the {@link Entity} area, this Behavior is processed.
+         *
+         * @param app      the parent application
+         * @param e        the concerned {@link Entity}
+         * @param mouseX   mouse X position
+         * @param mouseY   mouse y position
+         * @param buttonId the button number that has been clicked.
+         */
+        default void onMouseClick(Demo01Frame app, Entity e, double mouseX, double mouseY, int buttonId) {
+        }
+
+        /**
+         * On the mouse button pressed on the {@link Entity} area, this Behavior is processed.
+         *
+         * @param app      the parent application
+         * @param e        the concerned {@link Entity}
+         * @param mouseX   mouse X position
+         * @param mouseY   mouse y position
+         * @param buttonId the button number that has been clicked.
+         */
+        default void onMousePressed(Demo01Frame app, Entity e, double mouseX, double mouseY, int buttonId) {
+        }
+
+        /**
+         * On the mouse button released on the {@link Entity} area, this Behavior is processed.
+         *
+         * @param app      the parent application
+         * @param e        the concerned {@link Entity}
+         * @param mouseX   mouse X position
+         * @param mouseY   mouse y position
+         * @param buttonId the button number that has been clicked.
+         */
+        default void onMouseReleased(Demo01Frame app, Entity e, double mouseX, double mouseY, int buttonId) {
+        }
     }
 
     /**
@@ -746,7 +806,23 @@ public class Demo01Frame implements KeyListener {
     }
 
     /**
-     * Define the alignment for the affected Entity relative to its parent one.
+     * Define the alignment for the affected {@link Entity} relative to its <code>parent</code> one.
+     *
+     * <p>Align enumeration is used to set automatic position relatively to the
+     * <code>parent</code> {@link Entity} with {@link AlignBehavior}</p>
+     * <p>Example:
+     * <pre>
+     *     Button bt = new Button("MyButton")
+     *       .setParent(myDialogBox)
+     *       .setAlign(Align.LEFT);
+     * </pre>
+     * </p>
+     * <p>This created button will be align on the internal left of the parent Entity,
+     * taking care of {@link UIObject#margin} and {@link UIObject#padding}.</p>
+     *
+     * @see TextObject
+     * @see Button
+     * @see AlignBehavior
      */
     public enum Align {
         LEFT,
@@ -755,7 +831,6 @@ public class Demo01Frame implements KeyListener {
         TOP,
         BOTTOM;
     }
-
 
     /**
      * This {@link Behavior} implementation is used to automatically move child {@link TextObject} and {@link Button}
@@ -772,16 +847,16 @@ public class Demo01Frame implements KeyListener {
                     case "Button", "TextBox" -> {
                         switch (((Button) c).align) {
                             case LEFT -> {
-                                c.x = e.x + DialogBox.margin + DialogBox.padding;
-                                c.y = e.y + e.height - (c.height + DialogBox.margin + DialogBox.padding);
+                                c.x = e.x + UIObject.margin + UIObject.padding;
+                                c.y = e.y + e.height - (c.height + UIObject.margin + UIObject.padding);
                             }
                             case RIGHT -> {
-                                c.x = (e.x + e.width) - (c.width + DialogBox.margin + DialogBox.padding);
-                                c.y = e.y + e.height - (c.height + DialogBox.margin + DialogBox.padding);
+                                c.x = (e.x + e.width) - (c.width + UIObject.margin + UIObject.padding);
+                                c.y = e.y + e.height - (c.height + UIObject.margin + UIObject.padding);
                             }
                             case CENTER -> {
-                                c.x = (e.x + (e.width * 0.5)) - (DialogBox.margin + DialogBox.padding);
-                                c.y = e.y + e.height - (c.height + DialogBox.margin + DialogBox.padding);
+                                c.x = (e.x + (e.width * 0.5)) - (UIObject.margin + UIObject.padding);
+                                c.y = e.y + e.height - (c.height + UIObject.margin + UIObject.padding);
                             }
                             default -> {
                                 // processing TOP,BOTTOM will come later...
@@ -797,14 +872,49 @@ public class Demo01Frame implements KeyListener {
     }
 
     /**
-     * A {@link DialogBox} entity will create a dialog with a text. Adding child Button will add new operations
+     * This interface defines internals parameters for any User Interface objects on screen.
+     *
+     * @author Frédéric Delorme
+     * @since 1.0.0
+     */
+    public interface UIObject extends Behavior {
+        public static int margin = 2;
+        public static int padding = 2;
+        public static Color mouseOnColor = Color.LIGHT_GRAY;
+        public static Color mousePressedColor = mouseOnColor;
+        public static Color mouseOutColor = Color.GRAY;
+        public static Color mouseReleasedColor = mouseOutColor;
+
+        @Override
+        default void onMousePressed(Demo01Frame app, Entity e, double mouseX, double mouseY, int buttonId) {
+            e.setFillColor(mousePressedColor);
+        }
+
+        @Override
+        default void onMouseReleased(Demo01Frame app, Entity e, double mouseX, double mouseY, int buttonId) {
+            e.setFillColor(mouseReleasedColor);
+        }
+
+        @Override
+        default void onMouseIn(Demo01Frame app, Entity e, double mouseX, double mouseY) {
+            e.setFillColor(mouseOnColor);
+        }
+
+        @Override
+        default void onMouseOut(Demo01Frame app, Entity e, double mouseX, double mouseY) {
+            e.setFillColor(mouseOutColor);
+
+        }
+    }
+
+    /**
+     * A {@link DialogBox} entity will create a dialog with a text.
+     * Adding child {@link Button} will add new operations
      * to activate some processing.
      * <p>
      * By default, a DialogBox is not active; it must be activated to be displayed.
      */
-    public static class DialogBox extends TextObject {
-        public static int margin = 2;
-        public static int padding = 2;
+    public static class DialogBox extends TextObject implements UIObject {
 
         public DialogBox(String name) {
             super(name);
@@ -815,36 +925,16 @@ public class Demo01Frame implements KeyListener {
             setFillColor(Color.BLUE);
             setBorderColor(Color.CYAN);
             setTextColor(Color.WHITE);
-
-            // Add the required button OK
-            add(new Button("OK")
-                    .setAlign(Align.RIGHT)
-                    .setTextAlign(Align.CENTER)
-                    .setText(messages.getString("app.dialog.button.ok"))
-                    .setTextColor(Color.WHITE)
-                    .setFillColor(Color.LIGHT_GRAY)
-                    .setBorderColor(Color.GRAY)
-                    .setSize(40, 12));
-
-            // Add the required button Cancel
-            add(new Button("Cancel")
-                    .setAlign(Align.LEFT)
-                    .setText(messages.getString("app.dialog.button.cancel"))
-                    .setTextAlign(Align.CENTER)
-                    .setTextColor(Color.WHITE)
-                    .setFillColor(Color.LIGHT_GRAY)
-                    .setBorderColor(Color.GRAY)
-                    .setSize(40, 12));
-
             add(new AlignBehavior());
         }
 
         public void setVisible(boolean visible) {
             setActive(visible);
+            setChildVisible(visible);
         }
     }
 
-    public static class Button extends TextObject {
+    public static class Button extends TextObject implements UIObject {
         public Align align;
 
         public Button(String name) {
@@ -875,6 +965,12 @@ public class Demo01Frame implements KeyListener {
     private static BufferedImage buffer;
     private int FPS = 60;
     private int UPS = 120;
+
+    private double mouseX = 0;
+    private double mouseY = 0;
+    private int realMouseX;
+    private int realMouseY;
+
 
     private boolean[] keys = new boolean[1024];
 
@@ -1015,7 +1111,13 @@ public class Demo01Frame implements KeyListener {
         window.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
         window.setIconImage(getResource("/images/thor-hammer.png"));
         window.pack();
+        // processing keyboard input
         window.addKeyListener(this);
+        // processing mouse input
+        window.addMouseListener(this);
+        window.addMouseMotionListener(this);
+        window.addMouseWheelListener(this);
+        // show window.
         window.setVisible(true);
         window.createBufferStrategy(3);
     }
@@ -1108,20 +1210,22 @@ public class Demo01Frame implements KeyListener {
                             }
                         }));
 
-        add(new DialogBox("exitConfirmBox")
+        DialogBox exitConfirmation = (DialogBox) new DialogBox("exitConfirmBox")
                 .setText(messages.getString("app.dialog.exit.message"))
                 .setFont(textFont.deriveFont(8.0f))
                 .setTextColor(Color.WHITE)
                 .setSize(140, 40)
                 .setFillColor(Color.DARK_GRAY)
                 .setBorderColor(Color.BLACK)
+                .setActive(false)
+                .setPriority(10)
                 .add(new Behavior() {
                     @Override
                     public void onActivate(Demo01Frame app, Entity e) {
                         setPause(true);
                     }
                 })
-                .add(new Behavior() {
+                .add(new UIObject() {
                     @Override
                     public void onKeyReleased(Demo01Frame app, Entity e, KeyEvent k) {
                         if (k.getKeyCode() == KeyEvent.VK_Y) {
@@ -1133,8 +1237,58 @@ public class Demo01Frame implements KeyListener {
                             setPause(false);
                         }
                     }
-                })
-        );
+                });
+        add(exitConfirmation);
+
+        // Add the required button OK
+        Entity okButton = (Button) new Button("OK")
+                .setAlign(Align.RIGHT)
+                .setTextAlign(Align.CENTER)
+                .setText(messages.getString("app.dialog.button.ok"))
+                .setTextColor(Color.WHITE)
+                .setFillColor(Color.LIGHT_GRAY)
+                .setBorderColor(Color.GRAY)
+                .setActive(false)
+                .setSize(40, 12)
+                .setPriority(20)
+                .add(new UIObject() {
+                    @Override
+                    public void onMouseClick(Demo01Frame app, Entity e, double mouseX, double mouseY, int buttonId) {
+                        exit = true;
+                        e.setFillColor(Color.CYAN);
+                    }
+                });
+
+        // Add the required button Cancel
+        Entity cancelButton = new Button("Cancel")
+                .setAlign(Align.LEFT)
+                .setText(messages.getString("app.dialog.button.cancel"))
+                .setTextAlign(Align.CENTER)
+                .setTextColor(Color.WHITE)
+                .setFillColor(Color.LIGHT_GRAY)
+                .setBorderColor(Color.GRAY)
+                .setActive(false)
+                .setSize(40, 12)
+                .setPriority(20)
+                .add(new UIObject() {
+                    @Override
+                    public void onMouseClick(Demo01Frame app, Entity e, double mouseX, double mouseY, int buttonId) {
+                        exit = false;
+                        DialogBox db = (DialogBox) getEntity("exitConfirmBox");
+                        db.setVisible(false);
+                        setPause(false);
+                        e.setFillColor(Color.CYAN);
+                    }
+                });
+        add(okButton);
+        add(cancelButton);
+        // add the button to the dialog box.
+        exitConfirmation.add(okButton);
+        exitConfirmation.add(cancelButton);
+    }
+
+    public <T extends Entity> T getEntity(String entityName) {
+        return (T) entities.get(entityName);
     }
 
     private void generateEntities(String rootName, int nbEntities) {
@@ -1236,7 +1390,7 @@ public class Demo01Frame implements KeyListener {
         long currentFPS = 0;
 
         Map<String, Object> stats = new ConcurrentHashMap<>();
-        while (!exit) {
+        do {
             startTime = System.currentTimeMillis();
             input();
             delay = startTime - previousTime;
@@ -1271,7 +1425,7 @@ public class Demo01Frame implements KeyListener {
             stats.put("fps", currentFPS);
             stats.put("ups", currentUPS);
             stats.put("ft", delay);
-        }
+        } while (!exit);
     }
 
     private static boolean isPause() {
@@ -1446,7 +1600,7 @@ public class Demo01Frame implements KeyListener {
         g.setBackground(backGroundColor);
         g.clearRect(0, 0, buffer.getWidth(), buffer.getHeight());
         // move Camera
-        Entity player = entities.get("player");
+        Entity player = getEntity("player");
         if (Optional.ofNullable(activeCamera).isPresent()) {
             g.translate(-activeCamera.x, -activeCamera.y);
         }
@@ -1479,6 +1633,16 @@ public class Demo01Frame implements KeyListener {
                 b.draw(this, activeCamera, g);
             });
         }
+
+        stats.put("mouse", "(" + mouseX + "," + mouseY + ")");
+        if (isDebugAtLeast(1)) {
+            g.setColor(Color.YELLOW);
+            g.fillRect(
+                    (int) mouseX,
+                    (int) mouseY,
+                    2, 2);
+        }
+
         g.dispose();
 
         Graphics g2s = window.getBufferStrategy().getDrawGraphics();
@@ -1486,18 +1650,35 @@ public class Demo01Frame implements KeyListener {
                 0, 0, buffer.getWidth(), buffer.getHeight(), null);
         if (debug > 0) {
             g2s.setColor(Color.ORANGE);
-            g2s.drawString(String.format("[ dbg:%01d / fps:%03d ups:%03d ft:%03d / nbObj:%04d active:%04d ]",
+
+            g2s.drawString(String.format("[ dbg:%01d / fps:%03d ups:%03d ft:%03d / nbObj:%04d active:%04d / mouse: %s]",
                             debug,
                             stats.get("fps"),
                             stats.get("ups"),
                             stats.get("ft"),
                             (long) entities.values().size(),
-                            entities.values().stream().filter(Entity::isActive).count()),
+                            entities.values().stream().filter(Entity::isActive).count(),
+                            stats.get("mouse")),
                     10, window.getHeight() - 10
             );
         }
+        if (isDebugAtLeast(2)) {
+            // draw mouse
+            g2s.setColor(Color.WHITE);
+            g2s.fillRect((int) realMouseX, (int) realMouseY, 1, 1);
+        }
         g2s.dispose();
         window.getBufferStrategy().show();
+    }
+
+    /**
+     * Detects if debug level is greater than the required one
+     *
+     * @param debugLevel the minimum required debug level
+     * @return true if the required level is reached.
+     */
+    private boolean isDebugAtLeast(int debugLevel) {
+        return debug >= debugLevel;
     }
 
     /*----- objects rendering -----*/
@@ -1577,15 +1758,15 @@ public class Demo01Frame implements KeyListener {
         int textWidth = g.getFontMetrics().stringWidth(te.getText());
         int yOffset = g.getFontMetrics().getDescent();
 
-        te.setSize(te.getWidth(), fontHeight + 2 * DialogBox.margin);
+        te.setSize(te.getWidth(), fontHeight + 2 * UIObject.margin);
 
         drawEdgeRectangle(g, te);
 
         g.setColor(te.textColor);
         g.drawString(
                 te.getText(),
-                x + (int) ((te.getWidth() - textWidth) * 0.5) + DialogBox.margin,
-                y + DialogBox.margin + fontHeight - yOffset);
+                x + (int) ((te.getWidth() - textWidth) * 0.5) + UIObject.margin,
+                y + UIObject.margin + fontHeight - yOffset);
     }
 
     private static void drawEdgeRectangle(Graphics2D g, Entity te) {
@@ -1638,8 +1819,9 @@ public class Demo01Frame implements KeyListener {
         g.drawRect((int) db.getX(), (int) db.getY(), (int) db.getWidth(), (int) db.getHeight());
 
         g.setColor(db.textColor);
-        g.drawString(db.getText(), (int) (db.getX() + (db.getWidth() - textWidth) * 0.5 - DialogBox.margin * 2),
-                (int) (db.getY() + (db.getHeight() * 0.30) + DialogBox.margin + DialogBox.padding));
+
+        g.drawString(db.getText(), (int) (db.getX() + (db.getWidth() - textWidth) * 0.5 - UIObject.margin * 2),
+                (int) (db.getY() + (db.getHeight() * 0.30) + UIObject.margin + UIObject.padding));
     }
 
     /*----- releasing objects and resources -----*/
@@ -1715,7 +1897,7 @@ public class Demo01Frame implements KeyListener {
         switch (k.getKeyCode()) {
             // exit application on ESCAPE
             case KeyEvent.VK_ESCAPE -> {
-                DialogBox db = (DialogBox) entities.get("exitConfirmBox");
+                DialogBox db = (DialogBox) getEntity("exitConfirmBox");
                 activateEntity(db, true);
             }
             // reset the scene on CTRL+Z
@@ -1751,4 +1933,100 @@ public class Demo01Frame implements KeyListener {
         return keys[keyCode];
     }
 
+    /*----- Mouse event management -----*/
+
+    @Override
+    public void mouseClicked(MouseEvent e) {
+        if (getEntityClicked(mouseX, mouseY).isPresent()) {
+            Entity entityClicked = getEntityClicked(mouseX, mouseY).get();
+            info("Entity %s has been clicked", entityClicked.name);
+            entityClicked.behaviors
+                    .forEach(b -> b.onMouseClick(this, entityClicked, mouseX, mouseY, e.getButton()));
+        }
+    }
+
+    private Optional<Entity> getEntityClicked(double mouseX, double mouseY) {
+        Optional<Entity> entityClicked = entities.values().stream()
+                .filter(entity -> Arrays.stream(entity.getClass().getInterfaces()).filter(i -> i.equals(UIObject.class)).findFirst().isPresent()
+                        && entity.isActive()
+                        && entity.contains(mouseX, mouseY)).sorted((a, b) -> Integer.compare(b.priority, a.priority)).findFirst();
+
+        return entityClicked;
+    }
+
+    @Override
+    public void mousePressed(MouseEvent e) {
+        if (getEntityClicked(mouseX, mouseY).isPresent()) {
+            Entity entityClicked = getEntityClicked(mouseX, mouseY).get();
+            info("Entity %s has been clicked", entityClicked.name);
+            entityClicked.behaviors
+                    .forEach(b -> b.onMousePressed(this, entityClicked, mouseX, mouseY, e.getButton()));
+        }
+    }
+
+    @Override
+    public void mouseReleased(MouseEvent e) {
+        if (getEntityClicked(mouseX, mouseY).isPresent()) {
+            Entity entityClicked = getEntityClicked(mouseX, mouseY).get();
+            info("Entity %s has been clicked", entityClicked.name);
+            entityClicked.behaviors
+                    .forEach(b -> b.onMouseReleased(this, entityClicked, mouseX, mouseY, e.getButton()));
+        }
+    }
+
+    @Override
+    public void mouseEntered(MouseEvent e) {
+        entities.values().stream()
+                .filter(entity -> entity.isActive() && entity.contains(mouseX, mouseY))
+                .forEach(entity -> entity.behaviors
+                        .forEach(b -> b.onMouseIn(this, entity, mouseX, mouseY)));
+    }
+
+    @Override
+    public void mouseExited(MouseEvent e) {
+        entities.values().stream()
+                .filter(entity -> entity.isActive() && entity.contains(mouseX, mouseY))
+                .forEach(entity -> {
+                    entity.behaviors
+                            .forEach(b -> b.onMouseOut(this, entity, mouseX, mouseY));
+                });
+    }
+
+    @Override
+    public void mouseWheelMoved(MouseWheelEvent e) {
+
+    }
+
+    @Override
+    public void mouseDragged(MouseEvent e) {
+
+    }
+
+    @Override
+    public void mouseMoved(MouseEvent e) {
+        this.realMouseX = e.getX();
+        this.realMouseY = e.getY();
+        this.mouseX = (realMouseX * ((double) buffer.getWidth() / window.getWidth()));
+        this.mouseY = (realMouseY * ((double) buffer.getHeight() / window.getHeight()));
+
+        if (getEntityClicked(mouseX, mouseY).isPresent()) {
+            Entity entityClicked = getEntityClicked(mouseX, mouseY).get();
+
+            if (entityClicked.getAttribute("mouse_hover", false)) {
+                entityClicked.behaviors
+                        .forEach(b -> b.onMouseOut(this, entityClicked, mouseX, mouseY));
+
+                info("Mouse get out of the entity  %s", entityClicked.name);
+                entityClicked.setAttribute("mouse_hover", false);
+            } else {
+                if (entityClicked.getAttribute("mouse_hover", true)) {
+                    entityClicked.behaviors
+                            .forEach(b -> b.onMouseIn(this, entityClicked, mouseX, mouseY));
+                    entityClicked.setAttribute("mouse_hover", true);
+                }
+
+                info("Mouse enter over the entity  %s", entityClicked.name);
+            }
+        }
+    }
 }
