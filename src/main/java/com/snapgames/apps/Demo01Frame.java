@@ -8,9 +8,7 @@ import java.awt.event.KeyListener;
 import java.awt.geom.Point2D;
 import java.awt.geom.Rectangle2D;
 import java.awt.image.BufferedImage;
-import java.io.FileInputStream;
-import java.io.FileNotFoundException;
-import java.io.IOException;
+import java.io.*;
 import java.net.URISyntaxException;
 import java.nio.file.Files;
 import java.nio.file.Path;
@@ -456,7 +454,7 @@ public class Demo01Frame implements KeyListener {
          */
         public Animations update(double elapsed) {
             if (Optional.ofNullable(animationsFrames).isPresent()
-                && Optional.ofNullable(activeAnimationKey).isPresent()) {
+                    && Optional.ofNullable(activeAnimationKey).isPresent()) {
                 AnimationFrames anim = animationsFrames.get(activeAnimationKey);
                 anim.update(elapsed);
             }
@@ -486,7 +484,7 @@ public class Demo01Frame implements KeyListener {
          */
         public void reset() {
             if (Optional.ofNullable(animationsFrames).isPresent()
-                && Optional.ofNullable(activeAnimationKey).isPresent()) {
+                    && Optional.ofNullable(activeAnimationKey).isPresent()) {
                 this.animationsFrames.get(activeAnimationKey).reset();
             }
         }
@@ -737,11 +735,11 @@ public class Demo01Frame implements KeyListener {
         public void update(double dt) {
             if (Optional.ofNullable(target).isPresent()) {
                 this.x += Math.ceil(
-                    (target.getX() + (target.getWidth() * 0.5) - ((viewport.getWidth()) * 0.5) - this.getX())
-                        * tweenFactor * Math.min(dt, 1));
+                        (target.getX() + (target.getWidth() * 0.5) - ((viewport.getWidth()) * 0.5) - this.getX())
+                                * tweenFactor * Math.min(dt, 1));
                 this.y += Math.ceil(
-                    (target.getY() + (target.getHeight() * 0.5) - ((viewport.getHeight()) * 0.5) - this.getY())
-                        * tweenFactor * Math.min(dt, 1));
+                        (target.getY() + (target.getHeight() * 0.5) - ((viewport.getHeight()) * 0.5) - this.getY())
+                                * tweenFactor * Math.min(dt, 1));
                 this.viewport.setRect(this);
             }
         }
@@ -820,23 +818,23 @@ public class Demo01Frame implements KeyListener {
 
             // Add the required button OK
             add(new Button("OK")
-                .setAlign(Align.RIGHT)
-                .setTextAlign(Align.CENTER)
-                .setText(messages.getString("app.dialog.button.ok"))
-                .setTextColor(Color.WHITE)
-                .setFillColor(Color.LIGHT_GRAY)
-                .setBorderColor(Color.GRAY)
-                .setSize(40, 12));
+                    .setAlign(Align.RIGHT)
+                    .setTextAlign(Align.CENTER)
+                    .setText(messages.getString("app.dialog.button.ok"))
+                    .setTextColor(Color.WHITE)
+                    .setFillColor(Color.LIGHT_GRAY)
+                    .setBorderColor(Color.GRAY)
+                    .setSize(40, 12));
 
             // Add the required button Cancel
             add(new Button("Cancel")
-                .setAlign(Align.LEFT)
-                .setText(messages.getString("app.dialog.button.cancel"))
-                .setTextAlign(Align.CENTER)
-                .setTextColor(Color.WHITE)
-                .setFillColor(Color.LIGHT_GRAY)
-                .setBorderColor(Color.GRAY)
-                .setSize(40, 12));
+                    .setAlign(Align.LEFT)
+                    .setText(messages.getString("app.dialog.button.cancel"))
+                    .setTextAlign(Align.CENTER)
+                    .setTextColor(Color.WHITE)
+                    .setFillColor(Color.LIGHT_GRAY)
+                    .setBorderColor(Color.GRAY)
+                    .setSize(40, 12));
 
             add(new AlignBehavior());
         }
@@ -895,11 +893,11 @@ public class Demo01Frame implements KeyListener {
      */
     public Demo01Frame() {
         info("Initialization application %s (%s) %n- running on JDK %s %n- at %s %n- with classpath = %s%n",
-            messages.getString("app.name"),
-            messages.getString("app.version"),
-            System.getProperty("java.version"),
-            System.getProperty("java.home"),
-            System.getProperty("java.class.path"));
+                messages.getString("app.name"),
+                messages.getString("app.version"),
+                System.getProperty("java.version"),
+                System.getProperty("java.home"),
+                System.getProperty("java.class.path"));
     }
 
     public void run(String[] args) {
@@ -966,19 +964,19 @@ public class Demo01Frame implements KeyListener {
         // create the window
         window = new JFrame(config.getProperty("app.window.title", "Demo01"));
         window.setPreferredSize(new Dimension(
-            Integer.parseInt(config.getProperty("app.window.width", "640")),
-            Integer.parseInt(config.getProperty("app.window.height", "480"))
+                Integer.parseInt(config.getProperty("app.window.width", "640")),
+                Integer.parseInt(config.getProperty("app.window.height", "480"))
         ));
         // create the drawing buffer
         buffer = new BufferedImage(
-            Integer.parseInt(config.getProperty("app.render.buffer.width", "320")),
-            Integer.parseInt(config.getProperty("app.render.buffer.height", "240")),
-            BufferedImage.TYPE_INT_ARGB
+                Integer.parseInt(config.getProperty("app.render.buffer.width", "320")),
+                Integer.parseInt(config.getProperty("app.render.buffer.height", "240")),
+                BufferedImage.TYPE_INT_ARGB
         );
         // world size
         world.playArea = new Rectangle2D.Double(0, 0,
-            Integer.parseInt(config.getProperty("app.world.play.area.width", "320")),
-            Integer.parseInt(config.getProperty("app.world.play.area.height", "240"))
+                Integer.parseInt(config.getProperty("app.world.play.area.width", "320")),
+                Integer.parseInt(config.getProperty("app.world.play.area.height", "240"))
         );
         // world gravity
         world.gravity = Double.parseDouble(config.getProperty("app.world.gravity", "0.0981"));
@@ -992,14 +990,20 @@ public class Demo01Frame implements KeyListener {
      * @throws IOException in case of issue during file reading.
      */
     public void loadConfiguration(String configFilePath) throws IOException, URISyntaxException {
-        Path rootPath = Paths.get(this.getClass().getProtectionDomain().getCodeSource().getLocation().toURI()).toRealPath();
+        Path rootPath = Paths.get(Demo01Frame.class.getProtectionDomain().getCodeSource().getLocation().toURI()).getParent();
         try {
-            config.load(new FileInputStream(rootPath.toString() + "/configuration.properties"));
-            info("Reading configuration from file configuration.properties at side JAR");
-
+            File propertyFile = new File(rootPath.toFile(), configFilePath);
+            if (propertyFile.exists()) {
+                try (InputStream input = new FileInputStream(propertyFile)) {
+                    config.load(input);
+                    info("Reading configuration from file %s at %s", configFilePath, rootPath.getFileName().toUri());
+                }
+            } else {
+                config.load(this.getClass().getResourceAsStream(configFilePath));
+                info("Reading JAR contained configuration from file %s", configFilePath);
+            }
         } catch (IOException ioe) {
-            config.load(this.getClass().getResourceAsStream(configFilePath));
-            info("Reading JAR contained configuration from file %s", configFilePath);
+            error("Unable to read configuriatoin file %s", configFilePath);
         }
 
         config.forEach((k, v) -> {
@@ -1023,127 +1027,127 @@ public class Demo01Frame implements KeyListener {
         Font textFont = getResource("/fonts/Minecraftia-Regular.ttf");
 
         add(new ImageObject("forest")
-            .setImage(getResource("/images/backgrounds/forest.jpg"))
-            .setPosition(0, 0)
-            .setSize(world.playArea.getWidth(), world.playArea.getHeight())
+                .setImage(getResource("/images/backgrounds/forest.jpg"))
+                .setPosition(0, 0)
+                .setSize(world.playArea.getWidth(), world.playArea.getHeight())
         );
 
         add(new TextObject("score")
-            .setText("%05d")
-            .setValue(score)
-            .setFont(scoreFont.deriveFont(18.0f))
-            .setPosition(20, 32)
-            .setBorderColor(Color.WHITE)
-            .setRelativeToCamera(true)
-            .add(new Behavior() {
-                @Override
-                public void input(Demo01Frame app, Entity e) {
-                    ((TextObject) e).setValue(score);
-                }
-            })
+                .setText("%05d")
+                .setValue(score)
+                .setFont(scoreFont.deriveFont(18.0f))
+                .setPosition(20, 32)
+                .setBorderColor(Color.WHITE)
+                .setRelativeToCamera(true)
+                .add(new Behavior() {
+                    @Override
+                    public void input(Demo01Frame app, Entity e) {
+                        ((TextObject) e).setValue(score);
+                    }
+                })
         );
         add(new TextObject("Life")
-            .setText("%01d")
-            .setValue(lifeCount)
-            .setFont(textFont.deriveFont(8.0f))
-            .setPosition(buffer.getWidth() - 32, 32)
-            .setBorderColor(Color.WHITE)
-            .setRelativeToCamera(true)
-            .add(new Behavior() {
-                @Override
-                public void input(Demo01Frame app, Entity e) {
-                    ((TextObject) e).setValue(lifeCount);
-                }
-            })
+                .setText("%01d")
+                .setValue(lifeCount)
+                .setFont(textFont.deriveFont(8.0f))
+                .setPosition(buffer.getWidth() - 32, 32)
+                .setBorderColor(Color.WHITE)
+                .setRelativeToCamera(true)
+                .add(new Behavior() {
+                    @Override
+                    public void input(Demo01Frame app, Entity e) {
+                        ((TextObject) e).setValue(lifeCount);
+                    }
+                })
         );
 
         generateEntities("enemy_", 20);
 
         Entity player = new Entity("player")
-            .setPosition(world.playArea.getWidth() * 0.5,
-                world.playArea.getHeight() * 0.5)
-            .setSize(16, 16)
-            .setPriority(200)
-            .setMaterial(new Material("Player_MAT", 1.0, 0.998, 0.98))
-            .setMass(10.0)
-            .add(new Behavior() {
-                @Override
-                public void input(Demo01Frame app, Entity player) {
-                    double speed = 0.025;
-                    if (isKeyPressed(KeyEvent.VK_UP)) {
-                        player.forces.add(new Point2D.Double(0, -(speed * 2.0)));
+                .setPosition(world.playArea.getWidth() * 0.5,
+                        world.playArea.getHeight() * 0.5)
+                .setSize(16, 16)
+                .setPriority(200)
+                .setMaterial(new Material("Player_MAT", 1.0, 0.998, 0.98))
+                .setMass(10.0)
+                .add(new Behavior() {
+                    @Override
+                    public void input(Demo01Frame app, Entity player) {
+                        double speed = 0.025;
+                        if (isKeyPressed(KeyEvent.VK_UP)) {
+                            player.forces.add(new Point2D.Double(0, -(speed * 2.0)));
+                        }
+                        if (isKeyPressed(KeyEvent.VK_DOWN)) {
+                            player.forces.add(new Point2D.Double(0, speed));
+                        }
+                        if (isKeyPressed(KeyEvent.VK_LEFT)) {
+                            player.forces.add(new Point2D.Double(-speed, 0));
+                        }
+                        if (isKeyPressed(KeyEvent.VK_RIGHT)) {
+                            player.forces.add(new Point2D.Double(speed, 0));
+                        }
                     }
-                    if (isKeyPressed(KeyEvent.VK_DOWN)) {
-                        player.forces.add(new Point2D.Double(0, speed));
-                    }
-                    if (isKeyPressed(KeyEvent.VK_LEFT)) {
-                        player.forces.add(new Point2D.Double(-speed, 0));
-                    }
-                    if (isKeyPressed(KeyEvent.VK_RIGHT)) {
-                        player.forces.add(new Point2D.Double(speed, 0));
-                    }
-                }
-            });
+                });
         add(player);
 
         generateEntities("enemy_", 20);
 
         setActiveCamera((Camera)
-            new Camera("cam01")
-                .setTarget(player)
-                .setTweenFactor(0.01)
-                .setSize(320, 240)
-                .add(new Behavior() {
-                    @Override
-                    public void draw(Demo01Frame app, Entity e, Graphics2D g) {
-                        g.setColor(Color.WHITE);
-                        g.setFont(textFont.deriveFont(8.0f));
-                        g.drawString(
-                            messages.getString("app.camera.name"),
-                            (int) world.playArea.getHeight(), (int) world.playArea.getHeight() - 20);
-                    }
-                }));
+                new Camera("cam01")
+                        .setTarget(player)
+                        .setTweenFactor(0.01)
+                        .setSize(320, 240)
+                        .add(new Behavior() {
+                            @Override
+                            public void draw(Demo01Frame app, Entity e, Graphics2D g) {
+                                g.setColor(Color.WHITE);
+                                g.setFont(textFont.deriveFont(8.0f));
+                                g.drawString(
+                                        messages.getString("app.camera.name"),
+                                        (int) world.playArea.getHeight(), (int) world.playArea.getHeight() - 20);
+                            }
+                        }));
 
         add(new DialogBox("exitConfirmBox")
-            .setText(messages.getString("app.dialog.exit.message"))
-            .setFont(textFont.deriveFont(8.0f))
-            .setTextColor(Color.WHITE)
-            .setSize(140, 40)
-            .setFillColor(Color.DARK_GRAY)
-            .setBorderColor(Color.BLACK)
-            .add(new Behavior() {
-                @Override
-                public void onActivate(Demo01Frame app, Entity e) {
-                    setPause(true);
-                }
-            })
-            .add(new Behavior() {
-                @Override
-                public void onKeyReleased(Demo01Frame app, Entity e, KeyEvent k) {
-                    if (k.getKeyCode() == KeyEvent.VK_Y) {
-                        exit = true;
+                .setText(messages.getString("app.dialog.exit.message"))
+                .setFont(textFont.deriveFont(8.0f))
+                .setTextColor(Color.WHITE)
+                .setSize(140, 40)
+                .setFillColor(Color.DARK_GRAY)
+                .setBorderColor(Color.BLACK)
+                .add(new Behavior() {
+                    @Override
+                    public void onActivate(Demo01Frame app, Entity e) {
+                        setPause(true);
                     }
-                    if (k.getKeyCode() == KeyEvent.VK_N) {
-                        exit = false;
-                        ((DialogBox) e).setVisible(false);
-                        setPause(false);
+                })
+                .add(new Behavior() {
+                    @Override
+                    public void onKeyReleased(Demo01Frame app, Entity e, KeyEvent k) {
+                        if (k.getKeyCode() == KeyEvent.VK_Y) {
+                            exit = true;
+                        }
+                        if (k.getKeyCode() == KeyEvent.VK_N) {
+                            exit = false;
+                            ((DialogBox) e).setVisible(false);
+                            setPause(false);
+                        }
                     }
-                }
-            })
+                })
         );
     }
 
     private void generateEntities(String rootName, int nbEntities) {
         for (int i = 0; i < nbEntities; i++) {
             add(new Entity(rootName + Entity.index)
-                .setPosition(world.playArea.getWidth() * Math.random(),
-                    world.playArea.getHeight() * Math.random())
-                .setSize(8, 8)
-                .setPriority(100 + i)
-                .setFillColor(Color.RED)
-                .setAcceleration(0.25 - (Math.random() * 0.5), 0.25 - (Math.random() * 0.5))
-                .setMaterial(new Material("Enemy_MAT", 1.0, 0.98, 1.0))
-                .setMass(2.0 + (5.0 * Math.random())));
+                    .setPosition(world.playArea.getWidth() * Math.random(),
+                            world.playArea.getHeight() * Math.random())
+                    .setSize(8, 8)
+                    .setPriority(100 + i)
+                    .setFillColor(Color.RED)
+                    .setAcceleration(0.25 - (Math.random() * 0.5), 0.25 - (Math.random() * 0.5))
+                    .setMaterial(new Material("Enemy_MAT", 1.0, 0.98, 1.0))
+                    .setMass(2.0 + (5.0 * Math.random())));
         }
     }
 
@@ -1172,8 +1176,8 @@ public class Demo01Frame implements KeyListener {
             switch (ext) {
                 case "ttf" -> {
                     return (T) Font.createFont(
-                        Font.TRUETYPE_FONT,
-                        Demo01Frame.class.getResourceAsStream(path));
+                            Font.TRUETYPE_FONT,
+                            Demo01Frame.class.getResourceAsStream(path));
                 }
                 case "png", "jpg" -> {
                     return (T) ImageIO.read(Demo01Frame.class.getResourceAsStream(path));
@@ -1303,9 +1307,9 @@ public class Demo01Frame implements KeyListener {
     public void update(double delay) {
         // update all entities not stick to activeCamera.
         entities.values()
-            .forEach(e -> {
-                updateEntity(delay, e);
-            });
+                .forEach(e -> {
+                    updateEntity(delay, e);
+                });
         // update camera position
         if (Optional.ofNullable(activeCamera).isPresent()) {
             activeCamera.update(delay);
@@ -1438,7 +1442,7 @@ public class Demo01Frame implements KeyListener {
     public void render(Map<String, Object> stats) {
         Graphics2D g = buffer.createGraphics();
         g.setRenderingHints(Map.of(RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_ON,
-            RenderingHints.KEY_TEXT_ANTIALIASING, RenderingHints.VALUE_TEXT_ANTIALIAS_ON));
+                RenderingHints.KEY_TEXT_ANTIALIASING, RenderingHints.VALUE_TEXT_ANTIALIAS_ON));
         g.setBackground(backGroundColor);
         g.clearRect(0, 0, buffer.getWidth(), buffer.getHeight());
         // move Camera
@@ -1455,19 +1459,19 @@ public class Demo01Frame implements KeyListener {
         }
         //draw everything
         entities.values().stream().filter(e -> e.isActive() && !e.isRelativeToCamera())
-            .sorted(Comparator.comparingInt(a -> a.priority))
-            .forEach(e -> {
-                drawEntity(e, g);
-            });
+                .sorted(Comparator.comparingInt(a -> a.priority))
+                .forEach(e -> {
+                    drawEntity(e, g);
+                });
         if (Optional.ofNullable(activeCamera).isPresent()) {
             g.translate(activeCamera.x, activeCamera.y);
         }
         // draw all objects stick to the Camera.
         entities.values().stream().filter(e -> e.isActive() && e.isRelativeToCamera())
-            .sorted(Comparator.comparingInt(a -> a.priority))
-            .forEach(e -> {
-                drawEntity(e, g);
-            });
+                .sorted(Comparator.comparingInt(a -> a.priority))
+                .forEach(e -> {
+                    drawEntity(e, g);
+                });
 
         // draw all Behaviors about active camera.
         if (Optional.ofNullable(activeCamera).isPresent()) {
@@ -1479,17 +1483,17 @@ public class Demo01Frame implements KeyListener {
 
         Graphics g2s = window.getBufferStrategy().getDrawGraphics();
         g2s.drawImage(buffer, 0, 0, window.getWidth(), window.getHeight(),
-            0, 0, buffer.getWidth(), buffer.getHeight(), null);
+                0, 0, buffer.getWidth(), buffer.getHeight(), null);
         if (debug > 0) {
             g2s.setColor(Color.ORANGE);
             g2s.drawString(String.format("[ dbg:%01d / fps:%03d ups:%03d ft:%03d / nbObj:%04d active:%04d ]",
-                    debug,
-                    stats.get("fps"),
-                    stats.get("ups"),
-                    stats.get("ft"),
-                    (long) entities.values().size(),
-                    entities.values().stream().filter(Entity::isActive).count()),
-                10, window.getHeight() - 10
+                            debug,
+                            stats.get("fps"),
+                            stats.get("ups"),
+                            stats.get("ft"),
+                            (long) entities.values().size(),
+                            entities.values().stream().filter(Entity::isActive).count()),
+                    10, window.getHeight() - 10
             );
         }
         g2s.dispose();
@@ -1537,10 +1541,10 @@ public class Demo01Frame implements KeyListener {
 
     private void drawImageObject(Graphics2D g, ImageObject io) {
         g.drawImage(
-            io.getImage(),
-            (int) io.getX(), (int) io.getY(),
-            (int) io.getWidth(), (int) io.getHeight(),
-            null);
+                io.getImage(),
+                (int) io.getX(), (int) io.getY(),
+                (int) io.getWidth(), (int) io.getHeight(),
+                null);
     }
 
     private void drawGameObject(Graphics2D g, GameObject go) {
@@ -1558,12 +1562,12 @@ public class Demo01Frame implements KeyListener {
     private void drawButton(Graphics2D g, Button te) {
 
         int x = (int) ((Optional.ofNullable(te.getParent()).isPresent() && te.isRelativeToParent())
-            ? (te.getParent().getX() + te.getX())
-            : te.getX());
+                ? (te.getParent().getX() + te.getX())
+                : te.getX());
 
         int y = (int) ((Optional.ofNullable(te.getParent()).isPresent() && te.isRelativeToParent())
-            ? (te.getParent().getY() + te.getY())
-            : te.getY());
+                ? (te.getParent().getY() + te.getY())
+                : te.getY());
 
         if (Optional.ofNullable(te.font).isPresent()) {
             g.setFont(te.font);
@@ -1579,30 +1583,30 @@ public class Demo01Frame implements KeyListener {
 
         g.setColor(te.textColor);
         g.drawString(
-            te.getText(),
-            x + (int) ((te.getWidth() - textWidth) * 0.5) + DialogBox.margin,
-            y + DialogBox.margin + fontHeight - yOffset);
+                te.getText(),
+                x + (int) ((te.getWidth() - textWidth) * 0.5) + DialogBox.margin,
+                y + DialogBox.margin + fontHeight - yOffset);
     }
 
     private static void drawEdgeRectangle(Graphics2D g, Entity te) {
 
         int x = (int) ((Optional.ofNullable(te.getParent()).isPresent() && te.isRelativeToParent())
-            ? (te.getParent().getX() + te.getX())
-            : te.getX());
+                ? (te.getParent().getX() + te.getX())
+                : te.getX());
 
         int y = (int) ((Optional.ofNullable(te.getParent()).isPresent() && te.isRelativeToParent())
-            ? (te.getParent().getY() + te.getY())
-            : te.getY());
+                ? (te.getParent().getY() + te.getY())
+                : te.getY());
         g.setColor(Color.GRAY);
         g.fillRect(x, y, (int) te.getWidth(), (int) te.getHeight());
 
         g.setColor(Color.LIGHT_GRAY);
         g.drawLine(
-            (int) te.getX(), (int) te.getY(),
-            (int) (x + te.getWidth()), (int) te.getY());
+                (int) te.getX(), (int) te.getY(),
+                (int) (x + te.getWidth()), (int) te.getY());
         g.drawLine(
-            (int) te.getX(), (int) (te.getY()),
-            (int) (te.getX()), (int) (te.getY() + te.getHeight()));
+                (int) te.getX(), (int) (te.getY()),
+                (int) (te.getX()), (int) (te.getY() + te.getHeight()));
 
         g.setColor(Color.DARK_GRAY);
         g.drawLine((int) te.getX(), (int) (te.getY() + te.getHeight()), (int) (x + te.getWidth()), (int) (te.getY() + te.getHeight()));
@@ -1613,11 +1617,11 @@ public class Demo01Frame implements KeyListener {
 
         g.setColor(Color.GRAY);
         g.drawLine(
-            (int) (te.getX() + te.getWidth()), (int) (te.getY()),
-            (int) (te.getX() + te.getWidth()), (int) (te.getY()));
+                (int) (te.getX() + te.getWidth()), (int) (te.getY()),
+                (int) (te.getX() + te.getWidth()), (int) (te.getY()));
         g.drawLine(
-            (int) (te.getX()), (int) (te.getY() + te.getHeight()),
-            (int) (te.getX()), (int) (te.getY() + te.getHeight()));
+                (int) (te.getX()), (int) (te.getY() + te.getHeight()),
+                (int) (te.getX()), (int) (te.getY() + te.getHeight()));
     }
 
     private static void drawDialogBox(Graphics2D g, DialogBox db) {
@@ -1635,7 +1639,7 @@ public class Demo01Frame implements KeyListener {
 
         g.setColor(db.textColor);
         g.drawString(db.getText(), (int) (db.getX() + (db.getWidth() - textWidth) * 0.5 - DialogBox.margin * 2),
-            (int) (db.getY() + (db.getHeight() * 0.30) + DialogBox.margin + DialogBox.padding));
+                (int) (db.getY() + (db.getHeight() * 0.30) + DialogBox.margin + DialogBox.padding));
     }
 
     /*----- releasing objects and resources -----*/
@@ -1688,26 +1692,26 @@ public class Demo01Frame implements KeyListener {
     public void keyPressed(KeyEvent k) {
         keys[k.getKeyCode()] = true;
         entities.values().stream()
-            .filter(Entity::isActive)
-            .filter(e -> !e.behaviors.isEmpty())
-            .forEach(e -> {
-                e.behaviors.forEach(b -> {
-                    b.onKeyPressed(this, e, k);
+                .filter(Entity::isActive)
+                .filter(e -> !e.behaviors.isEmpty())
+                .forEach(e -> {
+                    e.behaviors.forEach(b -> {
+                        b.onKeyPressed(this, e, k);
+                    });
                 });
-            });
     }
 
     @Override
     public void keyReleased(KeyEvent k) {
         keys[k.getKeyCode()] = false;
         entities.values().stream()
-            .filter(Entity::isActive)
-            .filter(e -> !e.behaviors.isEmpty())
-            .forEach(e -> {
-                e.behaviors.forEach(b -> {
-                    b.onKeyReleased(this, e, k);
+                .filter(Entity::isActive)
+                .filter(e -> !e.behaviors.isEmpty())
+                .forEach(e -> {
+                    e.behaviors.forEach(b -> {
+                        b.onKeyReleased(this, e, k);
+                    });
                 });
-            });
         switch (k.getKeyCode()) {
             // exit application on ESCAPE
             case KeyEvent.VK_ESCAPE -> {
