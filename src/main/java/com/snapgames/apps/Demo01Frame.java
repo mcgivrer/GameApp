@@ -19,6 +19,7 @@ import java.time.format.DateTimeFormatter;
 import java.util.List;
 import java.util.*;
 import java.util.concurrent.ConcurrentHashMap;
+import java.util.stream.Collectors;
 
 /**
  * Main class for Project {@link Demo01Frame}
@@ -1125,7 +1126,7 @@ public class Demo01Frame implements KeyListener, MouseListener, MouseWheelListen
      * Create the {@link Demo01Frame} instance and detect the current java context.
      */
     public Demo01Frame() {
-        info("Initialization application %s (%s) %n- running on JDK %s %n- at %s %n- with classpath = %s%n",
+        info("Initialization application %s (%s); running on JDK %s; at %s; with classpath = %s",
                 messages.getString("app.name"),
                 messages.getString("app.version"),
                 System.getProperty("java.version"),
@@ -1149,6 +1150,20 @@ public class Demo01Frame implements KeyListener, MouseListener, MouseWheelListen
      * @param args list of String arguments from Java command line.
      */
     private void init(String[] args) {
+        parseCliArguments(args);
+        loadConfiguration("/config.properties");
+        parseConfiguration();
+        info("Configuration applied: %s", config.stringPropertyNames().stream()
+                .map(key -> key + "=" + config.getProperty(key))
+                .collect(Collectors.joining(", ")));
+    }
+
+    /**
+     * Parse all the arguments from <code>args</code> and set default values into {@link Demo01Frame#config} as a configuration set.
+     *
+     * @param args the list of arguments to parse and set as default in the {@link Demo01Frame#config}.
+     */
+    private void parseCliArguments(String[] args) {
         List<String> lArgs = Arrays.asList(args);
         lArgs.forEach(s -> {
             info(String.format("Configuration|Argument: %s", s));
@@ -1156,32 +1171,42 @@ public class Demo01Frame implements KeyListener, MouseListener, MouseWheelListen
             switch (keyVal[0]) {
                 case "window", "w" -> {
                     config.setProperty("app.window.size", keyVal[1]);
+                    info("Window size is set to %s", keyVal[1]);
                 }
                 case "buffer", "b" -> {
                     config.setProperty("app.render.buffer", keyVal[1]);
+                    info("Rendering buffer size is set to %s", keyVal[1]);
                 }
                 case "title", "t" -> {
                     config.setProperty("app.window.title", keyVal[1]);
+                    info("Window title is set to %s", keyVal[1]);
+
                 }
                 case "exit", "x" -> {
                     config.setProperty("app.exit", keyVal[1]);
+                    info("The auto-exit flag is set to %s", keyVal[1]);
                 }
                 case "debug", "d" -> {
                     config.setProperty("app.debug.level", keyVal[1]);
+                    info("The debug level is set to %s", keyVal[1]);
+                }
+                case "debugFilter", "df" -> {
+                    config.setProperty("app.debug.filter", keyVal[1]);
+                    info("The debug filter is set to %s", keyVal[1]);
                 }
                 case "ups" -> {
                     config.setProperty("app.update.ups", keyVal[1]);
+                    info("The Update-Per-Second rate is set to %s", keyVal[1]);
                 }
                 case "fps" -> {
                     config.setProperty("app.render.fps", keyVal[1]);
+                    info("The Frame-Per-Second rate is set to %s", keyVal[1]);
                 }
                 default -> {
-                    error("This argument %s is unknown", s);
+                    warn("This argument %s is unknown, it is ignored.", s);
                 }
             }
         });
-        loadConfiguration("/config.properties");
-        parseConfiguration();
     }
 
     public void parseConfiguration() {
@@ -1240,10 +1265,6 @@ public class Demo01Frame implements KeyListener, MouseListener, MouseWheelListen
         } catch (IOException | URISyntaxException ioe) {
             error("Unable to read configuration file %s : %s", configFilePath, ioe.getMessage());
         }
-
-        config.forEach((k, v) -> {
-            info("Configuration| loading key [%s] set to [%s]", k, v);
-        });
     }
 
     public void initializeDisplay() {
