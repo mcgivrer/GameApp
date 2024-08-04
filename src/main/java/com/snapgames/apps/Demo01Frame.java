@@ -47,7 +47,6 @@ import java.util.stream.Collectors;
  */
 public class Demo01Frame implements KeyListener, MouseListener, MouseWheelListener, MouseMotionListener {
 
-
     /**
      * <p>The {@link Entity} class is the Core object for any Scene.</p>
      *
@@ -1057,6 +1056,10 @@ public class Demo01Frame implements KeyListener, MouseListener, MouseWheelListen
      */
     private static BufferedImage buffer;
     /**
+     * rendering window in fullscreen mode if true
+     */
+    private boolean fullScreenStatus = false;
+    /**
      * Frame Per Second rate
      */
     private int FPS = 60;
@@ -1133,7 +1136,7 @@ public class Demo01Frame implements KeyListener, MouseListener, MouseWheelListen
 
     public void run(String[] args) {
         init(args);
-        prepareDisplay(true);
+        prepareDisplay(false);
         createScene();
         loop();
         dispose();
@@ -1271,7 +1274,9 @@ public class Demo01Frame implements KeyListener, MouseListener, MouseWheelListen
         window.setPreferredSize(new Dimension(
                 Integer.parseInt(config.getProperty("app.window.width", "640")),
                 Integer.parseInt(config.getProperty("app.window.height", "480"))));
-
+        if (fullScreen) {
+            window.setUndecorated(true);
+        }
         window.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
         window.setIconImage(getResource("/images/thor-hammer.png"));
         window.pack();
@@ -1281,6 +1286,7 @@ public class Demo01Frame implements KeyListener, MouseListener, MouseWheelListen
         window.addMouseListener(this);
         window.addMouseMotionListener(this);
         window.addMouseWheelListener(this);
+
         // show window.
         window.setVisible(true);
         window.createBufferStrategy(3);
@@ -2203,7 +2209,8 @@ public class Demo01Frame implements KeyListener, MouseListener, MouseWheelListen
             }
             case KeyEvent.VK_F11 -> {
                 setPause(true);
-                prepareDisplay(true);
+                fullScreenStatus = !fullScreenStatus;
+                prepareDisplay(fullScreenStatus);
                 setPause(false);
             }
             case KeyEvent.VK_PAGE_UP -> {
