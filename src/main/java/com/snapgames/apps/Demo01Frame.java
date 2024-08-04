@@ -1,16 +1,14 @@
 package com.snapgames.apps;
 
 import javax.imageio.ImageIO;
+import javax.sound.sampled.*;
 import javax.swing.*;
 import java.awt.*;
 import java.awt.event.*;
 import java.awt.geom.Point2D;
 import java.awt.geom.Rectangle2D;
 import java.awt.image.BufferedImage;
-import java.io.File;
-import java.io.FileInputStream;
-import java.io.IOException;
-import java.io.InputStream;
+import java.io.*;
 import java.net.URISyntaxException;
 import java.nio.file.Path;
 import java.nio.file.Paths;
@@ -1308,11 +1306,18 @@ public class Demo01Frame implements KeyListener, MouseListener, MouseWheelListen
                     }
                 })
         );
+        add(new ImageObject("heart")
+                .setImage(getResource("/images/tiles01.png|0,96,16,16"))
+                .setPosition(buffer.getWidth() - 40, 20)
+                .setSize(16, 16)
+                .setRelativeToCamera(true)
+        );
+
         add(new TextObject("Life")
                 .setText("%01d")
                 .setValue(lifeCount)
                 .setFont(textFont.deriveFont(8.0f))
-                .setPosition(buffer.getWidth() - 32, 32)
+                .setPosition(buffer.getWidth() - 32, 40)
                 .setBorderColor(Color.WHITE)
                 .setRelativeToCamera(true)
                 .add(new Behavior() {
@@ -1507,7 +1512,14 @@ public class Demo01Frame implements KeyListener, MouseListener, MouseWheelListen
     /**
      * Retrieve a resource from a path.
      * <p>
-     * it can be a Font (ttf) or an image (jpg, png);
+     * It can be a Font (ttf) or an image (jpg, png)
+     *
+     * <p>if an image is loaded you can add slicing information on path:
+     * <code>path-to-/my-image.png|x,y,w,h</code> where: </p>
+     * <ul>
+     *     <li><code>x,y</code> are position in the image</li>
+     *     <li><code>w,h</code> are width and height of the sliced image</li>
+     * </ul>
      *
      * @param path path to the resource to be loaded.
      * @param <T>  the type of the resource.
@@ -1516,6 +1528,9 @@ public class Demo01Frame implements KeyListener, MouseListener, MouseWheelListen
     public static <T> T getResource(String path) {
         try {
             String ext = path.substring(path.lastIndexOf(".") + 1).toLowerCase();
+            if (path.contains("|")) {
+                ext = path.substring(path.lastIndexOf(".") + 1, path.lastIndexOf("|"));
+            }
             switch (ext) {
                 case "ttf" -> {
                     return (T) Font.createFont(
@@ -1523,7 +1538,20 @@ public class Demo01Frame implements KeyListener, MouseListener, MouseWheelListen
                             Demo01Frame.class.getResourceAsStream(path));
                 }
                 case "png", "jpg" -> {
-                    return (T) ImageIO.read(Demo01Frame.class.getResourceAsStream(path));
+                    if (path.contains("|")) {
+                        String filePath = path.substring(0, path.lastIndexOf("|"));
+                        BufferedImage img = ImageIO.read(Objects.requireNonNull(Demo01Frame.class.getResourceAsStream(filePath)));
+                        String slice = path.substring(path.lastIndexOf("|") + 1);
+                        String[] slices = slice.split(",");
+                        return (T) img.getSubimage(
+                                Integer.parseInt(slices[0]),
+                                Integer.parseInt(slices[1]),
+                                Integer.parseInt(slices[2]),
+                                Integer.parseInt(slices[3])
+                        );
+                    } else {
+                        return (T) ImageIO.read(Demo01Frame.class.getResourceAsStream(path));
+                    }
                 }
                 default -> {
                     return null;

@@ -27,9 +27,11 @@ or you can execute the command line :
 $> java -jar target/Demo01-1.0.0.jar
 ```
 
-![This is the default result for a DemoAppTemplate execution](src/docs/images/screenshot-1.png "This is the default result for a DemoAppTemplate execution")
+![This is the default result for a DemoAppTemplate execution](src/docs/images/screenshot-2.png "This is the default result for a DemoAppTemplate execution")
 
 _figure 1 - This is the default result for a DemoAppTemplate execution_
+
+>_**NOTE**_<br/>_On this figure 1, a screenshot, you can note the yellow border indicating that the debug level is set to 1 at least. the bottom orage line display some live debugging information._
 
 Now, the following keys act as :
 
@@ -43,6 +45,10 @@ Now, the following keys act as :
 | <kbd>LEFT</kbd>              | Move player left                              | 
 | <kbd>RIGHT</kbd>             | Move player right                             | 
 | <kbd>PAGE_UP</kbd>           | Add 1à new enemies                            | 
+
+![Requesting to quit by pressing ESCAPE key](src/docs/images/screenshot-3.png "Requesting to quit by pressing ESCAPE key")
+
+_figure 2 - Requesting to quit by pressing ESCAPE key_
 
 ### Configuration
 
