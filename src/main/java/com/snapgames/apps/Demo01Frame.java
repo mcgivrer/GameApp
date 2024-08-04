@@ -842,38 +842,6 @@ public class Demo01Frame implements KeyListener, MouseListener, MouseWheelListen
         BOTTOM;
     }
 
-    public static class AlignBehavior implements Behavior {
-        @Override
-        public void update(Demo01Frame app, Entity e, double elapsed) {
-            e.child.forEach(c -> {
-                switch (c.getClass().getSimpleName()) {
-                    case "Button", "TextBox" -> {
-                        switch (((Button) c).align) {
-                            case LEFT -> {
-                                c.x = e.x + DialogBox.margin + DialogBox.padding;
-                                c.y = e.y + e.height - (c.height + DialogBox.margin + DialogBox.padding);
-                            }
-                            case RIGHT -> {
-                                c.x = (e.x + e.width) - (c.width + DialogBox.margin + DialogBox.padding);
-                                c.y = e.y + e.height - (c.height + DialogBox.margin + DialogBox.padding);
-                            }
-                            case CENTER -> {
-                                c.x = (e.x + (e.width * 0.5)) - (DialogBox.margin + DialogBox.padding);
-                                c.y = e.y + e.height - (c.height + DialogBox.margin + DialogBox.padding);
-                            }
-                            default -> {
-                                // processing TOP,BOTTOM will come later...
-                            }
-                        }
-                    }
-                    default -> {
-                        // nothing to do thaaaaaa....
-                    }
-                }
-            });
-        }
-    }
-
     /**
      * This {@link Behavior} implementation is used to automatically move child {@link TextObject} and {@link Button}
      * to their new position according to the {@link Align} attribute.
