@@ -1392,6 +1392,7 @@ public class Demo01Frame implements KeyListener, MouseListener, MouseWheelListen
                 .setFillColor(Color.DARK_GRAY)
                 .setBorderColor(Color.BLACK)
                 .setActive(false)
+                .setPosition((buffer.getWidth() - 140) * 0.5, (buffer.getHeight() - 40) * 0.5)
                 .setPriority(10)
                 .add(new Behavior() {
                     @Override
@@ -1466,17 +1467,17 @@ public class Demo01Frame implements KeyListener, MouseListener, MouseWheelListen
     }
 
     /**
-     * Switch visibility of the {@link Entity} to the required status.
+     * Switch visibility of the {@link Entity} <code>e</code> to the required <code>visible</code> status.
      *
-     * <p>The {@link Entity} is set to active, and the corresponding behaviors for the
+     * <p>The {@link Entity} and its child are set to active, and the corresponding behaviors for the
      * {@link Entity} and all its child will be applied</p>
      * <ul>
      *     <li>{@link Behavior#onActivate(Demo01Frame, Entity)} if {@link Entity} is set to visible,</li>
      *      <li>{@link Behavior#onDeactivate(Demo01Frame, Entity)} if visibility of the {@link Entity} is unset.</li>
      * </ul>
      *
-     * @param e
-     * @param visible
+     * @param e       the {@link Entity} to set as visible.
+     * @param visible if true, the {@link Entity} <code>e</code> will be visible.
      */
     public void setVisible(Entity e, boolean visible) {
         e.setActive(visible);
@@ -1490,6 +1491,13 @@ public class Demo01Frame implements KeyListener, MouseListener, MouseWheelListen
         }
     }
 
+    /**
+     * Retrieve from the cache the {@link Entity} with name <code>entityName</code>.
+     *
+     * @param entityName the name of the {@link Entity} to be retrieved from the scene cache.
+     * @param <T>        the Entity extended type
+     * @return the corresponding {@link Entity} with the name <code>entityName</code>.
+     */
     public <T extends Entity> T getEntity(String entityName) {
         return (T) entities.get(entityName);
     }
@@ -1510,6 +1518,9 @@ public class Demo01Frame implements KeyListener, MouseListener, MouseWheelListen
 
     /**
      * Define the current active {@link Camera}.
+     * <p>
+     * The defined {@link Camera}'s targeted {@link Entity} will be tracked on center of the Camera viewport
+     * corresponding to the window center.
      *
      * @param cam the new {@link Camera} to activate.
      */
