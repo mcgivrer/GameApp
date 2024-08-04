@@ -4,6 +4,7 @@ import javax.imageio.ImageIO;
 import javax.swing.*;
 import java.awt.*;
 import java.awt.event.*;
+import java.awt.geom.Ellipse2D;
 import java.awt.geom.Point2D;
 import java.awt.geom.Rectangle2D;
 import java.awt.image.BufferedImage;
@@ -124,6 +125,10 @@ public class Demo01Frame implements KeyListener, MouseListener, MouseWheelListen
          */
         public Entity(String name) {
             this.name = name;
+        }
+
+        public void update(double elapsed) {
+
         }
 
         public Entity setPosition(double x, double y) {
@@ -308,7 +313,28 @@ public class Demo01Frame implements KeyListener, MouseListener, MouseWheelListen
 
         public GameObject setNature(GameObjectNature n) {
             this.nature = n;
+
             return this;
+        }
+
+        @Override
+        public Entity setPosition(double x, double y) {
+            super.setPosition(x, y);
+            setSize(width, height);
+            return this;
+        }
+
+        @Override
+        public void update(double elapsed) {
+            super.update(elapsed);
+            switch (nature) {
+                case ELLIPSE -> {
+                    shape = new Ellipse2D.Double(x, y, width, height);
+                }
+                default -> {
+                    shape = new Rectangle2D.Double(x, y, width, height);
+                }
+            }
         }
     }
 
@@ -1345,11 +1371,11 @@ public class Demo01Frame implements KeyListener, MouseListener, MouseWheelListen
 
         generateEntities("enemy_", 20);
 
-        Entity player = new Entity("player")
+        GameObject player = (GameObject) new GameObject("player")
+                .setNature(GameObjectNature.RECTANGLE)
                 .setPosition(world.playArea.getWidth() * 0.5,
                         world.playArea.getHeight() * 0.5)
-                .setSize(16, 16)
-                .setPriority(200)
+                .setSize(16, 16).setPriority(200)
                 .setMaterial(new Material("Player_MAT", 1.0, 0.998, 0.98))
                 .setMass(10.0)
                 .add(new Behavior() {
@@ -1735,6 +1761,7 @@ public class Demo01Frame implements KeyListener, MouseListener, MouseWheelListen
         if (!e.isRelativeToCamera() && !isPause()) {
             applyPhysics(delay, e);
             controlPlayAreaBoundaries(e);
+            e.update(delay);
         }
         e.behaviors.forEach(b -> {
             b.update(this, e, delay);
@@ -1996,7 +2023,26 @@ public class Demo01Frame implements KeyListener, MouseListener, MouseWheelListen
     }
 
     private void drawGameObject(Graphics2D g, GameObject go) {
-        // TODO Create the GameObject drawing method
+        switch (go.nature) {
+            case RECTANGLE, ELLIPSE, POLYGON -> {
+                g.setColor(go.fillColor);
+                g.fill(go.shape);
+                g.setColor(go.borderColor);
+                g.draw(go.shape);
+            }
+            case DOT -> {
+                g.setColor(go.borderColor);
+                g.drawLine(
+                        (int) go.getX(), (int) go.getY(),
+                        (int) go.getX(), (int) go.getY());
+            }
+            case LINE -> {
+                g.setColor(go.borderColor);
+                g.drawLine(
+                        (int) go.getX(), (int) go.getY(),
+                        (int) (go.getX() + go.getWidth()), (int) (go.getY() + go.getHeight()));
+            }
+        }
     }
 
     private static void drawTextBox(Graphics2D g, TextObject te) {
