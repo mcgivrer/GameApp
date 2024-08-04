@@ -1210,12 +1210,10 @@ public class Demo01Frame implements KeyListener, MouseListener, MouseWheelListen
      * Translated messages to display text on console and or on screen.
      */
     static ResourceBundle messages = ResourceBundle.getBundle("i18n/messages");
-
     /**
      * Configuration properties file.
      */
     private final Properties config = new Properties();
-
     /**
      * Flag set to true when game exit is required.
      */
@@ -1224,7 +1222,6 @@ public class Demo01Frame implements KeyListener, MouseListener, MouseWheelListen
      * Flag set to true when non-relative to camera {@link Entity} needs processing to be set on pause.
      */
     private static boolean pause = false;
-
     /**
      * Internal debug level output to console.
      */
@@ -1237,7 +1234,6 @@ public class Demo01Frame implements KeyListener, MouseListener, MouseWheelListen
      * Filtering debug information output on console based on debug info level.
      */
     private static String loggerFilter = "ERROR,WARN,INFO";
-
     /**
      * The window containing the all Game display.
      */
@@ -1258,7 +1254,6 @@ public class Demo01Frame implements KeyListener, MouseListener, MouseWheelListen
      * Update Per Second rate
      */
     private int UPS = 120;
-
     /**
      * Mouse horizontal position on buffer
      */
@@ -1279,29 +1274,23 @@ public class Demo01Frame implements KeyListener, MouseListener, MouseWheelListen
      * Previously focused Entity by mouse cursor.
      */
     private static Entity previousEntity = null;
-
     /**
      * current Active scene.
      */
     private Scene currentScene;
-
-
     /**
      * Internal buffer for key states
      */
     private boolean[] keys = new boolean[1024];
-
     /**
      * World default instance to define a play area, a gravity and a Material.
      */
     private World world = new World("earth", 0.981, new Rectangle2D.Double(), Material.DEFAULT);
-
     /**
      * Default background buffer color for rendering processing.
      */
     private Color backGroundColor = Color.BLACK;
-
-
+    
     /**
      * Create the {@link Demo01Frame} instance and detect the current java context.
      */
@@ -1576,7 +1565,6 @@ public class Demo01Frame implements KeyListener, MouseListener, MouseWheelListen
         currentScene.clear();
         createScene();
     }
-
 
     public void activateEntity(Entity e, boolean a) {
         e.setActive(a);
