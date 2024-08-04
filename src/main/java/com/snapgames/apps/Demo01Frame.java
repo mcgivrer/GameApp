@@ -1,5 +1,7 @@
 package com.snapgames.apps;
 
+import com.snapgames.apps.scenes.PlayScene;
+
 import javax.imageio.ImageIO;
 import javax.swing.*;
 import java.awt.*;
@@ -53,7 +55,6 @@ import java.util.stream.Collectors;
  */
 public class Demo01Frame implements KeyListener, MouseListener, MouseWheelListener, MouseMotionListener {
 
-
     /**
      * <p>The {@link Entity} class is the Core object for any Scene.</p>
      *
@@ -84,7 +85,7 @@ public class Demo01Frame implements KeyListener, MouseListener, MouseWheelListen
      * @since 1.0.0
      */
     public static class Entity extends Rectangle2D.Double {
-        static int index = 0;
+        public static int index = 0;
         public int id = index++;
         public String name = "entity_" + id;
 
@@ -1178,7 +1179,7 @@ public class Demo01Frame implements KeyListener, MouseListener, MouseWheelListen
          *
          * @param cam the new {@link Camera} to activate.
          */
-        void setActiveCamera(Camera cam) {
+        protected void setActiveCamera(Camera cam) {
             this.activeCamera = cam;
 
         }
@@ -1209,7 +1210,7 @@ public class Demo01Frame implements KeyListener, MouseListener, MouseWheelListen
     /**
      * Translated messages to display text on console and or on screen.
      */
-    static ResourceBundle messages = ResourceBundle.getBundle("i18n/messages");
+    public static ResourceBundle messages = ResourceBundle.getBundle("i18n/messages");
     /**
      * Configuration properties file.
      */
@@ -1271,9 +1272,13 @@ public class Demo01Frame implements KeyListener, MouseListener, MouseWheelListen
      */
     private int realMouseY;
     /**
-     * Previously focused Entity by mouse cursor.
+     * Previously focused {@link Entity} by mouse cursor.
      */
     private static Entity previousEntity = null;
+    /**
+     * A Map of all game's {@link Scene}
+     */
+    private Map<String, Scene> scenes = new ConcurrentHashMap<>();
     /**
      * current Active scene.
      */
@@ -1290,7 +1295,7 @@ public class Demo01Frame implements KeyListener, MouseListener, MouseWheelListen
      * Default background buffer color for rendering processing.
      */
     private Color backGroundColor = Color.BLACK;
-    
+
     /**
      * Create the {@link Demo01Frame} instance and detect the current java context.
      */
@@ -1468,14 +1473,39 @@ public class Demo01Frame implements KeyListener, MouseListener, MouseWheelListen
 
     /*----- Manage current Scene -----*/
 
-
     public void createScene() {
-        setCurrentScene(new PlayScene(this, "play"));
-        currentScene.create(this);
+        add(new PlayScene(this, "play"));
+        activateScene("play");
     }
 
+    /**
+     * Add a new {@link Scene} implementation to the Game.
+     *
+     * @param scene the new {@link Scene}.
+     */
+    private void add(Scene scene) {
+        scenes.put(scene.getName(), scene);
+    }
+
+    /**
+     * set the current active {@link Scene}.
+     *
+     * @param scene the implementation {@link Scene}.
+     */
     private void setCurrentScene(Scene scene) {
         this.currentScene = scene;
+    }
+
+    /**
+     * Activate the {@link Scene} named <code>sceneName</code>.
+     *
+     * @param sceneName the name of the {@link Scene} to be activated.
+     */
+    private void activateScene(String sceneName) {
+        if (Optional.ofNullable(currentScene).isEmpty()) {
+            setCurrentScene(scenes.get(sceneName));
+        }
+        currentScene.create(this);
     }
 
     /**

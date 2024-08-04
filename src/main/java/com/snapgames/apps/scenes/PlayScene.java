@@ -1,4 +1,6 @@
-package com.snapgames.apps;
+package com.snapgames.apps.scenes;
+
+import com.snapgames.apps.Demo01Frame;
 
 import java.awt.*;
 import java.awt.event.KeyEvent;
