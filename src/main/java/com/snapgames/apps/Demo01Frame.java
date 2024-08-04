@@ -1,7 +1,6 @@
 package com.snapgames.apps;
 
 import javax.imageio.ImageIO;
-import javax.sound.sampled.*;
 import javax.swing.*;
 import java.awt.*;
 import java.awt.event.*;
@@ -1134,7 +1133,7 @@ public class Demo01Frame implements KeyListener, MouseListener, MouseWheelListen
 
     public void run(String[] args) {
         init(args);
-        prepareDisplay();
+        prepareDisplay(true);
         createScene();
         loop();
         dispose();
@@ -1244,7 +1243,6 @@ public class Demo01Frame implements KeyListener, MouseListener, MouseWheelListen
      * or directly from the JAR side external file configFilePath.
      *
      * @param configFilePath path to the configuration file to be loaded
-     * @throws IOException in case of issue during file reading.
      */
     public void loadConfiguration(String configFilePath) {
 
@@ -1265,7 +1263,15 @@ public class Demo01Frame implements KeyListener, MouseListener, MouseWheelListen
         }
     }
 
-    public void prepareDisplay() {
+    public void prepareDisplay(boolean fullScreen) {
+        if (window.isActive()) {
+            window.dispose();
+        }
+        window = new JFrame(config.getProperty("app.window.title", "Demo01"));
+        window.setPreferredSize(new Dimension(
+                Integer.parseInt(config.getProperty("app.window.width", "640")),
+                Integer.parseInt(config.getProperty("app.window.height", "480"))));
+
         window.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
         window.setIconImage(getResource("/images/thor-hammer.png"));
         window.pack();
@@ -1278,6 +1284,9 @@ public class Demo01Frame implements KeyListener, MouseListener, MouseWheelListen
         // show window.
         window.setVisible(true);
         window.createBufferStrategy(3);
+        if (fullScreen) {
+            window.setExtendedState(Frame.MAXIMIZED_BOTH);
+        }
     }
 
     /*----- Manage current Scene -----*/
@@ -1296,7 +1305,7 @@ public class Demo01Frame implements KeyListener, MouseListener, MouseWheelListen
                 .setText("%05d")
                 .setValue(score)
                 .setFont(scoreFont.deriveFont(18.0f))
-                .setPosition(20, 32)
+                .setPosition(20, 16)
                 .setBorderColor(Color.WHITE)
                 .setRelativeToCamera(true)
                 .add(new Behavior() {
@@ -1308,7 +1317,7 @@ public class Demo01Frame implements KeyListener, MouseListener, MouseWheelListen
         );
         add(new ImageObject("heart")
                 .setImage(getResource("/images/tiles01.png|0,96,16,16"))
-                .setPosition(buffer.getWidth() - 40, 20)
+                .setPosition(buffer.getWidth() - 40, 3)
                 .setSize(16, 16)
                 .setRelativeToCamera(true)
         );
@@ -1317,7 +1326,7 @@ public class Demo01Frame implements KeyListener, MouseListener, MouseWheelListen
                 .setText("%01d")
                 .setValue(lifeCount)
                 .setFont(textFont.deriveFont(8.0f))
-                .setPosition(buffer.getWidth() - 32, 40)
+                .setPosition(buffer.getWidth() - 32, 16)
                 .setBorderColor(Color.WHITE)
                 .setRelativeToCamera(true)
                 .add(new Behavior() {
@@ -1363,7 +1372,7 @@ public class Demo01Frame implements KeyListener, MouseListener, MouseWheelListen
                 new Camera("cam01")
                         .setTarget(player)
                         .setTweenFactor(0.01)
-                        .setSize(320, 240)
+                        .setSize(buffer.getWidth(), buffer.getHeight())
                         .add(new Behavior() {
                             @Override
                             public void draw(Demo01Frame app, Entity e, Graphics2D g) {
@@ -1838,6 +1847,12 @@ public class Demo01Frame implements KeyListener, MouseListener, MouseWheelListen
                 .sorted(Comparator.comparingInt(a -> a.priority))
                 .forEach(e -> {
                     drawEntity(e, g);
+                    if (isDebugAtLeast(3)) {
+                        g.setColor(Color.ORANGE);
+                        g.drawRect(
+                                (int) e.getX(), (int) e.getY(),
+                                (int) e.getWidth(), (int) e.getHeight());
+                    }
                 });
 
         // draw play area limits in debug mode
@@ -1849,6 +1864,7 @@ public class Demo01Frame implements KeyListener, MouseListener, MouseWheelListen
         if (Optional.ofNullable(activeCamera).isPresent()) {
             g.translate(activeCamera.x, activeCamera.y);
         }
+
         // draw all objects stick to the Camera.
         entities.values().stream().filter(e -> e.isActive() && e.isRelativeToCamera())
                 .sorted(Comparator.comparingInt(a -> a.priority))
@@ -1863,6 +1879,7 @@ public class Demo01Frame implements KeyListener, MouseListener, MouseWheelListen
             });
         }
 
+        // keep mouse coordinates
         stats.put("mouse", "(" + mouseX + "," + mouseY + ")");
         if (isDebugAtLeast(1)) {
             g.setColor(Color.YELLOW);
@@ -1871,33 +1888,39 @@ public class Demo01Frame implements KeyListener, MouseListener, MouseWheelListen
                     (int) mouseY,
                     2, 2);
         }
-
         g.dispose();
 
-        Graphics g2s = window.getBufferStrategy().getDrawGraphics();
-        g2s.drawImage(buffer, 0, 0, window.getWidth(), window.getHeight(),
-                0, 0, buffer.getWidth(), buffer.getHeight(), null);
-        if (debug > 0) {
-            g2s.setColor(Color.ORANGE);
+        if (window.getGraphics() != null && window.getBufferStrategy() != null) {
+            Graphics g2s = window.getBufferStrategy().getDrawGraphics();
+            Insets insets = window.getInsets();
 
-            g2s.drawString(String.format("[ dbg:%01d / fps:%03d ups:%03d ft:%03d / nbObj:%04d active:%04d / mouse: %s]",
-                            debug,
-                            stats.get("fps"),
-                            stats.get("ups"),
-                            stats.get("ft"),
-                            (long) entities.values().size(),
-                            entities.values().stream().filter(Entity::isActive).count(),
-                            stats.get("mouse")),
-                    10, window.getHeight() - 10
-            );
+            g2s.drawImage(buffer, 0, insets.top, window.getWidth(), window.getHeight(),
+                    0, 0, buffer.getWidth(), buffer.getHeight(), null);
+
+            if (debug > 0) {
+                g2s.setColor(Color.ORANGE);
+                g2s.drawString(
+                        String.format("[ dbg:%01d / fps:%03d ups:%03d ft:%03d / nbObj:%04d active:%04d / mouse: %s]",
+                                debug,
+                                stats.get("fps"),
+                                stats.get("ups"),
+                                stats.get("ft"),
+                                (long) entities.values().size(),
+                                entities.values().stream().filter(Entity::isActive).count(),
+                                stats.get("mouse")),
+                        10, window.getHeight() - 10
+                );
+            }
+
+            if (isDebugAtLeast(2)) {
+                // draw mouse
+                g2s.setColor(Color.WHITE);
+                g2s.fillRect((int) realMouseX, (int) realMouseY, 1, 1);
+            }
+
+            g2s.dispose();
+            window.getBufferStrategy().show();
         }
-        if (isDebugAtLeast(2)) {
-            // draw mouse
-            g2s.setColor(Color.WHITE);
-            g2s.fillRect((int) realMouseX, (int) realMouseY, 1, 1);
-        }
-        g2s.dispose();
-        window.getBufferStrategy().show();
     }
 
     /**
@@ -1963,10 +1986,24 @@ public class Demo01Frame implements KeyListener, MouseListener, MouseWheelListen
 
     private static void drawTextBox(Graphics2D g, TextObject te) {
         g.setColor(te.textColor);
+
         if (Optional.ofNullable(te.font).isPresent()) {
             g.setFont(te.font);
         }
+
+        int textWidth = g.getFontMetrics().stringWidth(te.text);
+        int textHeight = g.getFontMetrics().getHeight();
+        int tx2 = g.getFontMetrics().getDescent();
+
+        te.setSize(textWidth, textHeight);
         g.drawString(te.getText(), (int) te.getX(), (int) te.getY());
+
+        if (debug > 2) {
+            g.setColor(Color.ORANGE);
+            g.drawRect(
+                    (int) te.getX() + tx2, (int) (te.getY() - te.getHeight()),
+                    (int) te.getWidth(), (int) te.getHeight());
+        }
     }
 
     private void drawButton(Graphics2D g, Button te) {
@@ -2153,6 +2190,11 @@ public class Demo01Frame implements KeyListener, MouseListener, MouseWheelListen
             case KeyEvent.VK_P, KeyEvent.VK_PAUSE -> {
                 setPause(!isPause());
             }
+            case KeyEvent.VK_F11 -> {
+                setPause(true);
+                prepareDisplay(true);
+                setPause(false);
+            }
             case KeyEvent.VK_PAGE_UP -> {
                 generateEntities("enemy_", 10);
             }
@@ -2228,11 +2270,10 @@ public class Demo01Frame implements KeyListener, MouseListener, MouseWheelListen
 
     @Override
     public void mouseMoved(MouseEvent e) {
-
         this.realMouseX = e.getX();
-        this.realMouseY = e.getY();
+        this.realMouseY = e.getY() - window.getInsets().top;
         this.mouseX = (realMouseX * ((double) buffer.getWidth() / window.getWidth()));
-        this.mouseY = (realMouseY * ((double) buffer.getHeight() / window.getHeight()));
+        this.mouseY = (realMouseY * ((double) buffer.getHeight() / (window.getHeight() - window.getInsets().top)));
 
         if (getEntityUnderMouse(mouseX, mouseY).isPresent()) {
             Entity entityClicked = getEntityUnderMouse(mouseX, mouseY).get();
