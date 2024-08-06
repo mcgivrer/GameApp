@@ -1100,13 +1100,19 @@ public class Demo01Frame implements KeyListener, MouseListener, MouseWheelListen
 
         void add(Entity entity);
 
-        void clear();
+        void reset();
 
         Camera getActiveCamera();
 
         String getName();
     }
 
+    /**
+     * Default abstract scene implementation for {@link Entity} and {@link Scene} management.
+     *
+     * @author Frederic Delorme
+     * @since 1.0.0
+     */
     public abstract static class AbstractScene implements Scene {
         private static long index = 0;
         private final long id = index++;
@@ -1123,6 +1129,12 @@ public class Demo01Frame implements KeyListener, MouseListener, MouseWheelListen
          */
         private Camera activeCamera;
 
+        /**
+         * Create a new {@link AbstractScene} with a <code>name</code> and a parent <code>app</code>.
+         *
+         * @param app  the parent application {@link Demo01Frame}
+         * @param name thename opf this new {@link AbstractScene}
+         */
         public AbstractScene(Demo01Frame app, String name) {
             this.name = name;
             this.app = app;
@@ -1165,7 +1177,7 @@ public class Demo01Frame implements KeyListener, MouseListener, MouseWheelListen
         }
 
         @Override
-        public void clear() {
+        public void reset() {
             entities.clear();
             behaviors.clear();
             activeCamera = null;
@@ -1276,7 +1288,7 @@ public class Demo01Frame implements KeyListener, MouseListener, MouseWheelListen
      */
     private static Entity previousEntity = null;
     /**
-     * A Map of all game's {@link Scene}
+     * A Map of all game's {@link Scene}.
      */
     private Map<String, Scene> scenes = new ConcurrentHashMap<>();
     /**
@@ -1592,7 +1604,7 @@ public class Demo01Frame implements KeyListener, MouseListener, MouseWheelListen
      * Reset current Scene.
      */
     public void resetScene() {
-        currentScene.clear();
+        currentScene.reset();
         createScene();
     }
 
