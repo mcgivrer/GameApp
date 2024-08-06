@@ -1,10 +1,10 @@
 ## see gitea action here for referecnces: https://gitea.com/actions
 name: Gitea Actions Java Build
-run-name: ${{ gitea.actor }} is testing out Gitea Actions 🚀
+run-name: ${{ gitea.actor }} is building the DemoAppTemplate project 🚀
 on: [push]
 
 jobs:
-  Build-Karma-Project:
+  Build-DemoAppTemplate-Project:
     runs-on: ubuntu-latest
     steps:
       - uses: https://github.com/actions/checkout@v3
