@@ -1,5 +1,7 @@
 # README
 
+[![Gitea action build](http://nextserver01:4000/frederic/DemoAppTemplate/actions/workflows/build.yml/badge.svg?branch=develop)](http://nextserver01:4000/frederic/DemoAppTemplate/actions?workflow=build.yml&actor=0&status=0)
+
 ## Context
 
 This is the readme file for Demo01Frame (1.0.0) proposing a simple 2D game framework
