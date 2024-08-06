@@ -1,6 +1,7 @@
 package com.snapgames.apps;
 
 import com.snapgames.apps.scenes.PlayScene;
+import com.snapgames.apps.scenes.TitleScene;
 
 import javax.imageio.ImageIO;
 import javax.swing.*;
@@ -19,6 +20,7 @@ import java.time.format.DateTimeFormatter;
 import java.util.List;
 import java.util.*;
 import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.CopyOnWriteArrayList;
 import java.util.stream.Collectors;
 
 /**
@@ -768,7 +770,7 @@ public class Demo01Frame implements KeyListener, MouseListener, MouseWheelListen
         public Font font;
         public Color textColor = Color.WHITE;
 
-        public Align textAlign;
+        public Align textAlign = Align.LEFT;
 
         public TextObject(String name) {
             super(name);
@@ -1118,7 +1120,7 @@ public class Demo01Frame implements KeyListener, MouseListener, MouseWheelListen
         private final long id = index++;
         private final Demo01Frame app;
         private String name = "scene_" + id;
-        private List<Behavior> behaviors = new ArrayList<>();
+        private List<Behavior> behaviors = new CopyOnWriteArrayList<>();
 
         /**
          * Internal map of {@link Entity} for the active scene.
@@ -1203,7 +1205,7 @@ public class Demo01Frame implements KeyListener, MouseListener, MouseWheelListen
 
         @Override
         public void activate(Demo01Frame app) {
-            getEntities().values().forEach(e -> e.setActive(true));
+            // nothing to do by default.
         }
 
         @Override
@@ -1487,7 +1489,8 @@ public class Demo01Frame implements KeyListener, MouseListener, MouseWheelListen
 
     public void createScene() {
         add(new PlayScene(this, "play"));
-        activateScene("play");
+        add(new TitleScene(this, "title"));
+        activateScene("title");
     }
 
     /**
@@ -1496,7 +1499,9 @@ public class Demo01Frame implements KeyListener, MouseListener, MouseWheelListen
      * @param scene the new {@link Scene}.
      */
     private void add(Scene scene) {
+
         scenes.put(scene.getName(), scene);
+        scene.load(this);
     }
 
     /**
@@ -1513,11 +1518,13 @@ public class Demo01Frame implements KeyListener, MouseListener, MouseWheelListen
      *
      * @param sceneName the name of the {@link Scene} to be activated.
      */
-    private void activateScene(String sceneName) {
-        if (Optional.ofNullable(currentScene).isEmpty()) {
-            setCurrentScene(scenes.get(sceneName));
+    public void activateScene(String sceneName) {
+        if (Optional.ofNullable(currentScene).isPresent()) {
+            currentScene.deactivate(this);
         }
+        setCurrentScene(scenes.get(sceneName));
         currentScene.create(this);
+        currentScene.activate(this);
     }
 
     /**
@@ -2035,14 +2042,26 @@ public class Demo01Frame implements KeyListener, MouseListener, MouseWheelListen
         int textWidth = g.getFontMetrics().stringWidth(te.text);
         int textHeight = g.getFontMetrics().getHeight();
         int tx2 = g.getFontMetrics().getDescent();
-
+        int offsetX = 0;
+        switch (te.textAlign) {
+            case CENTER -> {
+                offsetX = (int) (-0.5 * textWidth);
+            }
+            case LEFT -> {
+                offsetX = 0;
+            }
+            case RIGHT -> {
+                offsetX = -textWidth;
+            }
+        }
         te.setSize(textWidth, textHeight);
-        g.drawString(te.getText(), (int) te.getX(), (int) te.getY());
+        g.drawString(te.getText(), (int) te.getX() + offsetX, (int) te.getY());
+
 
         if (debug > 2) {
             g.setColor(Color.ORANGE);
             g.drawRect(
-                    (int) te.getX() + tx2, (int) (te.getY() - te.getHeight()),
+                    (int) te.getX() + tx2 + offsetX, (int) (te.getY() - te.getHeight()),
                     (int) te.getWidth(), (int) te.getHeight());
         }
     }
