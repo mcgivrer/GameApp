@@ -21,13 +21,18 @@ public class PlayScene extends Demo01Frame.AbstractScene {
      */
     private int lifeCount = 3;
 
+    Font scoreFont;
+
+    Font textFont;
+
     public PlayScene(Demo01Frame app, String name) {
         super(app, name);
     }
 
     @Override
     public void load(Demo01Frame app) {
-        super.load(app);
+        scoreFont = getResource("/fonts/upheavtt.ttf");
+        textFont = getResource("/fonts/Minecraftia-Regular.ttf");
     }
 
     @Override
@@ -220,6 +225,9 @@ public class PlayScene extends Demo01Frame.AbstractScene {
                         if (k.isControlDown()) {
                             app.getWorld().gravity *= -1;
                         }
+                    }
+                    case KeyEvent.VK_F12 -> {
+                        app.activateScene("title");
                     }
                     default -> {
                         // no action !
