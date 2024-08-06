@@ -1,6 +1,6 @@
 # README
 
-
+[![Gitea action build](http://nextserver01:4000/frederic/DemoAppTemplate/actions/workflows/build.yml/badge.svg?branch=develop)](http://nextserver01:4000/frederic/DemoAppTemplate/actions?workflow=build.yml&actor=0&status=0)
 [![Java build](https://github.com/mcgivrer/DemoAppTemplate/actions/workflows/build.yml/badge.svg)](https://github.com/mcgivrer/DemoAppTemplate/actions/workflows/build.yml)
 
 ## Context
