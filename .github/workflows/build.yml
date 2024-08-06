@@ -1,5 +1,5 @@
 name: Java build
-run-name: ${{ github.actor }} is testing out Gitea Actions 🚀
+run-name: ${{ github.actor }} is building a JDK based project 🚀
 on: [push]
 
 jobs:
