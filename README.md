@@ -1,5 +1,8 @@
 # README
 
+
+[![Java build](https://github.com/mcgivrer/DemoAppTemplate/actions/workflows/build.yml/badge.svg)](https://github.com/mcgivrer/DemoAppTemplate/actions/workflows/build.yml)
+
 ## Context
 
 This is the readme file for Demo01Frame (1.0.0) proposing a simple 2D game framework
