@@ -1,4 +1,4 @@
-package com.snapgames.apps;
+package com.snapgames.apps.console;
 
 import java.io.IOException;
 import java.time.LocalDateTime;

@@ -1,14 +1,14 @@
-package com.snapgames.apps.scenes;
+package com.snapgames.apps.desktop.game.scenes;
 
-import com.snapgames.apps.Demo01Frame;
+import com.snapgames.apps.desktop.game.GameApp;
 
 import java.awt.*;
 import java.awt.event.KeyEvent;
 
-import static com.snapgames.apps.Demo01Frame.getResource;
-import static com.snapgames.apps.Demo01Frame.messages;
+import static com.snapgames.apps.desktop.game.GameApp.getResource;
+import static com.snapgames.apps.desktop.game.GameApp.messages;
 
-public class TitleScene extends Demo01Frame.AbstractScene {
+public class TitleScene extends GameApp.AbstractScene {
 
 
     Font scoreFont;
@@ -17,55 +17,55 @@ public class TitleScene extends Demo01Frame.AbstractScene {
     /**
      * Create a new {@link TitleScene} with a <code>name</code> and a parent <code>app</code>.
      *
-     * @param app  the parent application {@link Demo01Frame}
+     * @param app  the parent application {@link GameApp}
      * @param name thename opf this new {@link TitleScene}
      */
-    public TitleScene(Demo01Frame app, String name) {
+    public TitleScene(GameApp app, String name) {
         super(app, name);
     }
 
     @Override
-    public void load(Demo01Frame app) {
+    public void load(GameApp app) {
         scoreFont = getResource("/fonts/upheavtt.ttf");
         textFont = getResource("/fonts/Minecraftia-Regular.ttf");
     }
 
     @Override
-    public void create(Demo01Frame app) {
+    public void create(GameApp app) {
 
-        add(new Demo01Frame.ImageObject("forest")
+        add(new GameApp.ImageObject("forest")
                 .setImage(getResource("/images/backgrounds/forest.jpg"))
                 .setPosition(0, 0)
                 .setSize(app.getWorld().playArea.getWidth(), app.getWorld().playArea.getHeight())
         );
-        add(new Demo01Frame.TextObject("game-title")
+        add(new GameApp.TextObject("game-title")
                 .setText(messages.getString("app.scene.title.game.title"))
                 .setFont(scoreFont.deriveFont(18.0f))
-                .setTextAlign(Demo01Frame.Align.CENTER)
+                .setTextAlign(GameApp.Align.CENTER)
                 .setPosition(app.getBuffer().getWidth() * 0.5, app.getBuffer().getHeight() * 0.15)
                 .setBorderColor(Color.WHITE)
                 .setRelativeToCamera(true)
         );
-        add(new Demo01Frame.TextObject("welcome-msg")
+        add(new GameApp.TextObject("welcome-msg")
                 .setText(messages.getString("app.scene.title.welcome.message"))
                 .setFont(textFont.deriveFont(12.0f))
-                .setTextAlign(Demo01Frame.Align.CENTER)
+                .setTextAlign(GameApp.Align.CENTER)
                 .setPosition(app.getBuffer().getWidth() * 0.5, app.getBuffer().getHeight() * 0.65)
                 .setBorderColor(Color.WHITE)
                 .setRelativeToCamera(true)
         );
 
-        add(new Demo01Frame.TextObject("copyright-msg")
+        add(new GameApp.TextObject("copyright-msg")
                 .setText(messages.getString("app.scene.title.copyright.message"))
                 .setFont(textFont.deriveFont(6.0f))
-                .setTextAlign(Demo01Frame.Align.RIGHT)
+                .setTextAlign(GameApp.Align.RIGHT)
                 .setPosition(app.getBuffer().getWidth() - 10, app.getBuffer().getHeight() - 20)
                 .setBorderColor(Color.WHITE)
                 .setRelativeToCamera(true)
         );
-        add(new Demo01Frame.Behavior() {
+        add(new GameApp.Behavior() {
             @Override
-            public void onKeyReleased(Demo01Frame app, Demo01Frame.Entity e, KeyEvent k) {
+            public void onKeyReleased(GameApp app, GameApp.Entity e, KeyEvent k) {
                 switch (k.getKeyCode()) {
                     case KeyEvent.VK_ENTER -> {
                         app.activateScene("play");
@@ -80,7 +80,7 @@ public class TitleScene extends Demo01Frame.AbstractScene {
     }
 
     @Override
-    public void update(Demo01Frame app, double elapsed) {
+    public void update(GameApp app, double elapsed) {
         super.update(app, elapsed);
     }
 }

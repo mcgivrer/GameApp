@@ -1,15 +1,15 @@
-package com.snapgames.apps.scenes;
+package com.snapgames.apps.desktop.game.scenes;
 
-import com.snapgames.apps.Demo01Frame;
+import com.snapgames.apps.desktop.game.GameApp;
 
 import java.awt.*;
 import java.awt.event.KeyEvent;
 import java.awt.geom.Point2D;
 
-import static com.snapgames.apps.Demo01Frame.getResource;
-import static com.snapgames.apps.Demo01Frame.setPause;
+import static com.snapgames.apps.desktop.game.GameApp.getResource;
+import static com.snapgames.apps.desktop.game.GameApp.setPause;
 
-public class PlayScene extends Demo01Frame.AbstractScene {
+public class PlayScene extends GameApp.AbstractScene {
 
 
     /**
@@ -25,76 +25,76 @@ public class PlayScene extends Demo01Frame.AbstractScene {
 
     Font textFont;
 
-    public PlayScene(Demo01Frame app, String name) {
+    public PlayScene(GameApp app, String name) {
         super(app, name);
     }
 
     @Override
-    public void load(Demo01Frame app) {
+    public void load(GameApp app) {
         scoreFont = getResource("/fonts/upheavtt.ttf");
         textFont = getResource("/fonts/Minecraftia-Regular.ttf");
     }
 
     @Override
-    public void create(Demo01Frame app) {
+    public void create(GameApp app) {
 
         Font scoreFont = getResource("/fonts/upheavtt.ttf");
         Font textFont = getResource("/fonts/Minecraftia-Regular.ttf");
 
-        add(new Demo01Frame.ImageObject("forest")
+        add(new GameApp.ImageObject("forest")
                 .setImage(getResource("/images/backgrounds/forest.jpg"))
                 .setPosition(0, 0)
                 .setSize(app.getWorld().playArea.getWidth(), app.getWorld().playArea.getHeight())
         );
 
-        add(new Demo01Frame.TextObject("score")
+        add(new GameApp.TextObject("score")
                 .setText("%05d")
                 .setValue(score)
                 .setFont(scoreFont.deriveFont(18.0f))
                 .setPosition(20, 16)
                 .setBorderColor(Color.WHITE)
                 .setRelativeToCamera(true)
-                .add(new Demo01Frame.Behavior() {
+                .add(new GameApp.Behavior() {
                     @Override
-                    public void input(Demo01Frame app, Demo01Frame.Entity e) {
-                        ((Demo01Frame.TextObject) e).setValue(score);
+                    public void input(GameApp app, GameApp.Entity e) {
+                        ((GameApp.TextObject) e).setValue(score);
                     }
                 })
         );
-        add(new Demo01Frame.ImageObject("heart")
+        add(new GameApp.ImageObject("heart")
                 .setImage(getResource("/images/tiles01.png|0,96,16,16"))
                 .setPosition(app.getBuffer().getWidth() - 40, 3)
                 .setSize(16, 16)
                 .setRelativeToCamera(true)
         );
 
-        add(new Demo01Frame.TextObject("Life")
+        add(new GameApp.TextObject("Life")
                 .setText("%01d")
                 .setValue(lifeCount)
                 .setFont(textFont.deriveFont(8.0f))
                 .setPosition(app.getBuffer().getWidth() - 32, 16)
                 .setBorderColor(Color.WHITE)
                 .setRelativeToCamera(true)
-                .add(new Demo01Frame.Behavior() {
+                .add(new GameApp.Behavior() {
                     @Override
-                    public void input(Demo01Frame app, Demo01Frame.Entity e) {
-                        ((Demo01Frame.TextObject) e).setValue(lifeCount);
+                    public void input(GameApp app, GameApp.Entity e) {
+                        ((GameApp.TextObject) e).setValue(lifeCount);
                     }
                 })
         );
 
         generateEntities(app, "enemy_", 20);
 
-        Demo01Frame.GameObject player = (Demo01Frame.GameObject) new Demo01Frame.GameObject("player")
-                .setNature(Demo01Frame.GameObjectNature.RECTANGLE)
+        GameApp.GameObject player = (GameApp.GameObject) new GameApp.GameObject("player")
+                .setNature(GameApp.GameObjectNature.RECTANGLE)
                 .setPosition(app.getWorld().playArea.getWidth() * 0.5,
                         app.getWorld().playArea.getHeight() * 0.5)
                 .setSize(16, 16).setPriority(200)
-                .setMaterial(new Demo01Frame.Material("Player_MAT", 1.0, 0.998, 0.98))
+                .setMaterial(new GameApp.Material("Player_MAT", 1.0, 0.998, 0.98))
                 .setMass(10.0)
-                .add(new Demo01Frame.Behavior() {
+                .add(new GameApp.Behavior() {
                     @Override
-                    public void input(Demo01Frame app, Demo01Frame.Entity player) {
+                    public void input(GameApp app, GameApp.Entity player) {
                         double speed = 0.025;
                         if (app.isKeyPressed(KeyEvent.VK_UP)) {
                             player.forces.add(new Point2D.Double(0, -(speed * 2.0)));
@@ -114,14 +114,14 @@ public class PlayScene extends Demo01Frame.AbstractScene {
 
         generateEntities(app, "enemy_", 20);
 
-        setActiveCamera((Demo01Frame.Camera)
-                new Demo01Frame.Camera("cam01")
+        setActiveCamera((GameApp.Camera)
+                new GameApp.Camera("cam01")
                         .setTarget(player)
                         .setTweenFactor(0.01)
                         .setSize(app.getBuffer().getWidth(), app.getBuffer().getHeight())
-                        .add(new Demo01Frame.Behavior() {
+                        .add(new GameApp.Behavior() {
                             @Override
-                            public void draw(Demo01Frame app, Demo01Frame.Entity e, Graphics2D g) {
+                            public void draw(GameApp app, GameApp.Entity e, Graphics2D g) {
                                 g.setColor(Color.WHITE);
                                 g.setFont(textFont.deriveFont(8.0f));
                                 g.drawString(
@@ -130,7 +130,7 @@ public class PlayScene extends Demo01Frame.AbstractScene {
                             }
                         }));
 
-        Demo01Frame.DialogBox exitConfirmation = (Demo01Frame.DialogBox) new Demo01Frame.DialogBox("exitConfirmBox")
+        GameApp.DialogBox exitConfirmation = (GameApp.DialogBox) new GameApp.DialogBox("exitConfirmBox")
                 .setText(app.messages.getString("app.dialog.exit.message"))
                 .setFont(textFont.deriveFont(8.0f))
                 .setTextColor(Color.WHITE)
@@ -140,20 +140,20 @@ public class PlayScene extends Demo01Frame.AbstractScene {
                 .setActive(false)
                 .setPosition((app.getBuffer().getWidth() - 140) * 0.5, (app.getBuffer().getHeight() - 40) * 0.5)
                 .setPriority(10)
-                .add(new Demo01Frame.Behavior() {
+                .add(new GameApp.Behavior() {
                     @Override
-                    public void onActivate(Demo01Frame app, Demo01Frame.Entity e) {
+                    public void onActivate(GameApp app, GameApp.Entity e) {
                         setPause(true);
                     }
 
                     @Override
-                    public void onDeactivate(Demo01Frame app, Demo01Frame.Entity e) {
+                    public void onDeactivate(GameApp app, GameApp.Entity e) {
                         setPause(false);
                     }
                 })
-                .add(new Demo01Frame.UIObject() {
+                .add(new GameApp.UIObject() {
                     @Override
-                    public void onKeyReleased(Demo01Frame app, Demo01Frame.Entity e, KeyEvent k) {
+                    public void onKeyReleased(GameApp app, GameApp.Entity e, KeyEvent k) {
                         if (k.getKeyCode() == KeyEvent.VK_Y || k.getKeyCode() == KeyEvent.VK_SPACE) {
                             app.setExit(true);
                         }
@@ -163,41 +163,41 @@ public class PlayScene extends Demo01Frame.AbstractScene {
                         }
                     }
                 });
-        add((Demo01Frame.Entity) exitConfirmation);
+        add((GameApp.Entity) exitConfirmation);
 
         // Add the required button OK
-        Demo01Frame.Entity okButton = (Demo01Frame.Button) new Demo01Frame.Button("OK")
-                .setAlign(Demo01Frame.Align.RIGHT)
-                .setTextAlign(Demo01Frame.Align.CENTER)
+        GameApp.Entity okButton = (GameApp.Button) new GameApp.Button("OK")
+                .setAlign(GameApp.Align.RIGHT)
+                .setTextAlign(GameApp.Align.CENTER)
                 .setText(app.messages.getString("app.dialog.button.ok"))
                 .setTextColor(Color.WHITE)
                 .setFillColor(Color.GRAY)
                 .setActive(false)
                 .setSize(40, 12)
                 .setPriority(20)
-                .add(new Demo01Frame.UIObject() {
+                .add(new GameApp.UIObject() {
                     @Override
-                    public void onMouseClick(Demo01Frame app, Demo01Frame.Entity e, double mouseX, double mouseY, int buttonId) {
+                    public void onMouseClick(GameApp app, GameApp.Entity e, double mouseX, double mouseY, int buttonId) {
                         app.setExit(true);
                         e.setFillColor(Color.CYAN);
                     }
                 });
 
         // Add the required button Cancel
-        Demo01Frame.Entity cancelButton = new Demo01Frame.Button("Cancel")
-                .setAlign(Demo01Frame.Align.LEFT)
+        GameApp.Entity cancelButton = new GameApp.Button("Cancel")
+                .setAlign(GameApp.Align.LEFT)
                 .setText(app.messages.getString("app.dialog.button.cancel"))
-                .setTextAlign(Demo01Frame.Align.CENTER)
+                .setTextAlign(GameApp.Align.CENTER)
                 .setTextColor(Color.WHITE)
                 .setFillColor(Color.GRAY)
                 .setActive(false)
                 .setSize(40, 12)
                 .setPriority(20)
-                .add(new Demo01Frame.UIObject() {
+                .add(new GameApp.UIObject() {
                     @Override
-                    public void onMouseClick(Demo01Frame app, Demo01Frame.Entity e, double mouseX, double mouseY, int buttonId) {
+                    public void onMouseClick(GameApp app, GameApp.Entity e, double mouseX, double mouseY, int buttonId) {
                         app.setExit(false);
-                        Demo01Frame.DialogBox db = (Demo01Frame.DialogBox) getEntity("exitConfirmBox");
+                        GameApp.DialogBox db = (GameApp.DialogBox) getEntity("exitConfirmBox");
                         db.setVisible(false);
                         setPause(false);
                         e.setFillColor(Color.CYAN);
@@ -209,13 +209,13 @@ public class PlayScene extends Demo01Frame.AbstractScene {
         exitConfirmation.add(okButton);
         exitConfirmation.add(cancelButton);
 
-        add(new Demo01Frame.Behavior() {
+        add(new GameApp.Behavior() {
             @Override
-            public void onKeyReleased(Demo01Frame app, Demo01Frame.Entity e, KeyEvent k) {
+            public void onKeyReleased(GameApp app, GameApp.Entity e, KeyEvent k) {
                 switch (k.getKeyCode()) {
                     // exit application on ESCAPE
                     case KeyEvent.VK_ESCAPE -> {
-                        Demo01Frame.DialogBox db = (Demo01Frame.DialogBox) getEntity("exitConfirmBox");
+                        GameApp.DialogBox db = (GameApp.DialogBox) getEntity("exitConfirmBox");
                         app.activateEntity(db, true);
                     }
                     case KeyEvent.VK_PAGE_UP -> {
@@ -238,16 +238,16 @@ public class PlayScene extends Demo01Frame.AbstractScene {
     }
 
 
-    private void generateEntities(Demo01Frame app, String rootName, int nbEntities) {
+    private void generateEntities(GameApp app, String rootName, int nbEntities) {
         for (int i = 0; i < nbEntities; i++) {
-            add(new Demo01Frame.Entity(rootName + Demo01Frame.Entity.index)
+            add(new GameApp.Entity(rootName + GameApp.Entity.index)
                     .setPosition(app.getWorld().playArea.getWidth() * Math.random(),
                             app.getWorld().playArea.getHeight() * Math.random())
                     .setSize(8, 8)
                     .setPriority(100 + i)
                     .setFillColor(Color.RED)
                     .setAcceleration(0.25 - (Math.random() * 0.5), 0.25 - (Math.random() * 0.5))
-                    .setMaterial(new Demo01Frame.Material("Enemy_MAT", 1.0, 0.98, 1.0))
+                    .setMaterial(new GameApp.Material("Enemy_MAT", 1.0, 0.98, 1.0))
                     .setMass(2.0 + (5.0 * Math.random())));
         }
     }

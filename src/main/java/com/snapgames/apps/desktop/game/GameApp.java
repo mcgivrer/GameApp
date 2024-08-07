@@ -1,7 +1,7 @@
-package com.snapgames.apps;
+package com.snapgames.apps.desktop.game;
 
-import com.snapgames.apps.scenes.PlayScene;
-import com.snapgames.apps.scenes.TitleScene;
+import com.snapgames.apps.desktop.game.scenes.PlayScene;
+import com.snapgames.apps.desktop.game.scenes.TitleScene;
 
 import javax.imageio.ImageIO;
 import javax.swing.*;
@@ -24,7 +24,7 @@ import java.util.concurrent.CopyOnWriteArrayList;
 import java.util.stream.Collectors;
 
 /**
- * Main class for Project {@link Demo01Frame}
+ * Main class for Project {@link GameApp}
  *
  * <p>This class is the main class for a java game template.
  * It initialize default components and services
@@ -55,7 +55,7 @@ import java.util.stream.Collectors;
  * @author Frédéric Delorme frederic.delorme@gmail.com
  * @since 1.0.0
  */
-public class Demo01Frame implements KeyListener, MouseListener, MouseWheelListener, MouseMotionListener {
+public class GameApp implements KeyListener, MouseListener, MouseWheelListener, MouseMotionListener {
 
     /**
      * <p>The {@link Entity} class is the Core object for any Scene.</p>
@@ -67,8 +67,8 @@ public class Demo01Frame implements KeyListener, MouseListener, MouseWheelListen
      * to the <code>mass</code> and assigned {@link Material} and applied <code>forces</code>.
      * </p>
      *
-     * <p>The {@link Entity} is drawn by the {@link Demo01Frame#render(Map)} and more precisely by
-     * the {@link Demo01Frame#drawEntity(Entity, Graphics2D)}  operation.</p>
+     * <p>The {@link Entity} is drawn by the {@link GameApp#render(Map)} and more precisely by
+     * the {@link GameApp#drawEntity(Entity, Graphics2D)}  operation.</p>
      *
      * <p>you can add som {@link Behavior} on the entity to enhance the different phases of the entity processing:</p>
      * <ul>
@@ -82,8 +82,8 @@ public class Demo01Frame implements KeyListener, MouseListener, MouseWheelListen
      *
      * @author Frédéric Delorme
      * @see Behavior
-     * @see Demo01Frame#update(double)
-     * @see Demo01Frame#render(Map)
+     * @see GameApp#update(double)
+     * @see GameApp#render(Map)
      * @since 1.0.0
      */
     public static class Entity extends Rectangle2D.Double {
@@ -575,7 +575,7 @@ public class Demo01Frame implements KeyListener, MouseListener, MouseWheelListen
          *
          * @param app
          */
-        default void create(Demo01Frame app, Entity e) {
+        default void create(GameApp app, Entity e) {
         }
 
         /**
@@ -584,7 +584,7 @@ public class Demo01Frame implements KeyListener, MouseListener, MouseWheelListen
          * @param app the parent application
          * @param e   the concerned {@link Entity}
          */
-        default void input(Demo01Frame app, Entity e) {
+        default void input(GameApp app, Entity e) {
         }
 
         /**
@@ -593,7 +593,7 @@ public class Demo01Frame implements KeyListener, MouseListener, MouseWheelListen
          * @param app the parent application
          * @param e   the concerned {@link Entity}
          */
-        default void update(Demo01Frame app, Entity e, double elapsed) {
+        default void update(GameApp app, Entity e, double elapsed) {
         }
 
         /**
@@ -603,7 +603,7 @@ public class Demo01Frame implements KeyListener, MouseListener, MouseWheelListen
          * @param e   the concerned {@link Entity}.
          * @param g   the {@link Graphics2D} API to use.
          */
-        default void draw(Demo01Frame app, Entity e, Graphics2D g) {
+        default void draw(GameApp app, Entity e, Graphics2D g) {
         }
 
         /**
@@ -613,7 +613,7 @@ public class Demo01Frame implements KeyListener, MouseListener, MouseWheelListen
          * @param e   the concerned {@link Entity}
          * @param k   the {@link KeyEvent} to be processed.
          */
-        default void onKeyPressed(Demo01Frame app, Entity e, KeyEvent k) {
+        default void onKeyPressed(GameApp app, Entity e, KeyEvent k) {
         }
 
         /**
@@ -623,7 +623,7 @@ public class Demo01Frame implements KeyListener, MouseListener, MouseWheelListen
          * @param e   the concerned {@link Entity}
          * @param k   the {@link KeyEvent} to be processed.
          */
-        default void onKeyReleased(Demo01Frame app, Entity e, KeyEvent k) {
+        default void onKeyReleased(GameApp app, Entity e, KeyEvent k) {
         }
 
         /**
@@ -632,7 +632,7 @@ public class Demo01Frame implements KeyListener, MouseListener, MouseWheelListen
          * @param app the parent application
          * @param e   the concerned {@link Entity}
          */
-        default void onActivate(Demo01Frame app, Entity e) {
+        default void onActivate(GameApp app, Entity e) {
         }
 
         /**
@@ -641,7 +641,7 @@ public class Demo01Frame implements KeyListener, MouseListener, MouseWheelListen
          * @param app the parent application
          * @param e   the concerned {@link Entity}
          */
-        default void onDeactivate(Demo01Frame app, Entity e) {
+        default void onDeactivate(GameApp app, Entity e) {
         }
 
         /**
@@ -652,7 +652,7 @@ public class Demo01Frame implements KeyListener, MouseListener, MouseWheelListen
          * @param mouseX mouse X position
          * @param mouseY mouse y position
          */
-        default void onMouseIn(Demo01Frame app, Entity e, double mouseX, double mouseY) {
+        default void onMouseIn(GameApp app, Entity e, double mouseX, double mouseY) {
         }
 
         /**
@@ -663,7 +663,7 @@ public class Demo01Frame implements KeyListener, MouseListener, MouseWheelListen
          * @param mouseX mouse X position
          * @param mouseY mouse y position
          */
-        default void onMouseOut(Demo01Frame app, Entity e, double mouseX, double mouseY) {
+        default void onMouseOut(GameApp app, Entity e, double mouseX, double mouseY) {
         }
 
         /**
@@ -675,7 +675,7 @@ public class Demo01Frame implements KeyListener, MouseListener, MouseWheelListen
          * @param mouseY   mouse y position
          * @param buttonId the button number that has been clicked.
          */
-        default void onMouseClick(Demo01Frame app, Entity e, double mouseX, double mouseY, int buttonId) {
+        default void onMouseClick(GameApp app, Entity e, double mouseX, double mouseY, int buttonId) {
         }
 
         /**
@@ -687,7 +687,7 @@ public class Demo01Frame implements KeyListener, MouseListener, MouseWheelListen
          * @param mouseY   mouse y position
          * @param buttonId the button number that has been clicked.
          */
-        default void onMousePressed(Demo01Frame app, Entity e, double mouseX, double mouseY, int buttonId) {
+        default void onMousePressed(GameApp app, Entity e, double mouseX, double mouseY, int buttonId) {
         }
 
         /**
@@ -699,7 +699,7 @@ public class Demo01Frame implements KeyListener, MouseListener, MouseWheelListen
          * @param mouseY   mouse y position
          * @param buttonId the button number that has been clicked.
          */
-        default void onMouseReleased(Demo01Frame app, Entity e, double mouseX, double mouseY, int buttonId) {
+        default void onMouseReleased(GameApp app, Entity e, double mouseX, double mouseY, int buttonId) {
         }
     }
 
@@ -886,7 +886,7 @@ public class Demo01Frame implements KeyListener, MouseListener, MouseWheelListen
      */
     public static class AlignBehavior implements Behavior {
         @Override
-        public void update(Demo01Frame app, Entity e, double elapsed) {
+        public void update(GameApp app, Entity e, double elapsed) {
             e.child.forEach(c -> {
                 switch (c.getClass().getSimpleName()) {
                     case "Button", "TextBox" -> {
@@ -968,7 +968,7 @@ public class Demo01Frame implements KeyListener, MouseListener, MouseWheelListen
         Color mouseReleasedTextColor = Color.WHITE;
 
         @Override
-        default void onMousePressed(Demo01Frame app, Entity e, double mouseX, double mouseY, int buttonId) {
+        default void onMousePressed(GameApp app, Entity e, double mouseX, double mouseY, int buttonId) {
             e.setFillColor(mousePressedColor);
             if (e instanceof Button) {
                 Button bt = (Button) e;
@@ -977,7 +977,7 @@ public class Demo01Frame implements KeyListener, MouseListener, MouseWheelListen
         }
 
         @Override
-        default void onMouseReleased(Demo01Frame app, Entity e, double mouseX, double mouseY, int buttonId) {
+        default void onMouseReleased(GameApp app, Entity e, double mouseX, double mouseY, int buttonId) {
             e.setFillColor(mouseReleasedColor);
             if (e instanceof Button) {
                 Button bt = (Button) e;
@@ -986,13 +986,13 @@ public class Demo01Frame implements KeyListener, MouseListener, MouseWheelListen
         }
 
         @Override
-        default void onMouseIn(Demo01Frame app, Entity e, double mouseX, double mouseY) {
+        default void onMouseIn(GameApp app, Entity e, double mouseX, double mouseY) {
             e.setFillColor(mouseOnColor);
             e.setBorderColor(mouseOnBorderColor);
         }
 
         @Override
-        default void onMouseOut(Demo01Frame app, Entity e, double mouseX, double mouseY) {
+        default void onMouseOut(GameApp app, Entity e, double mouseX, double mouseY) {
             e.setFillColor(mouseOutColor);
             e.setBorderColor(mouseOutBorderColor);
         }
@@ -1069,28 +1069,28 @@ public class Demo01Frame implements KeyListener, MouseListener, MouseWheelListen
      */
     public interface Scene {
 
-        default void load(Demo01Frame app) {
+        default void load(GameApp app) {
         }
 
-        void create(Demo01Frame app);
+        void create(GameApp app);
 
-        default void initialize(Demo01Frame app) {
+        default void initialize(GameApp app) {
         }
 
-        void activate(Demo01Frame app);
+        void activate(GameApp app);
 
-        default void input(Demo01Frame app) {
+        default void input(GameApp app) {
         }
 
-        default void update(Demo01Frame app, double elapsed) {
+        default void update(GameApp app, double elapsed) {
         }
 
-        default void draw(Demo01Frame app, Graphics2D g) {
+        default void draw(GameApp app, Graphics2D g) {
         }
 
-        void deactivate(Demo01Frame app);
+        void deactivate(GameApp app);
 
-        void dispose(Demo01Frame app);
+        void dispose(GameApp app);
 
         List<Behavior> getBehaviors();
 
@@ -1118,7 +1118,7 @@ public class Demo01Frame implements KeyListener, MouseListener, MouseWheelListen
     public abstract static class AbstractScene implements Scene {
         private static long index = 0;
         private final long id = index++;
-        private final Demo01Frame app;
+        private final GameApp app;
         private String name = "scene_" + id;
         private List<Behavior> behaviors = new CopyOnWriteArrayList<>();
 
@@ -1134,10 +1134,10 @@ public class Demo01Frame implements KeyListener, MouseListener, MouseWheelListen
         /**
          * Create a new {@link AbstractScene} with a <code>name</code> and a parent <code>app</code>.
          *
-         * @param app  the parent application {@link Demo01Frame}
+         * @param app  the parent application {@link GameApp}
          * @param name thename opf this new {@link AbstractScene}
          */
-        public AbstractScene(Demo01Frame app, String name) {
+        public AbstractScene(GameApp app, String name) {
             this.name = name;
             this.app = app;
         }
@@ -1204,17 +1204,17 @@ public class Demo01Frame implements KeyListener, MouseListener, MouseWheelListen
         }
 
         @Override
-        public void activate(Demo01Frame app) {
+        public void activate(GameApp app) {
             // nothing to do by default.
         }
 
         @Override
-        public void deactivate(Demo01Frame app) {
+        public void deactivate(GameApp app) {
             getEntities().values().forEach(e -> e.setActive(false));
         }
 
         @Override
-        public void dispose(Demo01Frame app) {
+        public void dispose(GameApp app) {
 
         }
     }
@@ -1311,9 +1311,9 @@ public class Demo01Frame implements KeyListener, MouseListener, MouseWheelListen
     private Color backGroundColor = Color.BLACK;
 
     /**
-     * Create the {@link Demo01Frame} instance and detect the current java context.
+     * Create the {@link GameApp} instance and detect the current java context.
      */
-    public Demo01Frame() {
+    public GameApp() {
         info("Initialization application %s (%s); running on JDK %s; at %s; with classpath = %s",
                 messages.getString("app.name"),
                 messages.getString("app.version"),
@@ -1347,9 +1347,9 @@ public class Demo01Frame implements KeyListener, MouseListener, MouseWheelListen
     }
 
     /**
-     * Parse all the arguments from <code>args</code> and set default values into {@link Demo01Frame#config} as a configuration set.
+     * Parse all the arguments from <code>args</code> and set default values into {@link GameApp#config} as a configuration set.
      *
-     * @param args the list of arguments to parse and set as default in the {@link Demo01Frame#config}.
+     * @param args the list of arguments to parse and set as default in the {@link GameApp#config}.
      */
     private void parseCliArguments(String[] args) {
         List<String> lArgs = Arrays.asList(args);
@@ -1440,7 +1440,7 @@ public class Demo01Frame implements KeyListener, MouseListener, MouseWheelListen
     public void loadConfiguration(String configFilePath) {
 
         try {
-            Path rootPath = Paths.get(Demo01Frame.class.getProtectionDomain().getCodeSource().getLocation().toURI()).getParent();
+            Path rootPath = Paths.get(GameApp.class.getProtectionDomain().getCodeSource().getLocation().toURI()).getParent();
             File propertyFile = new File(rootPath.toFile(), configFilePath);
             if (propertyFile.exists()) {
                 try (InputStream input = new FileInputStream(propertyFile)) {
@@ -1533,8 +1533,8 @@ public class Demo01Frame implements KeyListener, MouseListener, MouseWheelListen
      * <p>The {@link Entity} and its child are set to active, and the corresponding behaviors for the
      * {@link Entity} and all its child will be applied</p>
      * <ul>
-     *     <li>{@link Behavior#onActivate(Demo01Frame, Entity)} if {@link Entity} is set to visible,</li>
-     *      <li>{@link Behavior#onDeactivate(Demo01Frame, Entity)} if visibility of the {@link Entity} is unset.</li>
+     *     <li>{@link Behavior#onActivate(GameApp, Entity)} if {@link Entity} is set to visible,</li>
+     *      <li>{@link Behavior#onDeactivate(GameApp, Entity)} if visibility of the {@link Entity} is unset.</li>
      * </ul>
      *
      * @param e       the {@link Entity} to set as visible.
@@ -1579,12 +1579,12 @@ public class Demo01Frame implements KeyListener, MouseListener, MouseWheelListen
                 case "ttf" -> {
                     return (T) Font.createFont(
                             Font.TRUETYPE_FONT,
-                            Demo01Frame.class.getResourceAsStream(path));
+                            GameApp.class.getResourceAsStream(path));
                 }
                 case "png", "jpg" -> {
                     if (path.contains("|")) {
                         String filePath = path.substring(0, path.lastIndexOf("|"));
-                        BufferedImage img = ImageIO.read(Objects.requireNonNull(Demo01Frame.class.getResourceAsStream(filePath)));
+                        BufferedImage img = ImageIO.read(Objects.requireNonNull(GameApp.class.getResourceAsStream(filePath)));
                         String slice = path.substring(path.lastIndexOf("|") + 1);
                         String[] slices = slice.split(",");
                         return (T) img.getSubimage(
@@ -1594,7 +1594,7 @@ public class Demo01Frame implements KeyListener, MouseListener, MouseWheelListen
                                 Integer.parseInt(slices[3])
                         );
                     } else {
-                        return (T) ImageIO.read(Demo01Frame.class.getResourceAsStream(path));
+                        return (T) ImageIO.read(GameApp.class.getResourceAsStream(path));
                     }
                 }
                 default -> {
@@ -1755,7 +1755,7 @@ public class Demo01Frame implements KeyListener, MouseListener, MouseWheelListen
     }
 
     /**
-     * The {@link Demo01Frame#applyPhysics(double, Entity)} method updates the
+     * The {@link GameApp#applyPhysics(double, Entity)} method updates the
      * physics properties of an {@link Entity} object based on the forces acting
      * on it, the delay time, and the {@link Entity}'s material properties.
      *
@@ -2160,7 +2160,7 @@ public class Demo01Frame implements KeyListener, MouseListener, MouseWheelListen
     /*----- Game start entry point -----*/
 
     public static void main(String[] argc) {
-        Demo01Frame app = new Demo01Frame();
+        GameApp app = new GameApp();
         app.run(argc);
     }
 
@@ -2357,7 +2357,6 @@ public class Demo01Frame implements KeyListener, MouseListener, MouseWheelListen
     public World getWorld() {
         return this.world;
     }
-
 
     public void setExit(boolean x) {
         exit = x;
