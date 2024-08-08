@@ -2265,7 +2265,7 @@ public class GameApp implements KeyListener, MouseListener, MouseWheelListener, 
     public void mouseClicked(MouseEvent e) {
         if (getEntityUnderMouse(mouseX, mouseY).isPresent()) {
             Entity entityClicked = getEntityUnderMouse(mouseX, mouseY).get();
-            info("Entity %s has been clicked", entityClicked.name);
+            debug("Entity %s has been clicked", entityClicked.name);
             entityClicked.behaviors
                     .forEach(b -> b.onMouseClick(this, entityClicked, mouseX, mouseY, e.getButton()));
         }
@@ -2284,7 +2284,7 @@ public class GameApp implements KeyListener, MouseListener, MouseWheelListener, 
     public void mousePressed(MouseEvent e) {
         if (getEntityUnderMouse(mouseX, mouseY).isPresent()) {
             Entity entityClicked = getEntityUnderMouse(mouseX, mouseY).get();
-            info("Entity %s has been clicked", entityClicked.name);
+            debug("Entity %s has been pressed", entityClicked.name);
             entityClicked.behaviors
                     .forEach(b -> b.onMousePressed(this, entityClicked, mouseX, mouseY, e.getButton()));
         }
@@ -2294,7 +2294,7 @@ public class GameApp implements KeyListener, MouseListener, MouseWheelListener, 
     public void mouseReleased(MouseEvent e) {
         if (getEntityUnderMouse(mouseX, mouseY).isPresent()) {
             Entity entityClicked = getEntityUnderMouse(mouseX, mouseY).get();
-            info("Entity %s has been clicked", entityClicked.name);
+            debug("Entity %s has been released", entityClicked.name);
             entityClicked.behaviors
                     .forEach(b -> b.onMouseReleased(this, entityClicked, mouseX, mouseY, e.getButton()));
         }
