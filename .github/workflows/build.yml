@@ -1,5 +1,5 @@
 name: Java build
-run-name: ${{ github.actor }} is building a JDK based project 🚀
+run-name: ${{ github.actor }} is building a JDK based project ${{github.repository}} 🚀
 on: [push]
 
 jobs:
