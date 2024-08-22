@@ -240,14 +240,15 @@ public class PlayScene extends GameApp.AbstractScene {
 
     private void generateEntities(GameApp app, String rootName, int nbEntities) {
         for (int i = 0; i < nbEntities; i++) {
-            add(new GameApp.Entity(rootName + GameApp.Entity.index)
+            add(new GameApp.GameObject(rootName + GameApp.Entity.index)
+                    .setNature(GameApp.GameObjectNature.ELLIPSE)
                     .setPosition(app.getWorld().playArea.getWidth() * Math.random(),
                             app.getWorld().playArea.getHeight() * Math.random())
                     .setSize(8, 8)
                     .setPriority(100 + i)
                     .setFillColor(Color.RED)
                     .setAcceleration(0.25 - (Math.random() * 0.5), 0.25 - (Math.random() * 0.5))
-                    .setMaterial(new GameApp.Material("Enemy_MAT", 1.0, 0.98, 1.0))
+                    .setMaterial(new GameApp.Material("Enemy_MAT", 1.0, 0.96, 0.98))
                     .setMass(2.0 + (5.0 * Math.random())));
         }
     }

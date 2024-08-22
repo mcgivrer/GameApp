@@ -1221,6 +1221,63 @@ public class GameApp implements KeyListener, MouseListener, MouseWheelListener, 
         }
     }
 
+    public interface RendererPlugin<T> {
+        public Class<? extends Entity> getEntityClass();
+
+        public void draw(Graphics2D g, Entity e);
+    }
+
+    public static class GameObjectRendererPlugin implements RendererPlugin<GameObject> {
+
+        @Override
+        public Class<? extends Entity> getEntityClass() {
+            return GameObject.class;
+        }
+
+        @Override
+        public void draw(Graphics2D g, Entity e) {
+            GameObject go = (GameObject) e;
+            switch (go.nature) {
+                case RECTANGLE, ELLIPSE, POLYGON -> {
+                    g.setColor(go.fillColor);
+                    g.fill(go.shape);
+                    g.setColor(go.borderColor);
+                    g.draw(go.shape);
+                }
+                case DOT -> {
+                    g.setColor(go.borderColor);
+                    g.drawLine(
+                            (int) go.getX(), (int) go.getY(),
+                            (int) go.getX(), (int) go.getY());
+                }
+                case LINE -> {
+                    g.setColor(go.borderColor);
+                    g.drawLine(
+                            (int) go.getX(), (int) go.getY(),
+                            (int) (go.getX() + go.getWidth()), (int) (go.getY() + go.getHeight()));
+                }
+            }
+        }
+    }
+
+    public static class ImageObjectRendererPlugin implements RendererPlugin<ImageObject> {
+
+        @Override
+        public Class<? extends Entity> getEntityClass() {
+            return ImageObject.class;
+        }
+
+        @Override
+        public void draw(Graphics2D g, Entity e) {
+            ImageObject io = (ImageObject) e;
+            g.drawImage(
+                    io.getImage(),
+                    (int) io.getX(), (int) io.getY(),
+                    (int) io.getWidth(), (int) io.getHeight(),
+                    null);
+        }
+    }
+
     /**
      * The new {@link Renderer} service is responsible for drawing the current state of
      * the game onto the screen. It prepares the graphics context,
@@ -1259,8 +1316,14 @@ public class GameApp implements KeyListener, MouseListener, MouseWheelListener, 
          */
         private Color backGroundColor = Color.BLACK;
 
+        private Map<Class<? extends Entity>, RendererPlugin<? extends Entity>> plugins = new HashMap<>();
+
         public Renderer(GameApp app) {
             this.app = app;
+        }
+
+        public void register(RendererPlugin<? extends Entity> rp) {
+            plugins.put(rp.getEntityClass(), rp);
         }
 
         /**
@@ -1276,6 +1339,9 @@ public class GameApp implements KeyListener, MouseListener, MouseWheelListener, 
                     BufferedImage.TYPE_INT_ARGB
             );
             fullScreenStatus = Boolean.parseBoolean(app.getConfig().getProperty("app.window.full.screen", "false"));
+            // add default Plugins implementation
+            register(new GameObjectRendererPlugin());
+            register(new ImageObjectRendererPlugin());
         }
 
         /**
@@ -1355,6 +1421,7 @@ public class GameApp implements KeyListener, MouseListener, MouseWheelListener, 
                             g.drawRect(
                                     (int) e.getX(), (int) e.getY(),
                                     (int) e.getWidth(), (int) e.getHeight());
+
                         }
                     });
 
@@ -1420,7 +1487,9 @@ public class GameApp implements KeyListener, MouseListener, MouseWheelListener, 
                     g2s.setColor(Color.WHITE);
                     g2s.fillRect((int) app.realMouseX, (int) app.realMouseY, 1, 1);
                 }
-                window.getBufferStrategy().show();
+                if (window.getBufferStrategy() != null) {
+                    window.getBufferStrategy().show();
+                }
                 g2s.dispose();
             }
         }
@@ -1428,30 +1497,27 @@ public class GameApp implements KeyListener, MouseListener, MouseWheelListener, 
         /*----- objects rendering -----*/
 
         private void drawEntity(Entity e, Graphics2D g) {
-            switch (e.getClass().getSimpleName()) {
-                case "Entity" -> {
-                    g.setColor(e.fillColor);
-                    g.fill(e);
-                    g.setColor(e.borderColor);
-                    g.draw(e);
-                }
-                case "GameObject" -> {
-                    drawGameObject(g, (GameObject) e);
-                }
-                case "AnimatedObject" -> {
-                    drawAnimatedObject(g, (AnimatedObject) e);
-                }
-                case "ImageObject" -> {
-                    drawImageObject(g, (ImageObject) e);
-                }
-                case "TextObject" -> {
-                    drawTextBox(g, (TextObject) e);
-                }
-                case "DialogBox" -> {
-                    drawDialogBox(g, (DialogBox) e);
-                }
-                case "Button" -> {
-                    drawButton(g, (Button) e);
+
+            if (plugins.containsKey(e.getClass())) {
+                plugins.get(e.getClass()).draw(g, e);
+                e.setAttribute("renderedBy", plugins.get(e.getClass()).getClass());
+            } else {
+                switch (e.getClass().getSimpleName()) {
+                    case "AnimatedObject" -> {
+                        drawAnimatedObject(g, (AnimatedObject) e);
+                    }
+                    case "TextObject" -> {
+                        drawTextBox(g, (TextObject) e);
+                    }
+                    case "DialogBox" -> {
+                        drawDialogBox(g, (DialogBox) e);
+                    }
+                    case "Button" -> {
+                        drawButton(g, (Button) e);
+                    }
+                    default -> {
+                        error("Unknown drawing method/plugin for '%s' type %s", e.getName(), e.getClass());
+                    }
                 }
             }
             e.behaviors.forEach(b -> {
@@ -1462,37 +1528,6 @@ public class GameApp implements KeyListener, MouseListener, MouseWheelListener, 
 
         private void drawAnimatedObject(Graphics2D g, AnimatedObject ao) {
             // TODO Create the AnimatedObject drawing method
-        }
-
-        private void drawImageObject(Graphics2D g, ImageObject io) {
-            g.drawImage(
-                    io.getImage(),
-                    (int) io.getX(), (int) io.getY(),
-                    (int) io.getWidth(), (int) io.getHeight(),
-                    null);
-        }
-
-        private void drawGameObject(Graphics2D g, GameObject go) {
-            switch (go.nature) {
-                case RECTANGLE, ELLIPSE, POLYGON -> {
-                    g.setColor(go.fillColor);
-                    g.fill(go.shape);
-                    g.setColor(go.borderColor);
-                    g.draw(go.shape);
-                }
-                case DOT -> {
-                    g.setColor(go.borderColor);
-                    g.drawLine(
-                            (int) go.getX(), (int) go.getY(),
-                            (int) go.getX(), (int) go.getY());
-                }
-                case LINE -> {
-                    g.setColor(go.borderColor);
-                    g.drawLine(
-                            (int) go.getX(), (int) go.getY(),
-                            (int) (go.getX() + go.getWidth()), (int) (go.getY() + go.getHeight()));
-                }
-            }
         }
 
         private static void drawTextBox(Graphics2D g, TextObject te) {
@@ -1996,7 +2031,7 @@ public class GameApp implements KeyListener, MouseListener, MouseWheelListener, 
 
     public void loop() {
         long startTime = System.currentTimeMillis();
-        long previousTime = startTime;
+        long endTime = startTime;
         long delay = 1;
 
         long updateFrames = 0;
@@ -2009,9 +2044,7 @@ public class GameApp implements KeyListener, MouseListener, MouseWheelListener, 
 
         Map<String, Object> stats = new ConcurrentHashMap<>();
         do {
-            startTime = System.currentTimeMillis();
             input();
-            delay = startTime - previousTime;
             updateTime += delay;
             if (updateTime > 1000) {
                 currentUPS = updateFrames;
@@ -2040,10 +2073,15 @@ public class GameApp implements KeyListener, MouseListener, MouseWheelListener, 
             } catch (InterruptedException e) {
                 throw new RuntimeException(e);
             }
-            previousTime = startTime;
+
             stats.put("fps", currentFPS);
             stats.put("ups", currentUPS);
             stats.put("ft", delay);
+
+            endTime = System.currentTimeMillis();
+            delay = endTime - startTime;
+            startTime = endTime;
+
         } while (!exit);
     }
 
@@ -2245,7 +2283,6 @@ public class GameApp implements KeyListener, MouseListener, MouseWheelListener, 
             System.out.printf(dateFormatted + "|" + level + "|" + message + "%n", args);
         }
     }
-
 
     public static void debug(String message, Object... args) {
         log("DEBUG", message, args);
