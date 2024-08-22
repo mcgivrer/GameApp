@@ -2,6 +2,7 @@ package com.snapgames.apps.desktop.game;
 
 import com.snapgames.apps.desktop.game.scenes.PlayScene;
 import com.snapgames.apps.desktop.game.scenes.TitleScene;
+import org.w3c.dom.Text;
 
 import javax.imageio.ImageIO;
 import javax.swing.*;
@@ -1278,6 +1279,122 @@ public class GameApp implements KeyListener, MouseListener, MouseWheelListener, 
         }
     }
 
+    public static class TextObjectRendererPlugin implements RendererPlugin<TextObject> {
+
+        @Override
+        public Class<? extends Entity> getEntityClass() {
+            return TextObject.class;
+        }
+
+        @Override
+        public void draw(Graphics2D g, Entity e) {
+            TextObject te = (TextObject) e;
+            g.setColor(te.textColor);
+
+            if (Optional.ofNullable(te.font).isPresent()) {
+                g.setFont(te.font);
+            }
+
+            int textWidth = g.getFontMetrics().stringWidth(te.text);
+            int textHeight = g.getFontMetrics().getHeight();
+            int tx2 = g.getFontMetrics().getDescent();
+            int offsetX = 0;
+            switch (te.textAlign) {
+                case CENTER -> {
+                    offsetX = (int) (-0.5 * textWidth);
+                }
+                case LEFT -> {
+                    offsetX = 0;
+                }
+                case RIGHT -> {
+                    offsetX = -textWidth;
+                }
+            }
+            te.setSize(textWidth, textHeight);
+            g.drawString(te.getText(), (int) te.getX() + offsetX, (int) te.getY());
+
+
+            if (debug > 2) {
+                g.setColor(Color.ORANGE);
+                g.drawRect(
+                        (int) te.getX() + tx2 + offsetX, (int) (te.getY() - te.getHeight()),
+                        (int) te.getWidth(), (int) te.getHeight());
+            }
+        }
+    }
+
+    public static class ButtonRendererPlugin implements RendererPlugin<Button> {
+
+        @Override
+        public Class<? extends Entity> getEntityClass() {
+            return Button.class;
+        }
+
+        @Override
+        public void draw(Graphics2D g, Entity e) {
+            Button te = (Button) e;
+            int x = (int) ((Optional.ofNullable(te.getParent()).isPresent() && te.isRelativeToParent())
+                    ? (te.getParent().getX() + te.getX())
+                    : te.getX());
+
+            int y = (int) ((Optional.ofNullable(te.getParent()).isPresent() && te.isRelativeToParent())
+                    ? (te.getParent().getY() + te.getY())
+                    : te.getY());
+
+            if (Optional.ofNullable(te.font).isPresent()) {
+                g.setFont(te.font);
+            }
+
+            int fontHeight = g.getFontMetrics().getHeight();
+            int textWidth = g.getFontMetrics().stringWidth(te.getText());
+            int yOffset = g.getFontMetrics().getDescent();
+
+            te.setSize(te.getWidth(), fontHeight + 2 * UIObject.margin);
+
+            Renderer.drawEdgeRectangle(g, te);
+
+            g.setColor(te.textColor);
+            g.drawString(
+                    te.getText(),
+                    x + (int) ((te.getWidth() - textWidth) * 0.5) + UIObject.margin,
+                    y + UIObject.margin + fontHeight - yOffset);
+        }
+    }
+
+    public static class DialogBoxRendererPlugin implements RendererPlugin<DialogBox> {
+
+        @Override
+        public Class<? extends Entity> getEntityClass() {
+            return DialogBox.class;
+        }
+
+        @Override
+        public void draw(Graphics2D g, Entity e) {
+            DialogBox db = (DialogBox) e;
+
+            if (Optional.ofNullable(db.font).isPresent()) {
+                g.setFont(db.font);
+            }
+            int textHeight = g.getFontMetrics().getHeight();
+            int textWidth = g.getFontMetrics().stringWidth(db.getText());
+
+            /*
+            g.setColor(Color.GRAY);
+
+            g.fillRect((int) db.getX(), (int) db.getY(), (int) db.getWidth(), (int) db.getHeight());
+
+            g.setColor(db.borderColor);
+            g.drawRect((int) db.getX(), (int) db.getY(), (int) db.getWidth(), (int) db.getHeight());
+            */
+            Renderer.drawEdgeRectangle(g, db);
+
+            g.setColor(db.textColor);
+
+            g.drawString(db.getText(), (int) (db.getX() + (db.getWidth() - textWidth) * 0.5 - UIObject.margin * 2),
+                    (int) (db.getY() + (db.getHeight() * 0.30) + UIObject.margin + UIObject.padding));
+        }
+    }
+
     /**
      * The new {@link Renderer} service is responsible for drawing the current state of
      * the game onto the screen. It prepares the graphics context,
@@ -1342,6 +1459,9 @@ public class GameApp implements KeyListener, MouseListener, MouseWheelListener, 
             // add default Plugins implementation
             register(new GameObjectRendererPlugin());
             register(new ImageObjectRendererPlugin());
+            register(new TextObjectRendererPlugin());
+            register(new ButtonRendererPlugin());
+            register(new DialogBoxRendererPlugin());
         }
 
         /**
@@ -1502,95 +1622,12 @@ public class GameApp implements KeyListener, MouseListener, MouseWheelListener, 
                 plugins.get(e.getClass()).draw(g, e);
                 e.setAttribute("renderedBy", plugins.get(e.getClass()).getClass());
             } else {
-                switch (e.getClass().getSimpleName()) {
-                    case "AnimatedObject" -> {
-                        drawAnimatedObject(g, (AnimatedObject) e);
-                    }
-                    case "TextObject" -> {
-                        drawTextBox(g, (TextObject) e);
-                    }
-                    case "DialogBox" -> {
-                        drawDialogBox(g, (DialogBox) e);
-                    }
-                    case "Button" -> {
-                        drawButton(g, (Button) e);
-                    }
-                    default -> {
-                        error("Unknown drawing method/plugin for '%s' type %s", e.getName(), e.getClass());
-                    }
-                }
+                error("Unknown drawing method/plugin for '%s' type %s", e.getName(), e.getClass());
             }
             e.behaviors.forEach(b -> {
                 b.draw(app, e, g);
             });
             e.child.forEach(c -> drawEntity(c, g));
-        }
-
-        private void drawAnimatedObject(Graphics2D g, AnimatedObject ao) {
-            // TODO Create the AnimatedObject drawing method
-        }
-
-        private static void drawTextBox(Graphics2D g, TextObject te) {
-            g.setColor(te.textColor);
-
-            if (Optional.ofNullable(te.font).isPresent()) {
-                g.setFont(te.font);
-            }
-
-            int textWidth = g.getFontMetrics().stringWidth(te.text);
-            int textHeight = g.getFontMetrics().getHeight();
-            int tx2 = g.getFontMetrics().getDescent();
-            int offsetX = 0;
-            switch (te.textAlign) {
-                case CENTER -> {
-                    offsetX = (int) (-0.5 * textWidth);
-                }
-                case LEFT -> {
-                    offsetX = 0;
-                }
-                case RIGHT -> {
-                    offsetX = -textWidth;
-                }
-            }
-            te.setSize(textWidth, textHeight);
-            g.drawString(te.getText(), (int) te.getX() + offsetX, (int) te.getY());
-
-
-            if (debug > 2) {
-                g.setColor(Color.ORANGE);
-                g.drawRect(
-                        (int) te.getX() + tx2 + offsetX, (int) (te.getY() - te.getHeight()),
-                        (int) te.getWidth(), (int) te.getHeight());
-            }
-        }
-
-        private void drawButton(Graphics2D g, Button te) {
-
-            int x = (int) ((Optional.ofNullable(te.getParent()).isPresent() && te.isRelativeToParent())
-                    ? (te.getParent().getX() + te.getX())
-                    : te.getX());
-
-            int y = (int) ((Optional.ofNullable(te.getParent()).isPresent() && te.isRelativeToParent())
-                    ? (te.getParent().getY() + te.getY())
-                    : te.getY());
-
-            if (Optional.ofNullable(te.font).isPresent()) {
-                g.setFont(te.font);
-            }
-
-            int fontHeight = g.getFontMetrics().getHeight();
-            int textWidth = g.getFontMetrics().stringWidth(te.getText());
-            int yOffset = g.getFontMetrics().getDescent();
-
-            te.setSize(te.getWidth(), fontHeight + 2 * UIObject.margin);
-
-            drawEdgeRectangle(g, te);
-
-            g.setColor(te.textColor);
-            g.drawString(
-                    te.getText(),
-                    x + (int) ((te.getWidth() - textWidth) * 0.5) + UIObject.margin,
-                    y + UIObject.margin + fontHeight - yOffset);
         }
 
         private static void drawEdgeRectangle(Graphics2D g, Entity te) {
@@ -1629,25 +1666,6 @@ public class GameApp implements KeyListener, MouseListener, MouseWheelListener, 
                     (int) (te.getX()), (int) (te.getY() + te.getHeight()));
         }
 
-        private static void drawDialogBox(Graphics2D g, DialogBox db) {
-            if (Optional.ofNullable(db.font).isPresent()) {
-                g.setFont(db.font);
-            }
-            int textHeight = g.getFontMetrics().getHeight();
-            int textWidth = g.getFontMetrics().stringWidth(db.getText());
-
-            g.setColor(Color.GRAY);
-            g.fillRect((int) db.getX(), (int) db.getY(), (int) db.getWidth(), (int) db.getHeight());
-
-            g.setColor(db.borderColor);
-            g.drawRect((int) db.getX(), (int) db.getY(), (int) db.getWidth(), (int) db.getHeight());
-
-            g.setColor(db.textColor);
-
-            g.drawString(db.getText(), (int) (db.getX() + (db.getWidth() - textWidth) * 0.5 - UIObject.margin * 2),
-                    (int) (db.getY() + (db.getHeight() * 0.30) + UIObject.margin + UIObject.padding));
-        }
-
         /**
          * release all resources from Renderer system.
          */
@@ -1684,6 +1702,13 @@ public class GameApp implements KeyListener, MouseListener, MouseWheelListener, 
      * Configuration properties file.
      */
     private final Properties config = new Properties();
+
+    /**
+     * Default file path for configuration properties
+     */
+    private String configFilePath = "/config.properties";
+
+
     /**
      * Flag set to true when game exit is required.
      */
@@ -1782,7 +1807,7 @@ public class GameApp implements KeyListener, MouseListener, MouseWheelListener, 
      */
     private void init(String[] args) {
         parseCliArguments(args);
-        loadConfiguration("/config.properties");
+        loadConfiguration(configFilePath);
         parseConfiguration();
         info("Configuration applied: %s", config.stringPropertyNames().stream()
                 .map(key -> key + "=" + config.getProperty(key))
@@ -1836,6 +1861,9 @@ public class GameApp implements KeyListener, MouseListener, MouseWheelListener, 
                     config.setProperty("app.render.fps", keyVal[1]);
                     info("The Frame-Per-Second rate is set to %s", keyVal[1]);
                 }
+                case "config" -> {
+                    configFilePath = keyVal[1];
+                }
                 default -> {
                     warn("This argument %s is unknown, it is ignored.", s);
                 }
@@ -1871,7 +1899,6 @@ public class GameApp implements KeyListener, MouseListener, MouseWheelListener, 
      * @param configFilePath path to the configuration file to be loaded
      */
     public void loadConfiguration(String configFilePath) {
-
         try {
             Path rootPath = Paths.get(GameApp.class.getProtectionDomain().getCodeSource().getLocation().toURI()).getParent();
             File propertyFile = new File(rootPath.toFile(), configFilePath);
