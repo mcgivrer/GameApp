@@ -1064,6 +1064,47 @@ public class GameApp implements KeyListener, MouseListener, MouseWheelListener, 
     }
 
     /**
+     * An {@link ItemObject} is an item in a {@link MenuObject}.
+     *
+     * @author Frédéric Delorme
+     * @since 1.0.0
+     */
+    public static class ItemObject extends TextObject implements UIObject {
+
+        public ItemObject(String name) {
+            super(name);
+        }
+
+        public ItemObject setValue(String value) {
+            this.value = value;
+            return this;
+        }
+
+    }
+
+    /**
+     * A {@link MenuObject} is a choice selector between multiple items.
+     *
+     * @author Frédéric Delorme
+     * @since 1.0.0
+     */
+    public static class MenuObject extends TextObject implements UIObject {
+
+        private List<ItemObject> items = new ArrayList<>();
+
+        public MenuObject(String name) {
+            super(name);
+        }
+
+        public void addItem(ItemObject item) {
+            items.add(item);
+        }
+
+
+    }
+
+
+    /**
      * A Scene is defining a full gameplay and integrate all the lifecycle operation.
      *
      * @author Frederic Delorme
