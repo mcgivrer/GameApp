@@ -1085,22 +1085,41 @@ public class GameApp implements KeyListener, MouseListener, MouseWheelListener, 
 
     /**
      * A {@link MenuObject} is a choice selector between multiple items.
+     * {@link Entity#child} list will be menu entry item {@link ItemObject}.
      *
      * @author Frédéric Delorme
      * @since 1.0.0
      */
     public static class MenuObject extends TextObject implements UIObject {
 
-        private List<ItemObject> items = new ArrayList<>();
+        private Color backgoundColor;
 
+        /**
+         * Create a new {@link MenuObject} with a name.
+         *
+         * @param name the Name of this new {@link MenuObject}.
+         */
         public MenuObject(String name) {
             super(name);
+            setPosition((buffer.getWidth() - this.width) * 0.5, (buffer.getHeight() - this.height) * 0.5);
+            setRelativeToCamera(true);
+            setFillColor(null);
+            setBackgroundColor(null);
+            setBorderColor(null);
+            setTextColor(Color.WHITE);
+            add(new AlignBehavior());
         }
 
-        public void addItem(ItemObject item) {
-            items.add(item);
+        public MenuObject setBackgroundColor(Color bckColor) {
+            this.backgoundColor = bckColor;
+            return this;
         }
 
+        public MenuObject add(ItemObject item) {
+            add((Entity) item);
+            setSize(Math.max(getWidth(), item.getWidth()), getHeight() + item.getHeight());
+            return this;
+        }
 
     }
 
