@@ -1092,18 +1092,29 @@ public class GameApp implements KeyListener, MouseListener, MouseWheelListener, 
     public static class MenuObject extends TextObject implements UIObject {
 
         private List<ItemObject> items = new ArrayList<>();
+        private Color backgroundColor;
 
         public MenuObject(String name) {
             super(name);
+            setBackgroundColor(null);
+            setSize(100, 48);
+            setPosition((buffer.getWidth() - this.width) * 0.5, (buffer.getHeight() - this.height) * 0.5);
+            setRelativeToCamera(true);
+            setFillColor(Color.BLUE);
+            setBorderColor(Color.CYAN);
+            setTextColor(Color.WHITE);
+            add(new AlignBehavior());
+        }
+
+        private void setBackgroundColor(Color bckColor) {
+            this.backgroundColor = bckColor;
         }
 
         public void addItem(ItemObject item) {
+            item.setPosition(this.x, this.y + (items.size()) * item.height);
             items.add(item);
         }
-
-
     }
-
 
     /**
      * A Scene is defining a full gameplay and integrate all the lifecycle operation.
@@ -1402,6 +1413,75 @@ public class GameApp implements KeyListener, MouseListener, MouseWheelListener, 
         }
     }
 
+    public static class ItemObjectRendererPlugin implements RendererPlugin<ItemObject> {
+
+        @Override
+        public Class<? extends Entity> getEntityClass() {
+            return ItemObject.class;
+        }
+
+        @Override
+        public void draw(Graphics2D g, Entity e) {
+            ItemObject te = (ItemObject) e;
+            g.setColor(te.textColor);
+
+            if (Optional.ofNullable(te.font).isPresent()) {
+                g.setFont(te.font);
+            }
+
+            int textWidth = g.getFontMetrics().stringWidth(te.text);
+            int textHeight = g.getFontMetrics().getHeight();
+            int tx2 = g.getFontMetrics().getDescent();
+            int offsetX = 0;
+            switch (te.textAlign) {
+                case CENTER -> {
+                    offsetX = (int) (-0.5 * textWidth);
+                }
+                case LEFT -> {
+                    offsetX = 0;
+                }
+                case RIGHT -> {
+                    offsetX = -textWidth;
+                }
+            }
+            te.setSize(textWidth, textHeight);
+            g.drawString(te.getText(), (int) te.getX() + offsetX, (int) te.getY());
+        }
+    }
+
+    public static class MenuObjectRendererPlugin implements RendererPlugin<MenuObject> {
+
+        @Override
+        public Class<? extends Entity> getEntityClass() {
+            return MenuObject.class;
+        }
+
+        @Override
+        public void draw(Graphics2D g, Entity e) {
+            MenuObject mo = (MenuObject) e;
+
+            if (Optional.ofNullable(mo.font).isPresent()) {
+                g.setFont(mo.font);
+            }
+            int textHeight = g.getFontMetrics().getHeight();
+            int textWidth = g.getFontMetrics().stringWidth(mo.getText());
+
+            /*
+            g.setColor(Color.GRAY);
+
+            g.fillRect((int) db.getX(), (int) db.getY(), (int) db.getWidth(), (int) db.getHeight());
+
+            g.setColor(db.borderColor);
+            g.drawRect((int) db.getX(), (int) db.getY(), (int) db.getWidth(), (int) db.getHeight());
+            */
+
+            if (mo.backgroundColor != null) {
+                g.setColor(mo.textColor);
+                Renderer.drawEdgeRectangle(g, mo);
+            }
+        }
+    }
+
     public static class DialogBoxRendererPlugin implements RendererPlugin<DialogBox> {
 
         @Override
@@ -1503,6 +1583,8 @@ public class GameApp implements KeyListener, MouseListener, MouseWheelListener, 
             register(new TextObjectRendererPlugin());
             register(new ButtonRendererPlugin());
             register(new DialogBoxRendererPlugin());
+            register(new ItemObjectRendererPlugin());
+            register(new MenuObjectRendererPlugin());
         }
 
         /**
