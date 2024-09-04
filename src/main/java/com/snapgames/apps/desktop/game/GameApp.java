@@ -2,7 +2,6 @@ package com.snapgames.apps.desktop.game;
 
 import com.snapgames.apps.desktop.game.scenes.PlayScene;
 import com.snapgames.apps.desktop.game.scenes.TitleScene;
-import org.w3c.dom.Text;
 
 import javax.imageio.ImageIO;
 import javax.swing.*;
@@ -139,7 +138,7 @@ public class GameApp implements KeyListener, MouseListener, MouseWheelListener, 
             this.name = name;
         }
 
-        public void update(double elapsed) {
+        public void update(GameApp app, double elapsed) {
 
         }
 
@@ -341,8 +340,8 @@ public class GameApp implements KeyListener, MouseListener, MouseWheelListener, 
         }
 
         @Override
-        public void update(double elapsed) {
-            super.update(elapsed);
+        public void update(GameApp app, double elapsed) {
+            super.update(app, elapsed);
             switch (nature) {
                 case ELLIPSE -> {
                     shape = new Ellipse2D.Double(x, y, width, height);
@@ -572,13 +571,13 @@ public class GameApp implements KeyListener, MouseListener, MouseWheelListener, 
      * @author Frédéric Delorme
      * @since 1.0.0
      */
-    public interface Behavior {
+    public interface Behavior<T extends Entity> {
         /**
          * Create will help you customize the Entity creation.
          *
          * @param app
          */
-        default void create(GameApp app, Entity e) {
+        default void create(GameApp app, T e) {
         }
 
         /**
@@ -587,7 +586,7 @@ public class GameApp implements KeyListener, MouseListener, MouseWheelListener, 
          * @param app the parent application
          * @param e   the concerned {@link Entity}
          */
-        default void input(GameApp app, Entity e) {
+        default void input(GameApp app, T e) {
         }
 
         /**
@@ -596,7 +595,7 @@ public class GameApp implements KeyListener, MouseListener, MouseWheelListener, 
          * @param app the parent application
          * @param e   the concerned {@link Entity}
          */
-        default void update(GameApp app, Entity e, double elapsed) {
+        default void update(GameApp app, T e, double elapsed) {
         }
 
         /**
@@ -606,7 +605,7 @@ public class GameApp implements KeyListener, MouseListener, MouseWheelListener, 
          * @param e   the concerned {@link Entity}.
          * @param g   the {@link Graphics2D} API to use.
          */
-        default void draw(GameApp app, Entity e, Graphics2D g) {
+        default void draw(GameApp app, T e, Graphics2D g) {
         }
 
         /**
@@ -616,7 +615,7 @@ public class GameApp implements KeyListener, MouseListener, MouseWheelListener, 
          * @param e   the concerned {@link Entity}
          * @param k   the {@link KeyEvent} to be processed.
          */
-        default void onKeyPressed(GameApp app, Entity e, KeyEvent k) {
+        default void onKeyPressed(GameApp app, T e, KeyEvent k) {
         }
 
         /**
@@ -626,7 +625,7 @@ public class GameApp implements KeyListener, MouseListener, MouseWheelListener, 
          * @param e   the concerned {@link Entity}
          * @param k   the {@link KeyEvent} to be processed.
          */
-        default void onKeyReleased(GameApp app, Entity e, KeyEvent k) {
+        default void onKeyReleased(GameApp app, T e, KeyEvent k) {
         }
 
         /**
@@ -635,7 +634,7 @@ public class GameApp implements KeyListener, MouseListener, MouseWheelListener, 
          * @param app the parent application
          * @param e   the concerned {@link Entity}
          */
-        default void onActivate(GameApp app, Entity e) {
+        default void onActivate(GameApp app, T e) {
         }
 
         /**
@@ -644,7 +643,7 @@ public class GameApp implements KeyListener, MouseListener, MouseWheelListener, 
          * @param app the parent application
          * @param e   the concerned {@link Entity}
          */
-        default void onDeactivate(GameApp app, Entity e) {
+        default void onDeactivate(GameApp app, T e) {
         }
 
         /**
@@ -655,7 +654,7 @@ public class GameApp implements KeyListener, MouseListener, MouseWheelListener, 
          * @param mouseX mouse X position
          * @param mouseY mouse y position
          */
-        default void onMouseIn(GameApp app, Entity e, double mouseX, double mouseY) {
+        default void onMouseIn(GameApp app, T e, double mouseX, double mouseY) {
         }
 
         /**
@@ -666,7 +665,7 @@ public class GameApp implements KeyListener, MouseListener, MouseWheelListener, 
          * @param mouseX mouse X position
          * @param mouseY mouse y position
          */
-        default void onMouseOut(GameApp app, Entity e, double mouseX, double mouseY) {
+        default void onMouseOut(GameApp app, T e, double mouseX, double mouseY) {
         }
 
         /**
@@ -678,7 +677,7 @@ public class GameApp implements KeyListener, MouseListener, MouseWheelListener, 
          * @param mouseY   mouse y position
          * @param buttonId the button number that has been clicked.
          */
-        default void onMouseClick(GameApp app, Entity e, double mouseX, double mouseY, int buttonId) {
+        default void onMouseClick(GameApp app, T e, double mouseX, double mouseY, int buttonId) {
         }
 
         /**
@@ -690,7 +689,7 @@ public class GameApp implements KeyListener, MouseListener, MouseWheelListener, 
          * @param mouseY   mouse y position
          * @param buttonId the button number that has been clicked.
          */
-        default void onMousePressed(GameApp app, Entity e, double mouseX, double mouseY, int buttonId) {
+        default void onMousePressed(GameApp app, T e, double mouseX, double mouseY, int buttonId) {
         }
 
         /**
@@ -702,7 +701,16 @@ public class GameApp implements KeyListener, MouseListener, MouseWheelListener, 
          * @param mouseY   mouse y position
          * @param buttonId the button number that has been clicked.
          */
-        default void onMouseReleased(GameApp app, Entity e, double mouseX, double mouseY, int buttonId) {
+        default void onMouseReleased(GameApp app, T e, double mouseX, double mouseY, int buttonId) {
+        }
+
+        /**
+         * If the Entity is selected (e.g. ItemObject in a MenuObject)
+         *
+         * @param app the parent application
+         * @param e   the concerned {@link Entity}
+         */
+        default void onSelected(GameApp app, T e) {
         }
     }
 
@@ -800,7 +808,7 @@ public class GameApp implements KeyListener, MouseListener, MouseWheelListener, 
         }
 
         public String getText() {
-            if (text.contains("%") && value != null) {
+            if (text != null && text.contains("%") && value != null) {
                 return String.format(text, value);
             }
             return text;
@@ -811,6 +819,13 @@ public class GameApp implements KeyListener, MouseListener, MouseWheelListener, 
             return this;
         }
 
+        public Font getFont() {
+            return this.font;
+        }
+
+        public Object getValue() {
+            return value;
+        }
     }
 
     /**
@@ -973,7 +988,7 @@ public class GameApp implements KeyListener, MouseListener, MouseWheelListener, 
         @Override
         default void onMousePressed(GameApp app, Entity e, double mouseX, double mouseY, int buttonId) {
             e.setFillColor(mousePressedColor);
-            if (e instanceof Button) {
+            if (e instanceof Button || e instanceof ItemObject) {
                 Button bt = (Button) e;
                 bt.setTextColor(mousePressedTextColor);
             }
@@ -982,7 +997,7 @@ public class GameApp implements KeyListener, MouseListener, MouseWheelListener, 
         @Override
         default void onMouseReleased(GameApp app, Entity e, double mouseX, double mouseY, int buttonId) {
             e.setFillColor(mouseReleasedColor);
-            if (e instanceof Button) {
+            if (e instanceof Button || e instanceof ItemObject) {
                 Button bt = (Button) e;
                 bt.setTextColor(mouseReleasedTextColor);
             }
@@ -1072,8 +1087,12 @@ public class GameApp implements KeyListener, MouseListener, MouseWheelListener, 
      */
     public static class ItemObject extends TextObject implements UIObject {
 
+        private boolean highlight = false;
+
         public ItemObject(String name) {
             super(name);
+            setRelativeToCamera(true);
+            setActive(true);
         }
 
         public ItemObject setValue(String value) {
@@ -1081,6 +1100,9 @@ public class GameApp implements KeyListener, MouseListener, MouseWheelListener, 
             return this;
         }
 
+        public void setHighLight(boolean b) {
+            this.highlight = b;
+        }
     }
 
     /**
@@ -1091,8 +1113,9 @@ public class GameApp implements KeyListener, MouseListener, MouseWheelListener, 
      */
     public static class MenuObject extends TextObject implements UIObject {
 
-        private List<ItemObject> items = new ArrayList<>();
         private Color backgroundColor;
+        private int itemIndex = 0;
+        private Object selectedValue = null;
 
         public MenuObject(String name) {
             super(name);
@@ -1100,19 +1123,58 @@ public class GameApp implements KeyListener, MouseListener, MouseWheelListener, 
             setSize(100, 48);
             setPosition((buffer.getWidth() - this.width) * 0.5, (buffer.getHeight() - this.height) * 0.5);
             setRelativeToCamera(true);
+            setActive(true);
             setFillColor(Color.BLUE);
             setBorderColor(Color.CYAN);
             setTextColor(Color.WHITE);
+            setText("");
             add(new AlignBehavior());
+            add(new Behavior() {
+                @Override
+                public void onKeyReleased(GameApp app, Entity e, KeyEvent k) {
+                    MenuObject mo = (MenuObject) e;
+                    switch (k.getKeyCode()) {
+                        case KeyEvent.VK_DOWN -> {
+                            mo.itemIndex = Math.min(itemIndex + 1, child.size() - 1);
+                        }
+                        case KeyEvent.VK_UP -> {
+                            mo.itemIndex = Math.max(itemIndex - 1, 0);
+                        }
+                        case KeyEvent.VK_ENTER, KeyEvent.VK_SPACE -> {
+                            ItemObject io = ((ItemObject) child.get(itemIndex));
+                            mo.selectedValue = io.getValue();
+
+                            mo.behaviors.forEach(b -> b.onSelected(app, mo));
+                        }
+                    }
+                }
+            });
         }
 
-        private void setBackgroundColor(Color bckColor) {
+        public MenuObject setBackgroundColor(Color bckColor) {
             this.backgroundColor = bckColor;
+            return this;
         }
 
-        public void addItem(ItemObject item) {
-            item.setPosition(this.x, this.y + (items.size()) * item.height);
-            items.add(item);
+        public MenuObject addItem(ItemObject item) {
+            item.setPosition(
+                    this.x + UIObject.padding + UIObject.margin,
+                    this.y + UIObject.padding + UIObject.margin + (child.size() + 1.25f) * 14);
+            item.setFont(getFont());
+            child.add(item);
+            return this;
+        }
+
+        @Override
+        public void update(GameApp app, double elapsed) {
+            super.update(app, elapsed);
+            for (int i = 0; i < child.size(); i++) {
+                ((ItemObject) child.get(i)).setHighLight(i == itemIndex);
+            }
+        }
+
+        public int getItemIndex() {
+            return itemIndex;
         }
     }
 
@@ -1274,10 +1336,37 @@ public class GameApp implements KeyListener, MouseListener, MouseWheelListener, 
         }
     }
 
+    /**
+     * The rendering plugin architecture use RendererPlugin implemntation to draw any object on screen.
+     * Any renderer will implment the 2 required methods from the interface:
+     *
+     * <ul>
+     *     <li><code>getEntityClass()</code> that will return the class signature of the drawn object,</li>
+     *     <li><code>draw(Graphics2D,Entity)</code> the corresponding implementation of the
+     * drawing process for the corresponding Entity class.</li>
+     * </ul>
+     *
+     * @param <T> the parametrized class  corresponding to the entity inherited implementation to be drawn.
+     * @see Renderer
+     * @author Frédéric Delorme
+     * @since 1.0.0
+     */
     public interface RendererPlugin<T> {
-        public Class<? extends Entity> getEntityClass();
 
-        public void draw(Graphics2D g, Entity e);
+        /**
+         * return the  class of the drawn object inheriting from {@link Entity}.
+         *
+         * @return the Class of the Entity this plugin will draw.
+         */
+        Class<? extends Entity> getEntityClass();
+
+        /**
+         * Implementation of the draw process for this {@link Entity}.
+         *
+         * @param g the {@link Graphics2D} API instance to use to draw.
+         * @param e the {@link Entity} instance to be drawn.
+         */
+        void draw(Graphics2D g, Entity e);
     }
 
     public static class GameObjectRendererPlugin implements RendererPlugin<GameObject> {
@@ -1423,12 +1512,9 @@ public class GameApp implements KeyListener, MouseListener, MouseWheelListener, 
         @Override
         public void draw(Graphics2D g, Entity e) {
             ItemObject te = (ItemObject) e;
-            g.setColor(te.textColor);
-
             if (Optional.ofNullable(te.font).isPresent()) {
                 g.setFont(te.font);
             }
-
             int textWidth = g.getFontMetrics().stringWidth(te.text);
             int textHeight = g.getFontMetrics().getHeight();
             int tx2 = g.getFontMetrics().getDescent();
@@ -1444,8 +1530,20 @@ public class GameApp implements KeyListener, MouseListener, MouseWheelListener, 
                     offsetX = -textWidth;
                 }
             }
+
+            if (te.highlight) {
+                g.setColor(UIObject.mousePressedTextColor);
+                for (int i = -2; i < 2; i++) {
+                    for (int j = -2; j < 2; j++) {
+                        g.drawString(te.getText(), (int) te.getX() + i + offsetX, (int) te.getY() + j);
+                    }
+                }
+            }
+
+            g.setColor(te.textColor);
             te.setSize(textWidth, textHeight);
             g.drawString(te.getText(), (int) te.getX() + offsetX, (int) te.getY());
+
         }
     }
 
@@ -1464,7 +1562,8 @@ public class GameApp implements KeyListener, MouseListener, MouseWheelListener, 
                 g.setFont(mo.font);
             }
             int textHeight = g.getFontMetrics().getHeight();
-            int textWidth = g.getFontMetrics().stringWidth(mo.getText());
+            g.setColor(mo.textColor);
+            g.drawString(mo.getText(), (int) mo.getX(), (int) mo.getY());
 
             /*
             g.setColor(Color.GRAY);
@@ -1477,8 +1576,9 @@ public class GameApp implements KeyListener, MouseListener, MouseWheelListener, 
 
             if (mo.backgroundColor != null) {
                 g.setColor(mo.textColor);
-                Renderer.drawEdgeRectangle(g, mo);
+                Renderer.drawEdgeRectangle(g, mo, mo.backgroundColor);
             }
+
         }
     }
 
@@ -1750,10 +1850,16 @@ public class GameApp implements KeyListener, MouseListener, MouseWheelListener, 
             e.behaviors.forEach(b -> {
                 b.draw(app, e, g);
             });
-            e.child.forEach(c -> drawEntity(c, g));
+            e.child.forEach(c -> {
+                drawEntity(c, g);
+            });
         }
 
         private static void drawEdgeRectangle(Graphics2D g, Entity te) {
+            drawEdgeRectangle(g, te, te.fillColor);
+        }
+
+        private static void drawEdgeRectangle(Graphics2D g, Entity te, Color fill) {
 
             int x = (int) ((Optional.ofNullable(te.getParent()).isPresent() && te.isRelativeToParent())
                     ? (te.getParent().getX() + te.getX())
@@ -1762,7 +1868,7 @@ public class GameApp implements KeyListener, MouseListener, MouseWheelListener, 
             int y = (int) ((Optional.ofNullable(te.getParent()).isPresent() && te.isRelativeToParent())
                     ? (te.getParent().getY() + te.getY())
                     : te.getY());
-            g.setColor(te.fillColor);
+            g.setColor(fill);
             g.fillRect(x, y, (int) te.getWidth(), (int) te.getHeight());
 
             g.setColor(Color.LIGHT_GRAY);
@@ -2302,8 +2408,8 @@ public class GameApp implements KeyListener, MouseListener, MouseWheelListener, 
         if (!e.isRelativeToCamera() && !isPause()) {
             applyPhysics(delay, e);
             controlPlayAreaBoundaries(e);
-            e.update(delay);
         }
+        e.update(this, delay);
         e.behaviors.forEach(b -> {
             b.update(this, e, delay);
         });
