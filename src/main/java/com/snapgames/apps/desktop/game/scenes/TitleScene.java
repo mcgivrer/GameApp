@@ -3,7 +3,6 @@ package com.snapgames.apps.desktop.game.scenes;
 import com.snapgames.apps.desktop.game.GameApp;
 
 import java.awt.*;
-import java.awt.event.KeyEvent;
 
 import static com.snapgames.apps.desktop.game.GameApp.getResource;
 import static com.snapgames.apps.desktop.game.GameApp.messages;
@@ -47,9 +46,9 @@ public class TitleScene extends GameApp.AbstractScene {
         );
         add(new GameApp.TextObject("welcome-msg")
                 .setText(messages.getString("app.scene.title.welcome.message"))
-                .setFont(textFont.deriveFont(12.0f))
+                .setFont(textFont.deriveFont(Font.ITALIC, 8.0f))
                 .setTextAlign(GameApp.Align.CENTER)
-                .setPosition(app.getBuffer().getWidth() * 0.5, app.getBuffer().getHeight() * 0.85)
+                .setPosition(app.getBuffer().getWidth() * 0.5, app.getBuffer().getHeight() * 0.75)
                 .setBorderColor(Color.WHITE)
                 .setRelativeToCamera(true)
         );
@@ -69,10 +68,13 @@ public class TitleScene extends GameApp.AbstractScene {
 
         mo.addItem((GameApp.ItemObject) new GameApp.ItemObject("item1")
                 .setValue(1)
-                .setText(messages.getString("app.scene.title.menu.option.start")));
+                .setText(messages.getString("app.scene.title.menu.option.start"))
+        );
+
         mo.addItem((GameApp.ItemObject) new GameApp.ItemObject("item3")
                 .setValue(2)
-                .setText(messages.getString("app.scene.title.menu.option.quit")));
+                .setText(messages.getString("app.scene.title.menu.option.quit"))
+        );
 
         mo.add(new GameApp.Behavior<GameApp.MenuObject>() {
             @Override
@@ -81,7 +83,7 @@ public class TitleScene extends GameApp.AbstractScene {
                 if (vio == 1) {
                     app.activateScene("play");
                 } else if (vio == 2) {
-                    app.setExit(true);
+                    app.setExitRequest(true);
                 }
             }
         });

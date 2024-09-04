@@ -1347,8 +1347,8 @@ public class GameApp implements KeyListener, MouseListener, MouseWheelListener, 
      * </ul>
      *
      * @param <T> the parametrized class  corresponding to the entity inherited implementation to be drawn.
-     * @see Renderer
      * @author Frédéric Delorme
+     * @see Renderer
      * @since 1.0.0
      */
     public interface RendererPlugin<T> {
@@ -1367,6 +1367,17 @@ public class GameApp implements KeyListener, MouseListener, MouseWheelListener, 
          * @param e the {@link Entity} instance to be drawn.
          */
         void draw(Graphics2D g, Entity e);
+
+        default void drawVisualDebugInformation(Graphics2D g, Entity te, int offsetX) {
+            if (debug > 2) {
+                g.setColor(Color.YELLOW);
+                g.setFont(g.getFont().deriveFont(8.0f));
+                g.drawString("#" + te.id + ":" + te.name, (int) te.getX() - 10, (int) te.getY() - 10);
+                g.drawRect(
+                        (int) te.getX() + offsetX, (int) (te.getY() - te.getHeight()),
+                        (int) te.getWidth(), (int) te.getHeight());
+            }
+        }
     }
 
     public static class GameObjectRendererPlugin implements RendererPlugin<GameObject> {
@@ -1454,13 +1465,7 @@ public class GameApp implements KeyListener, MouseListener, MouseWheelListener, 
             te.setSize(textWidth, textHeight);
             g.drawString(te.getText(), (int) te.getX() + offsetX, (int) te.getY());
 
-
-            if (debug > 2) {
-                g.setColor(Color.ORANGE);
-                g.drawRect(
-                        (int) te.getX() + tx2 + offsetX, (int) (te.getY() - te.getHeight()),
-                        (int) te.getWidth(), (int) te.getHeight());
-            }
+            drawVisualDebugInformation(g, te, tx2 + offsetX);
         }
     }
 
@@ -1544,7 +1549,9 @@ public class GameApp implements KeyListener, MouseListener, MouseWheelListener, 
             te.setSize(textWidth, textHeight);
             g.drawString(te.getText(), (int) te.getX() + offsetX, (int) te.getY());
 
+            drawVisualDebugInformation(g, te, tx2 + offsetX);
         }
+
     }
 
     public static class MenuObjectRendererPlugin implements RendererPlugin<MenuObject> {
@@ -1565,20 +1572,12 @@ public class GameApp implements KeyListener, MouseListener, MouseWheelListener, 
             g.setColor(mo.textColor);
             g.drawString(mo.getText(), (int) mo.getX(), (int) mo.getY());
 
-            /*
-            g.setColor(Color.GRAY);
-
-            g.fillRect((int) db.getX(), (int) db.getY(), (int) db.getWidth(), (int) db.getHeight());
-
-            g.setColor(db.borderColor);
-            g.drawRect((int) db.getX(), (int) db.getY(), (int) db.getWidth(), (int) db.getHeight());
-            */
-
             if (mo.backgroundColor != null) {
                 g.setColor(mo.textColor);
                 Renderer.drawEdgeRectangle(g, mo, mo.backgroundColor);
             }
 
+            drawVisualDebugInformation(g, mo, mo.child.size() * mo.getFont().getSize());
         }
     }
 
@@ -1843,6 +1842,7 @@ public class GameApp implements KeyListener, MouseListener, MouseWheelListener, 
 
             if (plugins.containsKey(e.getClass())) {
                 plugins.get(e.getClass()).draw(g, e);
+                //plugins.get(e.getClass()).drawVisualDebugInformation(g, e, 0);
                 e.setAttribute("renderedBy", plugins.get(e.getClass()).getClass());
             } else {
                 error("Unknown drawing method/plugin for '%s' type %s", e.getName(), e.getClass());
@@ -2507,7 +2507,7 @@ public class GameApp implements KeyListener, MouseListener, MouseWheelListener, 
      * @param debugLevel the minimum required debug level
      * @return true if the required level is reached.
      */
-    private boolean isDebugAtLeast(int debugLevel) {
+    public boolean isDebugAtLeast(int debugLevel) {
         return debug >= debugLevel;
     }
 
@@ -2527,9 +2527,6 @@ public class GameApp implements KeyListener, MouseListener, MouseWheelListener, 
         app.run(argc);
     }
 
-    public static void setPause(boolean p) {
-        pause = p;
-    }
 
     /*----- Logger API -----*/
 
@@ -2712,7 +2709,7 @@ public class GameApp implements KeyListener, MouseListener, MouseWheelListener, 
         }
     }
 
-
+    /*----- getters and setters -----*/
     private Properties getConfig() {
         return config;
     }
@@ -2725,7 +2722,11 @@ public class GameApp implements KeyListener, MouseListener, MouseWheelListener, 
         return this.world;
     }
 
-    public void setExit(boolean x) {
+    public void setExitRequest(boolean x) {
         exit = x;
+    }
+
+    public static void setPause(boolean p) {
+        pause = p;
     }
 }
