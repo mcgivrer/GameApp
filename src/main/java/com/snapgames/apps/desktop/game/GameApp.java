@@ -1107,6 +1107,7 @@ public class GameApp implements KeyListener, MouseListener, MouseWheelListener, 
 
     /**
      * A {@link MenuObject} is a choice selector between multiple items.
+     * {@link Entity#child} list will be menu entry item {@link ItemObject}.
      *
      * @author Frédéric Delorme
      * @since 1.0.0
@@ -1117,6 +1118,11 @@ public class GameApp implements KeyListener, MouseListener, MouseWheelListener, 
         private int itemIndex = 0;
         private Object selectedValue = null;
 
+        /**
+         * Create a new {@link MenuObject} with a name.
+         *
+         * @param name the Name of this new {@link MenuObject}.
+         */
         public MenuObject(String name) {
             super(name);
             setBackgroundColor(null);
