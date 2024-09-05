@@ -3,13 +3,11 @@ package com.snapgames.apps.desktop.game.scenes;
 import com.snapgames.apps.desktop.game.GameApp;
 
 import java.awt.*;
-import java.awt.event.KeyEvent;
 
 import static com.snapgames.apps.desktop.game.GameApp.getResource;
 import static com.snapgames.apps.desktop.game.GameApp.messages;
 
 public class TitleScene extends GameApp.AbstractScene {
-
 
     Font scoreFont;
     Font textFont;
@@ -48,9 +46,9 @@ public class TitleScene extends GameApp.AbstractScene {
         );
         add(new GameApp.TextObject("welcome-msg")
                 .setText(messages.getString("app.scene.title.welcome.message"))
-                .setFont(textFont.deriveFont(12.0f))
+                .setFont(textFont.deriveFont(Font.ITALIC, 8.0f))
                 .setTextAlign(GameApp.Align.CENTER)
-                .setPosition(app.getBuffer().getWidth() * 0.5, app.getBuffer().getHeight() * 0.65)
+                .setPosition(app.getBuffer().getWidth() * 0.5, app.getBuffer().getHeight() * 0.75)
                 .setBorderColor(Color.WHITE)
                 .setRelativeToCamera(true)
         );
@@ -63,24 +61,32 @@ public class TitleScene extends GameApp.AbstractScene {
                 .setBorderColor(Color.WHITE)
                 .setRelativeToCamera(true)
         );
-        add(new GameApp.Behavior() {
+        GameApp.MenuObject mo = (GameApp.MenuObject) new GameApp.MenuObject("menu")
+                .setFont(textFont.deriveFont(10.0f))
+                .setText(messages.getString("app.scene.title.menu.choose"))
+                .setPosition(app.getBuffer().getWidth() * 0.3, app.getBuffer().getHeight() * 0.45);
+
+        mo.addItem((GameApp.ItemObject) new GameApp.ItemObject("item1")
+                .setValue(1)
+                .setText(messages.getString("app.scene.title.menu.option.start"))
+        );
+
+        mo.addItem((GameApp.ItemObject) new GameApp.ItemObject("item3")
+                .setValue(2)
+                .setText(messages.getString("app.scene.title.menu.option.quit"))
+        );
+
+        mo.add(new GameApp.Behavior<GameApp.MenuObject>() {
             @Override
-            public void onKeyReleased(GameApp app, GameApp.Entity e, KeyEvent k) {
-                switch (k.getKeyCode()) {
-                    case KeyEvent.VK_ENTER -> {
-                        app.activateScene("play");
-                    }
-                    default -> {
-                        // nothing to do there
-                    }
+            public void onSelected(GameApp app, GameApp.MenuObject e) {
+                int vio = (int) ((GameApp.ItemObject) e.child.get(e.getItemIndex())).getValue();
+                if (vio == 1) {
+                    app.activateScene("play");
+                } else if (vio == 2) {
+                    app.setExitRequest(true);
                 }
             }
         });
-
-    }
-
-    @Override
-    public void update(GameApp app, double elapsed) {
-        super.update(app, elapsed);
+        add((GameApp.Entity) mo);
     }
 }

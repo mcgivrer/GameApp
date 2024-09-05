@@ -6,8 +6,7 @@ import java.awt.*;
 import java.awt.event.KeyEvent;
 import java.awt.geom.Point2D;
 
-import static com.snapgames.apps.desktop.game.GameApp.getResource;
-import static com.snapgames.apps.desktop.game.GameApp.setPause;
+import static com.snapgames.apps.desktop.game.GameApp.*;
 
 public class PlayScene extends GameApp.AbstractScene {
 
@@ -122,11 +121,20 @@ public class PlayScene extends GameApp.AbstractScene {
                         .add(new GameApp.Behavior() {
                             @Override
                             public void draw(GameApp app, GameApp.Entity e, Graphics2D g) {
-                                g.setColor(Color.WHITE);
-                                g.setFont(textFont.deriveFont(8.0f));
-                                g.drawString(
-                                        app.messages.getString("app.camera.name"),
-                                        (int) app.getWorld().playArea.getHeight(), (int) app.getWorld().playArea.getHeight() - 20);
+                                if (app.isDebugAtLeast(2)) {
+                                    g.setColor(Color.ORANGE);
+                                    g.setFont(textFont.deriveFont(8.0f));
+                                    String camName = GameApp.messages.getString("app.camera.name");
+                                    g.getFontMetrics().stringWidth(camName);
+                                    g.drawString(
+                                            GameApp.messages.getString("app.camera.name"),
+                                            (int) app.getBuffer().getWidth() - g.getFontMetrics().stringWidth(camName)-10,
+                                            (int) app.getBuffer().getHeight() - 10);
+                                    Stroke s = g.getStroke();
+                                    g.setStroke(new BasicStroke(0.5f));
+                                    g.drawRect(10, 10, app.getBuffer().getWidth() - 20, app.getBuffer().getHeight() - 20);
+                                    g.setStroke(s);
+                                }
                             }
                         }));
 
@@ -155,10 +163,10 @@ public class PlayScene extends GameApp.AbstractScene {
                     @Override
                     public void onKeyReleased(GameApp app, GameApp.Entity e, KeyEvent k) {
                         if (k.getKeyCode() == KeyEvent.VK_Y || k.getKeyCode() == KeyEvent.VK_SPACE) {
-                            app.setExit(true);
+                            app.setExitRequest(true);
                         }
                         if (k.getKeyCode() == KeyEvent.VK_N || k.getKeyCode() == KeyEvent.VK_BACK_SPACE) {
-                            app.setExit(false);
+                            app.setExitRequest(false);
                             app.setVisible(e, false);
                         }
                     }
@@ -178,7 +186,7 @@ public class PlayScene extends GameApp.AbstractScene {
                 .add(new GameApp.UIObject() {
                     @Override
                     public void onMouseClick(GameApp app, GameApp.Entity e, double mouseX, double mouseY, int buttonId) {
-                        app.setExit(true);
+                        app.setExitRequest(true);
                         e.setFillColor(Color.CYAN);
                     }
                 });
@@ -196,7 +204,7 @@ public class PlayScene extends GameApp.AbstractScene {
                 .add(new GameApp.UIObject() {
                     @Override
                     public void onMouseClick(GameApp app, GameApp.Entity e, double mouseX, double mouseY, int buttonId) {
-                        app.setExit(false);
+                        app.setExitRequest(false);
                         GameApp.DialogBox db = (GameApp.DialogBox) getEntity("exitConfirmBox");
                         db.setVisible(false);
                         setPause(false);
