@@ -121,7 +121,7 @@ public class GameApp implements KeyListener, MouseListener, MouseWheelListener, 
         public List<Behavior> behaviors = new ArrayList<>();
 
         // add any attribute object to this entity.
-        private Map<String, Object> attributes = new HashMap<>();
+        private final Map<String, Object> attributes = new HashMap<>();
 
         public Shape shape = new Rectangle2D.Double();
 
@@ -985,6 +985,12 @@ public class GameApp implements KeyListener, MouseListener, MouseWheelListener, 
          */
         Color mouseReleasedTextColor = Color.WHITE;
 
+        Color borderColor = Color.BLACK;
+        Color darkBorderColor = Color.DARK_GRAY;
+        Color panelFillColor = Color.DARK_GRAY;
+        Color lightBorderColor = Color.LIGHT_GRAY;
+        Color midLightFillColor = Color.GRAY;
+
         @Override
         default void onMousePressed(GameApp app, Entity e, double mouseX, double mouseY, int buttonId) {
             e.setFillColor(mousePressedColor);
@@ -1014,6 +1020,11 @@ public class GameApp implements KeyListener, MouseListener, MouseWheelListener, 
             e.setFillColor(mouseOutColor);
             e.setBorderColor(mouseOutBorderColor);
         }
+
+        @Override
+        default void onMouseClick(GameApp app, Entity e, double mouseX, double mouseY, int buttonId) {
+            e.setFillColor(Color.CYAN);
+        }
     }
 
     /**
@@ -1028,18 +1039,66 @@ public class GameApp implements KeyListener, MouseListener, MouseWheelListener, 
         public DialogBox(String name) {
             super(name);
             setSize(100, 48);
+            setFillColor(UIObject.panelFillColor);
+            setBorderColor(UIObject.borderColor);
             setPosition((buffer.getWidth() - this.width) * 0.5, (buffer.getHeight() - this.height) * 0.5);
             setVisible(false);
             setRelativeToCamera(true);
-            setFillColor(Color.BLUE);
-            setBorderColor(Color.CYAN);
-            setTextColor(Color.WHITE);
             add(new AlignBehavior());
         }
 
         public void setVisible(boolean visible) {
             setActive(visible);
             setChildVisible(visible);
+        }
+    }
+
+    public static class ConfirmDialogBox extends DialogBox {
+
+        public ConfirmDialogBox(String name) {
+            super(name);
+            // Add the required button OK
+            GameApp.Entity okButton = (GameApp.Button) new GameApp.Button("OK")
+                    .setAlign(GameApp.Align.RIGHT)
+                    .setTextAlign(GameApp.Align.CENTER)
+                    .setText(messages.getString("app.dialog.button.ok"))
+                    .setTextColor(Color.WHITE)
+                    .setFillColor(Color.GRAY)
+                    .setActive(false)
+                    .setSize(40, 12)
+                    .setPriority(20)
+                    .add(new GameApp.UIObject() {
+                    });
+
+            // Add the required button Cancel
+            GameApp.Entity cancelButton = new GameApp.Button("Cancel")
+                    .setAlign(GameApp.Align.LEFT)
+                    .setText(messages.getString("app.dialog.button.cancel"))
+                    .setTextAlign(GameApp.Align.CENTER)
+                    .setTextColor(Color.WHITE)
+                    .setFillColor(Color.GRAY)
+                    .setActive(false)
+                    .setSize(56, 12)
+                    .setPriority(20)
+                    .add(new GameApp.UIObject() {
+                    });
+            // add the button to the dialog box.
+            add(okButton);
+            add(cancelButton);
+        }
+
+        public ConfirmDialogBox addConfirm(Behavior<Button> behavior) {
+            findChild("OK").add(behavior);
+            return this;
+        }
+
+        public ConfirmDialogBox addCancel(Behavior<Button> behavior) {
+            findChild("Cancel").add(behavior);
+            return this;
+        }
+
+        private Entity findChild(String childName) {
+            return child.stream().filter(c -> c.getName().equals(childName)).findFirst().get();
         }
     }
 
@@ -1280,6 +1339,7 @@ public class GameApp implements KeyListener, MouseListener, MouseWheelListener, 
                 b.create(app, entity);
             });
             entities.put(entity.name, entity);
+            entity.child.forEach(c -> add(c));
         }
 
         @Override
@@ -1503,7 +1563,7 @@ public class GameApp implements KeyListener, MouseListener, MouseWheelListener, 
 
             te.setSize(te.getWidth(), fontHeight + 2 * UIObject.margin);
 
-            Renderer.drawEdgeRectangle(g, te);
+            Renderer.drawUIPanel(g, te);
 
             g.setColor(te.textColor);
             g.drawString(
@@ -1580,7 +1640,7 @@ public class GameApp implements KeyListener, MouseListener, MouseWheelListener, 
 
             if (mo.backgroundColor != null) {
                 g.setColor(mo.textColor);
-                Renderer.drawEdgeRectangle(g, mo, mo.backgroundColor);
+                Renderer.drawUIPanel(g, mo, mo.backgroundColor);
             }
 
             drawVisualDebugInformation(g, mo, mo.child.size() * mo.getFont().getSize());
@@ -1603,21 +1663,19 @@ public class GameApp implements KeyListener, MouseListener, MouseWheelListener, 
             }
             int textHeight = g.getFontMetrics().getHeight();
             int textWidth = g.getFontMetrics().stringWidth(db.getText());
-
-            /*
-            g.setColor(Color.GRAY);
-
-            g.fillRect((int) db.getX(), (int) db.getY(), (int) db.getWidth(), (int) db.getHeight());
-
-            g.setColor(db.borderColor);
-            g.drawRect((int) db.getX(), (int) db.getY(), (int) db.getWidth(), (int) db.getHeight());
-            */
-            Renderer.drawEdgeRectangle(g, db);
+            Renderer.drawUIPanel(g, db);
 
             g.setColor(db.textColor);
 
             g.drawString(db.getText(), (int) (db.getX() + (db.getWidth() - textWidth) * 0.5 - UIObject.margin * 2),
                     (int) (db.getY() + (db.getHeight() * 0.30) + UIObject.margin + UIObject.padding));
+        }
+    }
+
+    public static class ConfirmDialogBoxRendererPlugin extends DialogBoxRendererPlugin {
+        @Override
+        public Class<? extends Entity> getEntityClass() {
+            return ConfirmDialogBox.class;
         }
     }
 
@@ -1690,6 +1748,7 @@ public class GameApp implements KeyListener, MouseListener, MouseWheelListener, 
             register(new DialogBoxRendererPlugin());
             register(new ItemObjectRendererPlugin());
             register(new MenuObjectRendererPlugin());
+            register(new ConfirmDialogBoxRendererPlugin());
         }
 
         /**
@@ -1702,7 +1761,7 @@ public class GameApp implements KeyListener, MouseListener, MouseWheelListener, 
         /**
          * Prepare the default display, can be full screen ort not.
          *
-         * @param fullScreen the flag to request the full screen mode.
+         * @param fullScreen the flag to request the full-screen mode.
          */
         public void prepareDisplay(boolean fullScreen) {
             if (window != null && window.isActive()) {
@@ -1861,11 +1920,11 @@ public class GameApp implements KeyListener, MouseListener, MouseWheelListener, 
             });
         }
 
-        private static void drawEdgeRectangle(Graphics2D g, Entity te) {
-            drawEdgeRectangle(g, te, te.fillColor);
+        private static void drawUIPanel(Graphics2D g, Entity te) {
+            drawUIPanel(g, te, te.fillColor);
         }
 
-        private static void drawEdgeRectangle(Graphics2D g, Entity te, Color fill) {
+        private static void drawUIPanel(Graphics2D g, Entity te, Color fill) {
 
             int x = (int) ((Optional.ofNullable(te.getParent()).isPresent() && te.isRelativeToParent())
                     ? (te.getParent().getX() + te.getX())
@@ -1877,7 +1936,7 @@ public class GameApp implements KeyListener, MouseListener, MouseWheelListener, 
             g.setColor(fill);
             g.fillRect(x, y, (int) te.getWidth(), (int) te.getHeight());
 
-            g.setColor(Color.LIGHT_GRAY);
+            g.setColor(UIObject.lightBorderColor);
             g.drawLine(
                     (int) te.getX(), (int) te.getY(),
                     (int) (x + te.getWidth()), (int) te.getY());
@@ -1885,14 +1944,14 @@ public class GameApp implements KeyListener, MouseListener, MouseWheelListener, 
                     (int) te.getX(), (int) (te.getY()),
                     (int) (te.getX()), (int) (te.getY() + te.getHeight()));
 
-            g.setColor(Color.DARK_GRAY);
+            g.setColor(UIObject.darkBorderColor);
             g.drawLine((int) te.getX(), (int) (te.getY() + te.getHeight()), (int) (x + te.getWidth()), (int) (te.getY() + te.getHeight()));
             g.drawLine((int) (te.getX() + te.getWidth()), (int) te.getY(), (int) (x + te.getWidth()), (int) (te.getY() + te.getHeight()));
 
             g.setColor(te.borderColor);
             g.drawRect(x - 1, y - 1, (int) (te.getWidth() + 2), (int) (te.getHeight() + 2));
 
-            g.setColor(Color.GRAY);
+            g.setColor(UIObject.midLightFillColor);
             g.drawLine(
                     (int) (te.getX() + te.getWidth()), (int) (te.getY()),
                     (int) (te.getX() + te.getWidth()), (int) (te.getY()));

@@ -53,9 +53,9 @@ public class PlayScene extends GameApp.AbstractScene {
                 .setPosition(20, 16)
                 .setBorderColor(Color.WHITE)
                 .setRelativeToCamera(true)
-                .add(new GameApp.Behavior() {
+                .add(new GameApp.Behavior<TextObject>() {
                     @Override
-                    public void input(GameApp app, GameApp.Entity e) {
+                    public void input(GameApp app, TextObject e) {
                         ((GameApp.TextObject) e).setValue(score);
                     }
                 })
@@ -74,10 +74,10 @@ public class PlayScene extends GameApp.AbstractScene {
                 .setPosition(app.getBuffer().getWidth() - 32, 16)
                 .setBorderColor(Color.WHITE)
                 .setRelativeToCamera(true)
-                .add(new GameApp.Behavior() {
+                .add(new GameApp.Behavior<TextObject>() {
                     @Override
-                    public void input(GameApp app, GameApp.Entity e) {
-                        ((GameApp.TextObject) e).setValue(lifeCount);
+                    public void update(GameApp app, TextObject e, double elapsed) {
+                        e.setValue(lifeCount);
                     }
                 })
         );
@@ -128,7 +128,7 @@ public class PlayScene extends GameApp.AbstractScene {
                                     g.getFontMetrics().stringWidth(camName);
                                     g.drawString(
                                             GameApp.messages.getString("app.camera.name"),
-                                            (int) app.getBuffer().getWidth() - g.getFontMetrics().stringWidth(camName)-10,
+                                            (int) app.getBuffer().getWidth() - g.getFontMetrics().stringWidth(camName) - 10,
                                             (int) app.getBuffer().getHeight() - 10);
                                     Stroke s = g.getStroke();
                                     g.setStroke(new BasicStroke(0.5f));
@@ -138,24 +138,39 @@ public class PlayScene extends GameApp.AbstractScene {
                             }
                         }));
 
-        GameApp.DialogBox exitConfirmation = (GameApp.DialogBox) new GameApp.DialogBox("exitConfirmBox")
+        GameApp.DialogBox exitConfirmation = (ConfirmDialogBox) new ConfirmDialogBox("exitConfirmBox")
+                .addConfirm(new GameApp.UIObject() {
+                    @Override
+                    public void onMouseClick(GameApp app, GameApp.Entity e, double mouseX, double mouseY, int buttonId) {
+                        UIObject.super.onMouseClick(app, e, mouseX, mouseY, buttonId);
+                        app.setExitRequest(true);
+                    }
+                })
+                .addCancel(new GameApp.UIObject() {
+                    @Override
+                    public void onMouseClick(GameApp app, GameApp.Entity e, double mouseX, double mouseY, int buttonId) {
+                        UIObject.super.onMouseClick(app, e, mouseX, mouseY, buttonId);
+                        app.setExitRequest(false);
+                        GameApp.DialogBox db = (GameApp.DialogBox) e.getParent();
+                        db.setVisible(false);
+                        setPause(false);
+                    }
+                })
                 .setText(app.messages.getString("app.dialog.exit.message"))
                 .setFont(textFont.deriveFont(8.0f))
                 .setTextColor(Color.WHITE)
                 .setSize(140, 40)
-                .setFillColor(Color.DARK_GRAY)
-                .setBorderColor(Color.BLACK)
                 .setActive(false)
                 .setPosition((app.getBuffer().getWidth() - 140) * 0.5, (app.getBuffer().getHeight() - 40) * 0.5)
                 .setPriority(10)
-                .add(new GameApp.Behavior() {
+                .add(new GameApp.Behavior<ConfirmDialogBox>() {
                     @Override
-                    public void onActivate(GameApp app, GameApp.Entity e) {
+                    public void onActivate(GameApp app, ConfirmDialogBox e) {
                         setPause(true);
                     }
 
                     @Override
-                    public void onDeactivate(GameApp app, GameApp.Entity e) {
+                    public void onDeactivate(GameApp app, ConfirmDialogBox e) {
                         setPause(false);
                     }
                 })
@@ -173,53 +188,10 @@ public class PlayScene extends GameApp.AbstractScene {
                 });
         add((GameApp.Entity) exitConfirmation);
 
-        // Add the required button OK
-        GameApp.Entity okButton = (GameApp.Button) new GameApp.Button("OK")
-                .setAlign(GameApp.Align.RIGHT)
-                .setTextAlign(GameApp.Align.CENTER)
-                .setText(app.messages.getString("app.dialog.button.ok"))
-                .setTextColor(Color.WHITE)
-                .setFillColor(Color.GRAY)
-                .setActive(false)
-                .setSize(40, 12)
-                .setPriority(20)
-                .add(new GameApp.UIObject() {
-                    @Override
-                    public void onMouseClick(GameApp app, GameApp.Entity e, double mouseX, double mouseY, int buttonId) {
-                        app.setExitRequest(true);
-                        e.setFillColor(Color.CYAN);
-                    }
-                });
-
-        // Add the required button Cancel
-        GameApp.Entity cancelButton = new GameApp.Button("Cancel")
-                .setAlign(GameApp.Align.LEFT)
-                .setText(app.messages.getString("app.dialog.button.cancel"))
-                .setTextAlign(GameApp.Align.CENTER)
-                .setTextColor(Color.WHITE)
-                .setFillColor(Color.GRAY)
-                .setActive(false)
-                .setSize(40, 12)
-                .setPriority(20)
-                .add(new GameApp.UIObject() {
-                    @Override
-                    public void onMouseClick(GameApp app, GameApp.Entity e, double mouseX, double mouseY, int buttonId) {
-                        app.setExitRequest(false);
-                        GameApp.DialogBox db = (GameApp.DialogBox) getEntity("exitConfirmBox");
-                        db.setVisible(false);
-                        setPause(false);
-                        e.setFillColor(Color.CYAN);
-                    }
-                });
-        add(okButton);
-        add(cancelButton);
-        // add the button to the dialog box.
-        exitConfirmation.add(okButton);
-        exitConfirmation.add(cancelButton);
-
+        // add Scene specific behavior.
         add(new GameApp.Behavior() {
             @Override
-            public void onKeyReleased(GameApp app, GameApp.Entity e, KeyEvent k) {
+            public void onKeyReleased(GameApp app, Entity e, KeyEvent k) {
                 switch (k.getKeyCode()) {
                     // exit application on ESCAPE
                     case KeyEvent.VK_ESCAPE -> {

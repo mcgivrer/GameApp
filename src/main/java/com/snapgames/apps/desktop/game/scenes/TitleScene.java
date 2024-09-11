@@ -44,14 +44,6 @@ public class TitleScene extends GameApp.AbstractScene {
                 .setBorderColor(Color.WHITE)
                 .setRelativeToCamera(true)
         );
-        add(new GameApp.TextObject("welcome-msg")
-                .setText(messages.getString("app.scene.title.welcome.message"))
-                .setFont(textFont.deriveFont(Font.ITALIC, 8.0f))
-                .setTextAlign(GameApp.Align.CENTER)
-                .setPosition(app.getBuffer().getWidth() * 0.5, app.getBuffer().getHeight() * 0.75)
-                .setBorderColor(Color.WHITE)
-                .setRelativeToCamera(true)
-        );
 
         add(new GameApp.TextObject("copyright-msg")
                 .setText(messages.getString("app.scene.title.copyright.message"))
