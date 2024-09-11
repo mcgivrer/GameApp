@@ -6,31 +6,143 @@ This chapter is dedicated to introducing interactivity with user based on the mo
 We already have some `Behavior` interface, and a `KeyListener` at our `GameApp` level.
 Let's extend this with `MouseXxxListener` and events interception with our extended `Behavior`: the `UIObject` API.
 
+## Mouse events processing
+
+We add new listeners to the GameApp class: `MouseListener`, `MouseWheelListener` and `MouseMotionListener` to get mouse
+move, click, wheel and any mouse events.
+
+first, adding new attributes to track mouse position, previous position and latest entity:
+
+```java
+public class GameApp implements KeyListener, MouseListener, MouseWheelListener, MouseMotionListener {
+    //...
+    private double mouseX = 0;
+    private double mouseY = 0;
+
+    private int realMouseX;
+    private int realMouseY;
+
+    private static Entity previousEntity = null;
+    //...
+
+
+}
+```
+
+then add the mouseMove event processing to track mouse: we will detect only `Button` instances first.
+
+```java
+public class GameApp implements KeyListener, MouseListener, MouseWheelListener, MouseMotionListener {
+    //...
+    // utilities to detect entity under mouse position
+    private Optional<Entity> getEntityUnderMouse(double mouseX, double mouseY) {
+        Optional<Entity> entityClicked = currentScene.getEntities().values().stream()
+                .filter(entity -> Arrays.stream(entity.getClass().getInterfaces()).filter(i -> i.equals(UIObject.class)).findFirst().isPresent()
+                        && entity.isActive()
+                        && entity.contains(mouseX, mouseY)).sorted((a, b) -> Integer.compare(b.priority, a.priority)).findFirst();
+
+        return entityClicked;
+    }
+
+
+    @Override
+    public void mouseMoved(MouseEvent e) {
+        JFrame window = renderer.getWindow();
+        this.realMouseX = e.getX();
+        this.realMouseY = e.getY() - window.getInsets().top;
+        this.mouseX = (realMouseX * ((double) buffer.getWidth() / window.getWidth()));
+        this.mouseY = (realMouseY * ((double) buffer.getHeight() / (window.getHeight() - window.getInsets().top)));
+
+        if (getEntityUnderMouse(mouseX, mouseY).isPresent()) {
+            Entity entityClicked = getEntityUnderMouse(mouseX, mouseY).get();
+            //reset previously highlighted UIObject
+            if (previousEntity != null && !previousEntity.equals(entityClicked)) {
+                if (previousEntity instanceof Button) {
+                    previousEntity.borderColor = UIObject.mouseOutBorderColor;
+                    previousEntity.fillColor = UIObject.mouseOutColor;
+
+                    debug("Mouse is out of the entity  %s (%s)", previousEntity.name, previousEntity.getClass());
+                    previousEntity.setAttribute("mouse_hover", false);
+                    previousEntity.behaviors
+                            .forEach(b -> b.onMouseOut(this, previousEntity, mouseX, mouseY));
+                }
+            }
+            previousEntity = entityClicked;
+            if (entityClicked instanceof Button) {
+                entityClicked.behaviors
+                        .forEach(b -> b.onMouseIn(this, entityClicked, mouseX, mouseY));
+                entityClicked.setAttribute("mouse_hover", true);
+            }
+            debug("Mouse enter over the entity  %s (%s)", entityClicked.name, entityClicked.getClass());
+
+        }
+    }
+}
+```
+
+And now, we can process mouse button events like _clicked_, _Pressed_ and _Released_ though the `Behavior` interface and
+the `UIObject` interface :
+
+```java
+public class GameApp implements KeyListener, MouseListener, MouseWheelListener, MouseMotionListener {
+    //...
+
+    @Override
+    public void mousePressed(MouseEvent e) {
+        if (getEntityUnderMouse(mouseX, mouseY).isPresent()) {
+            Entity entityClicked = getEntityUnderMouse(mouseX, mouseY).get();
+            debug("Entity %s has been pressed", entityClicked.name);
+            entityClicked.behaviors
+                    .forEach(b -> b.onMousePressed(this, entityClicked, mouseX, mouseY, e.getButton()));
+        }
+    }
+
+    @Override
+    public void mouseReleased(MouseEvent e) {
+        if (getEntityUnderMouse(mouseX, mouseY).isPresent()) {
+            Entity entityClicked = getEntityUnderMouse(mouseX, mouseY).get();
+            debug("Entity %s has been released", entityClicked.name);
+            entityClicked.behaviors
+                    .forEach(b -> b.onMouseReleased(this, entityClicked, mouseX, mouseY, e.getButton()));
+        }
+    }
+
+    public void mouseClicked(MouseEvent e) {
+        if (getEntityUnderMouse(mouseX, mouseY).isPresent()) {
+            Entity entityClicked = getEntityUnderMouse(mouseX, mouseY).get();
+            debug("Entity %s has been clicked", entityClicked.name);
+            entityClicked.behaviors
+                    .forEach(b -> b.onMouseClick(this, entityClicked, mouseX, mouseY, e.getButton()));
+        }
+    }
+}
+```
+
 Any component implementing this `UIObject` will be able to interact with mouse.
 
 ## UIObject
+
+The UIObject interface will bring new mouse events processing for managing component colorization.
 
 ```java
 public interface UIObject extends Behavior {
 
     int margin = 2;
-
     int padding = 2;
 
-    Color mouseOnColor = Color.LIGHT_GRAY;
-
+    Color borderColor = Color.BLACK;
+    Color darkBorderColor = Color.DARK_GRAY;
+    Color panelFillColor = Color.DARK_GRAY;
+    Color lightBorderColor = Color.LIGHT_GRAY;
+    Color midLightFillColor = Color.GRAY;
+    
+    Color mouseOnColor = lightBorderColor;
     Color mouseOnBorderColor = Color.WHITE;
-
     Color mousePressedColor = Color.CYAN;
-
     Color mousePressedTextColor = Color.BLUE;
-
-    Color mouseOutColor = Color.GRAY;
-
+    Color mouseOutColor = midLightFillColor;
     Color mouseOutBorderColor = new Color(0.1f, 0.1f, 0.1f);
-
     Color mouseReleasedColor = mouseOutColor;
-
     Color mouseReleasedTextColor = Color.WHITE;
 
     @Override
