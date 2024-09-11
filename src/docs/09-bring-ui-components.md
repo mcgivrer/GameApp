@@ -287,9 +287,7 @@ GameApp.Entity okButton = (GameApp.Button) new GameApp.Button("OK")
         .setSize(40, 12)
         .setPriority(20);
 
-exitConfirmation.
-
-add(okButton);
+exitConfirmation.add(okButton);
 ```
 
 ![Bringing the No and Yes button to life](images/ui-dialog-panel-and-yes-button.png "Bringing the No and Yes button to life")
@@ -306,9 +304,7 @@ GameApp.Entity cancelButton = new GameApp.Button("Cancel")
         .setActive(false)
         .setSize(40, 12)
         .setPriority(20);
-exitConfirmation.
-
-add(cancelButton);
+exitConfirmation.add(cancelButton);
 ```
 
 To finally get a full Yes/No DialogBox:
@@ -327,11 +323,11 @@ GameApp.Entity cancelButton = new GameApp.Button("Cancel")
         .add(new GameApp.UIObject() {
             @Override
             public void onMouseClick(GameApp app, GameApp.Entity e, double mouseX, double mouseY, int buttonId) {
-                app.setExitRequest(false);
+                UIObject.super.onMouseClick(app, e, mouseX, mouseY, buttonId);
                 GameApp.DialogBox db = (GameApp.DialogBox) getEntity("exitConfirmBox");
                 db.setVisible(false);
                 setPause(false);
-                e.setFillColor(Color.CYAN);
+                app.setExitRequest(false);
             }
         });
 ```
@@ -344,8 +340,8 @@ GameApp.Entity okButton = (GameApp.Button) new GameApp.Button("OK")
         .add(new GameApp.UIObject() {
             @Override
             public void onMouseClick(GameApp app, GameApp.Entity e, double mouseX, double mouseY, int buttonId) {
+                UIObject.super.onMouseClick(app, e, mouseX, mouseY, buttonId);
                 app.setExitRequest(true);
-                e.setFillColor(Color.CYAN);
             }
         });
 ```

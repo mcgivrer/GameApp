@@ -82,8 +82,6 @@ public class PlayScene extends GameApp.AbstractScene {
                 })
         );
 
-        generateEntities(app, "enemy_", 20);
-
         GameApp.GameObject player = (GameApp.GameObject) new GameApp.GameObject("player")
                 .setNature(GameApp.GameObjectNature.RECTANGLE)
                 .setPosition(app.getWorld().playArea.getWidth() * 0.5,
@@ -111,7 +109,8 @@ public class PlayScene extends GameApp.AbstractScene {
                 });
         add(player);
 
-        generateEntities(app, "enemy_", 20);
+        generateEntities(app, "enemy_", 10, 10, Color.RED);
+        generateEntities(app, "energy_", 10, 6, Color.GREEN);
 
         setActiveCamera((GameApp.Camera)
                 new GameApp.Camera("cam01")
@@ -150,10 +149,10 @@ public class PlayScene extends GameApp.AbstractScene {
                     @Override
                     public void onMouseClick(GameApp app, GameApp.Entity e, double mouseX, double mouseY, int buttonId) {
                         UIObject.super.onMouseClick(app, e, mouseX, mouseY, buttonId);
-                        app.setExitRequest(false);
                         GameApp.DialogBox db = (GameApp.DialogBox) e.getParent();
                         db.setVisible(false);
                         setPause(false);
+                        app.setExitRequest(false);
                     }
                 })
                 .setText(app.messages.getString("app.dialog.exit.message"))
@@ -199,7 +198,7 @@ public class PlayScene extends GameApp.AbstractScene {
                         app.activateEntity(db, true);
                     }
                     case KeyEvent.VK_PAGE_UP -> {
-                        generateEntities(app, "enemy_", 10);
+                        generateEntities(app, "enemy_", 10, 8,Color.RED);
                     }
                     case KeyEvent.VK_G -> {
                         if (k.isControlDown()) {
@@ -218,15 +217,15 @@ public class PlayScene extends GameApp.AbstractScene {
     }
 
 
-    private void generateEntities(GameApp app, String rootName, int nbEntities) {
+    private void generateEntities(GameApp app, String rootName, int nbEntities, int size, Color c) {
         for (int i = 0; i < nbEntities; i++) {
             add(new GameApp.GameObject(rootName + GameApp.Entity.index)
                     .setNature(GameApp.GameObjectNature.ELLIPSE)
                     .setPosition(app.getWorld().playArea.getWidth() * Math.random(),
                             app.getWorld().playArea.getHeight() * Math.random())
-                    .setSize(8, 8)
+                    .setSize(size, size)
                     .setPriority(100 + i)
-                    .setFillColor(Color.RED)
+                    .setFillColor(c)
                     .setAcceleration(0.25 - (Math.random() * 0.5), 0.25 - (Math.random() * 0.5))
                     .setMaterial(new GameApp.Material("Enemy_MAT", 1.0, 0.96, 0.98))
                     .setMass(2.0 + (5.0 * Math.random())));
