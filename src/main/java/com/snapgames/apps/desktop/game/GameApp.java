@@ -4,6 +4,7 @@ import com.snapgames.apps.desktop.game.scenes.PlayScene;
 import com.snapgames.apps.desktop.game.scenes.TitleScene;
 
 import javax.imageio.ImageIO;
+import javax.sound.sampled.*;
 import javax.swing.*;
 import java.awt.*;
 import java.awt.event.*;
@@ -1927,6 +1928,55 @@ public class GameApp implements KeyListener, MouseListener, MouseWheelListener, 
         }
     }
 
+    /**
+     * The `SoundManager` will help play sound and music as WAV file.
+     * <ul>
+     *     <li>Add sound from file with {@link SoundManager#add(String, String)},</li>
+     *     <li>Play sound with {@link SoundManager#play(String)},</li>
+     *     <li>Stop a sound with {@link SoundManager#stop(String)},</li>
+     *     <li>Stop All soiund with {@link SoundManager#stopAll()}.</li>
+     * </ul>
+     */
+    public static class SoundManager {
+        private GameApp app;
+        private Map<String, Clip> soundClips;
+
+        public SoundManager(GameApp app) {
+            this.app = app;
+            soundClips = new HashMap<>();
+        }
+
+        public void add(String name, String filePath) {
+            soundClips.put(name,getResource(filePath));
+        }
+
+        public void play(String name) {
+            Clip clip = soundClips.get(name);
+            if (clip != null) {
+                if (!clip.isRunning())
+                    clip.setFramePosition(0);
+                clip.start();
+            }
+        }
+
+        public void stop(String name) {
+            Clip clip = soundClips.get(name);
+            if (clip != null && clip.isRunning()) {
+                clip.stop();
+                clip.setFramePosition(0);
+            }
+        }
+
+        public void stopAll() {
+            for (Clip clip : soundClips.values()) {
+                if (clip.isRunning()) {
+                    clip.stop();
+                    clip.setFramePosition(0);
+                }
+            }
+        }
+    }
+
     /*------ Application properties -----*/
 
     /**
@@ -2261,6 +2311,16 @@ public class GameApp implements KeyListener, MouseListener, MouseWheelListener, 
                         );
                     } else {
                         return (T) ImageIO.read(GameApp.class.getResourceAsStream(path));
+                    }
+                }
+                case "wav" -> {
+                    try {
+                        AudioInputStream audioInputStream = AudioSystem.getAudioInputStream(Objects.requireNonNull(SoundManager.class.getResourceAsStream(path)));
+                        Clip clip = AudioSystem.getClip();
+                        clip.open(audioInputStream);
+                        return (T) clip;
+                    } catch (UnsupportedAudioFileException | IOException | LineUnavailableException e) {
+                        error("Unable to load sound file %s: %s", path, e.getMessage());
                     }
                 }
                 default -> {
