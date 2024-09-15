@@ -44,6 +44,8 @@ public class PlayScene extends GameApp.AbstractScene {
                 .setImage(getResource("/images/backgrounds/forest.jpg"))
                 .setPosition(0, 0)
                 .setSize(app.getWorld().getPlayArea().getWidth(), app.getWorld().getPlayArea().getHeight())
+                .setCollisionActive(false)
+                .setPhysicNature(PhysicNature.STATIC)
         );
 
         add(new GameApp.TextObject("score")

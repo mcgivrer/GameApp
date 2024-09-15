@@ -59,6 +59,12 @@ import static com.snapgames.apps.desktop.game.GameApp.Renderer.buffer;
  */
 public class GameApp implements KeyListener, MouseListener, MouseWheelListener, MouseMotionListener {
 
+    public enum PhysicNature {
+        STATIC,
+        DYNAMIC,
+        NONE;
+    }
+
     /**
      * <p>The {@link Entity} class is the Core object for any Scene.</p>
      *
@@ -95,15 +101,20 @@ public class GameApp implements KeyListener, MouseListener, MouseWheelListener, 
 
         // velocity
         public double dx, dy;
+        // acceleration
+        public double ax, ay;
+
+        public PhysicNature physicNature = PhysicNature.DYNAMIC;
 
         public int priority = 0;
         public boolean active = true;
-
         public Color borderColor = Color.BLACK;
         public Color fillColor = Color.BLUE;
 
-        // acceleration
-        public double ax, ay;
+        // lifespan & duration for this Entity.
+        private long lifespan = 0;
+        private long duration = -1;
+
         // forces
         public List<Point2D> forces = new ArrayList<>();
         // Material
@@ -119,6 +130,10 @@ public class GameApp implements KeyListener, MouseListener, MouseWheelListener, 
 
         // Enhance Entity with behaviors
         public List<Behavior> behaviors = new ArrayList<>();
+        public List<CollisionEvent> collisions = new ArrayList<>();
+        public boolean collisionActive = true;
+
+        private int contact = 0;
 
         // add any attribute object to this entity.
         private Map<String, Object> attributes = new HashMap<>();
@@ -272,6 +287,57 @@ public class GameApp implements KeyListener, MouseListener, MouseWheelListener, 
         public Collection<Entity> getChild() {
             return this.child;
         }
+
+        public Collection<Behavior> getBehaviors() {
+            return this.behaviors;
+        }
+
+        public int getContact() {
+            return contact;
+        }
+
+        public Entity setContact(int contact) {
+            this.contact = contact;
+            return this;
+        }
+
+        public Collection<CollisionEvent> getCollisions() {
+            return this.collisions;
+        }
+
+        public Collection<Point2D> getForces() {
+            return this.forces;
+        }
+
+        public long getDuration() {
+            return duration;
+        }
+
+        public long getLifeSpan() {
+            return lifespan;
+        }
+
+        public Map<String, String> getDebugInfo() {
+            return new HashMap<>();
+        }
+
+        public Entity setCollisionActive(boolean b) {
+            collisionActive = b;
+            return this;
+        }
+
+        public boolean isCollisionActivated() {
+            return collisionActive;
+        }
+
+        public PhysicNature getPhysicNature() {
+            return physicNature;
+        }
+
+        public Entity setPhysicNature(PhysicNature physicNature) {
+            this.physicNature = physicNature;
+            return this;
+        }
     }
 
     /**
@@ -374,6 +440,7 @@ public class GameApp implements KeyListener, MouseListener, MouseWheelListener, 
          */
         public ImageObject(String name) {
             super(name);
+            setCollisionActive(false);
         }
 
         public ImageObject setImage(BufferedImage img) {
@@ -715,6 +782,9 @@ public class GameApp implements KeyListener, MouseListener, MouseWheelListener, 
          * @param e   the concerned {@link Entity}
          */
         default void onSelected(GameApp app, T e) {
+        }
+
+        default void onCollide(GameApp parent, Scene activeScene, Entity o1, CollisionEvent ce) {
         }
     }
 
@@ -1773,13 +1843,7 @@ public class GameApp implements KeyListener, MouseListener, MouseWheelListener, 
                     .sorted(Comparator.comparingInt(a -> a.priority))
                     .forEach(e -> {
                         drawEntity(e, g);
-                        if (app.isDebugAtLeast(3)) {
-                            g.setColor(Color.ORANGE);
-                            g.drawRect(
-                                    (int) e.getX(), (int) e.getY(),
-                                    (int) e.getWidth(), (int) e.getHeight());
-
-                        }
+                        drawDebugInfo(g, e);
                     });
 
             // draw space partitioning
@@ -1832,13 +1896,14 @@ public class GameApp implements KeyListener, MouseListener, MouseWheelListener, 
                 if (app.isDebugAtLeast(0)) {
                     g2s.setColor(Color.ORANGE);
                     g2s.drawString(
-                            String.format("[ dbg:%01d / fps:%03d ups:%03d ft:%03d / obj:%04d active:%04d / scn:%s ]",
+                            String.format("[ dbg:%01d / fps:%03d ups:%03d ft:%03d / obj:%04d active:%04d / col:%03d / scn:%s ]",
                                     debug,
                                     stats.get("fps"),
                                     stats.get("ups"),
                                     stats.get("ft"),
                                     (long) currentScene.getEntities().values().size(),
                                     currentScene.getEntities().values().stream().filter(Entity::isActive).count(),
+                                    app.getCollisionManager().getCollisions().size(),
                                     stats.get("scene")),
                             10, window.getHeight() - 10
                     );
@@ -1873,6 +1938,94 @@ public class GameApp implements KeyListener, MouseListener, MouseWheelListener, 
             e.child.forEach(c -> {
                 drawEntity(c, g);
             });
+        }
+
+        private void drawDebugInfo(Graphics2D rbg, Entity go) {
+            if (debug > 0) {
+                if (go.getContact() > 0) {
+                    rbg.setColor(Color.YELLOW);
+                    if (go.getContact() << 1 != 0) {
+                        rbg.drawLine((int) go.x, (int) go.y, (int) go.x, (int) (go.y + go.getHeight()));
+                    }
+                    if (go.getContact() << 2 != 0) {
+                        rbg.drawLine((int) (go.x + go.getWidth()), (int) go.y, (int) (go.x + go.getWidth()), (int) (go.y + go.getHeight()));
+                    }
+                    if (go.getContact() << 3 != 0) {
+                        rbg.drawLine((int) (go.x), (int) go.y, (int) (go.x + go.getWidth()), (int) (go.y));
+                    }
+                    if (go.getContact() << 4 != 0) {
+                        rbg.drawLine((int) (go.x), (int) (go.y + go.getHeight()), (int) (go.x + go.getWidth()), (int) (go.y + go.getHeight()));
+                    }
+                    rbg.setColor(Color.ORANGE);
+                    rbg.draw(go);
+                }
+                if (debug > 1) {
+                    int centerX = (int) (go.x + go.width * 0.5);
+                    int centerY = (int) (go.y + go.height * 0.5);
+
+                    // draw Bounding box.
+                    Stroke b = rbg.getStroke();
+                    if (go.contact > 0 || !go.getCollisions().isEmpty()) {
+                        rbg.setStroke(new BasicStroke(1.0f));
+                        rbg.setColor(Color.RED);
+                    } else {
+                        rbg.setStroke(new BasicStroke(0.5f));
+                        rbg.setColor(Color.WHITE);
+                    }
+                    rbg.draw(go);
+                    rbg.setStroke(b);
+
+                    // draw velocity
+                    rbg.setColor(Color.CYAN);
+                    rbg.drawLine(
+                            centerX, centerY,
+                            centerX + (int) (go.dx * 0.1),
+                            centerY + (int) (go.dy * 0.1));
+
+                    // draw acceleration
+                    rbg.setColor(Color.YELLOW);
+                    rbg.drawLine(
+                            centerX, centerY,
+                            centerX + (int) (go.ax * 5.0),
+                            centerY + (int) (go.ay * 5.0));
+
+                    // draw forces
+                    if (debug > 2) {
+                        rbg.setColor(Color.GREEN);
+                        go.getForces().forEach(f -> {
+                            rbg.drawLine(
+                                    centerX,
+                                    centerY,
+                                    centerX + (int) (f.getX() * 0.1),
+                                    centerY + (int) (f.getY() * 0.1));
+                        });
+                    }
+                    // draw LifeSpan
+                    if (debug > 3 && go.getDuration() > -1 && go.getLifeSpan() > 0) {
+                        rbg.setColor(Color.RED);
+                        Stroke sBack = rbg.getStroke();
+                        rbg.setStroke(new BasicStroke(2.0f));
+                        rbg.setFont(rbg.getFont().deriveFont(9f));
+                        rbg.drawString("[L]", (int) (go.x - 12), (int) (go.y - 4));
+                        int level = (int) (go.getWidth() * (1.0 - (1.0 * go.getLifeSpan() / (1.0 * go.getDuration()))) * 1.5);
+                        rbg.drawLine((int) (go.x), (int) (go.y - 8),
+                                (int) (go.x + level), (int) (go.y - 8));
+                        rbg.setStroke(sBack);
+                    }
+                }
+                if (!debugFilter.isEmpty() && isEntityToBeDebug(debugFilter, go.getName()) && debug > 0) {
+                    rbg.setColor(Color.YELLOW);
+                    rbg.setFont(rbg.getFont().deriveFont(9.0f));
+                    go.getDebugInfo().forEach((key, value) -> {
+                        String[] l = key.split("\\|");
+                        int dbg = Integer.parseInt(l[0]);
+                        int idx = Integer.parseInt(l[1]);
+                        if (dbg <= debug) {
+                            rbg.drawString(l[2] + ":" + value, (int) (go.x + go.width), (int) (go.y + go.height) + (idx * 10));
+                        }
+                    });
+                }
+            }
         }
 
         private static void drawEdgeRectangle(Graphics2D g, Entity te) {
@@ -2191,6 +2344,103 @@ public class GameApp implements KeyListener, MouseListener, MouseWheelListener, 
         }
     }
 
+
+    /**
+     * <p>A {@link CollisionEvent} record is created for each detected collision into the {@link CollisionManager} service.</p>
+     * <p>Each collision between two {@link Entity} produce a new instance of the record CollisionEvent into the
+     * {@link CollisionManager#update(double)}.</p>
+     *
+     * @param o1 the primary object in the detected collision,
+     * @param o2 the secondary object int the detected collision.
+     * @author Frédéric Delorme
+     * @see CollisionManager
+     * @see Entity
+     * @since 0.0.11
+     */
+    public record CollisionEvent(Entity o1, Entity o2) {
+
+    }
+
+    /**
+     * <p>{@link CollisionManager} is used to detect and resolve collision<p>
+     * </p>This manager will detect all the collision between all active {@link Entity}
+     * into the current active {@link Scene}.</p>
+     *
+     * @author Frédéric Delorme
+     * @see CollisionEvent
+     * @see Entity
+     * @since 0.0.11
+     */
+    public static class CollisionManager {
+        private final GameApp parent;
+        private final List<CollisionEvent> collisionEvents = new ArrayList<>();
+
+        public CollisionManager(GameApp app) {
+            this.parent = app;
+        }
+
+        /**
+         * Parse all active objects to detect possible collision.
+         *
+         * @param elapsed the elapsed time since previous call.
+         */
+        public void update(double elapsed) {
+            // remove all previous collision.
+            collisionEvents.clear();
+            parent.getActiveScene().getEntities().values().forEach(o -> o.collisions.clear());
+            // detect new possible collision on active objects only.
+            parent.getActiveScene().getEntities().values().stream().
+                    filter(e -> e.isActive() && e.isCollisionActivated()).
+                    forEach(go -> {
+                        parent.getSpacePartition().find(go).stream().filter(
+                                go2 -> go2.isActive() && go2.isCollisionActivated()
+                                        && !go2.name.equals(go.getName())
+                                        && go.intersects(go2)).forEach(g -> {
+                            addCollisionEvent(g, go);
+                        });
+                    });
+        }
+
+        /**
+         * Add a new {@link CollisionEvent} to be processed
+         *
+         * @param o1 {@link Entity} 1 colliding with {@link Entity} 2
+         * @param o2 {@link Entity} 2 colliding with {@link Entity} 1
+         */
+        public void addCollisionEvent(Entity o1, Entity o2) {
+            CollisionEvent ce = new CollisionEvent(o1, o2);
+            collisionEvents.add(ce);
+            pprocessCollisionBehaviorFor(o1, ce);
+            pprocessCollisionBehaviorFor(o2, ce);
+
+        }
+
+        private void pprocessCollisionBehaviorFor(Entity o1, CollisionEvent ce) {
+            o1.collisions.add(ce);
+            o1.getBehaviors().forEach(b -> b.onCollide(parent, parent.getActiveScene(), o1, ce));
+        }
+
+        public Collection<CollisionEvent> getCollisionFor(Entity collider) {
+            return collisionEvents.stream().filter(go -> go.o1.equals(collider)).toList();
+        }
+
+        public Collection<CollisionEvent> getCollisions() {
+            return collisionEvents;
+        }
+
+        public void init(GameApp GameApp) {
+            collisionEvents.clear();
+        }
+    }
+
+    private SpacePartition getSpacePartition() {
+        return this.spacePartition;
+    }
+
+    private Scene getActiveScene() {
+        return currentScene;
+    }
+
     /*------ Application properties -----*/
 
     /**
@@ -2277,6 +2527,7 @@ public class GameApp implements KeyListener, MouseListener, MouseWheelListener, 
 
     private Renderer renderer;
     private SpacePartition spacePartition;
+    private CollisionManager colm;
 
     /**
      * Create the {@link GameApp} instance and detect the current java context.
@@ -2315,7 +2566,10 @@ public class GameApp implements KeyListener, MouseListener, MouseWheelListener, 
 
         // initialize Space Partitions (after config because of world init)
         spacePartition = new SpacePartition(world, 10, 5);
-
+        // init the collision manager for the current game
+        colm = new CollisionManager(this);
+        colm.init(this);
+        // prepare the renderer
         renderer = new Renderer(this);
         renderer.init(this);
     }
@@ -2645,28 +2899,25 @@ public class GameApp implements KeyListener, MouseListener, MouseWheelListener, 
      *
      * <p>It will refresh their status, position, velocity and acceleration, and active state.</p>
      *
-     * @param delay The elapsed time since previous call.
+     * @param elapsed The elapsed time since previous call.
      */
-    public void update(double delay) {
-        spacePartition.update(currentScene, delay);
+    public void update(double elapsed) {
+        spacePartition.update(currentScene, elapsed);
         // update all entities not stick to activeCamera.
         currentScene.getEntities().values()
                 .forEach(e -> {
-                    updateEntity(delay, e);
+                    updateEntity(elapsed, e);
                 });
+        colm.update(elapsed);
+        colm.getCollisions().forEach(ce -> {
+            ce.o1().setContact(ce.o1().getContact() + 16);
+            ce.o2().setContact(ce.o2().getContact() + 16);
+        });
         // update camera position
         if (Optional.ofNullable(currentScene.getActiveCamera()).isPresent()) {
-            currentScene.getActiveCamera().update(delay);
+            currentScene.getActiveCamera().update(elapsed);
             currentScene.getActiveCamera().behaviors.forEach(b -> {
-                b.update(this, currentScene.getActiveCamera(), delay);
-            });
-        }
-
-        // update camera position
-        if (Optional.ofNullable(currentScene.getActiveCamera()).isPresent()) {
-            currentScene.getActiveCamera().update(delay);
-            currentScene.getActiveCamera().behaviors.forEach(b -> {
-                b.update(this, currentScene.getActiveCamera(), delay);
+                b.update(this, currentScene.getActiveCamera(), elapsed);
             });
         }
     }
@@ -2681,8 +2932,12 @@ public class GameApp implements KeyListener, MouseListener, MouseWheelListener, 
      */
     private void updateEntity(double delay, Entity e) {
         if (!e.isRelativeToCamera() && !isPause()) {
-            applyPhysics(delay, e);
-            controlPlayAreaBoundaries(e);
+            if (e.getPhysicNature().equals(PhysicNature.DYNAMIC)) {
+                applyPhysics(delay, e);
+                if (e.isCollisionActivated()) {
+                    controlPlayAreaBoundaries(e);
+                }
+            }
         }
         e.update(this, delay);
         e.behaviors.forEach(b -> {
@@ -2753,25 +3008,30 @@ public class GameApp implements KeyListener, MouseListener, MouseWheelListener, 
      */
     public void controlPlayAreaBoundaries(Entity e) {
         if (!world.playArea.contains(e)) {
+            e.setContact(0);
             if (e.x < 0.0) {
                 e.x = 0.0;
                 e.dx = -e.dx * e.material.elasticity * world.material.roughness * world.material.elasticity;
                 e.ax = -e.ax * e.material.elasticity * world.material.roughness * world.material.elasticity;
+                e.setContact(1);
             }
             if (e.y < 0.0) {
                 e.y = 0.0;
                 e.dy = -e.dy * e.material.elasticity * world.material.roughness * world.material.elasticity;
                 e.ay = -e.ay * e.material.elasticity * world.material.roughness * world.material.elasticity;
+                e.setContact(3);
             }
             if (e.x > world.playArea.getWidth() - e.width) {
                 e.x = world.playArea.getWidth() - e.width;
                 e.dx = -e.dx * e.material.elasticity * world.material.roughness * world.material.elasticity;
                 e.ax = -e.ax * e.material.elasticity * world.material.roughness * world.material.elasticity;
+                e.setContact(2);
             }
             if (e.y > world.playArea.getHeight() - e.height) {
                 e.y = world.playArea.getHeight() - e.height;
                 e.dy = -e.dy * e.material.elasticity * world.material.roughness * world.material.elasticity;
                 e.ay = -e.ay;
+                e.setContact(4);
             }
         }
     }
@@ -3004,4 +3264,14 @@ public class GameApp implements KeyListener, MouseListener, MouseWheelListener, 
     public static void setPause(boolean p) {
         pause = p;
     }
+
+    public CollisionManager getCollisionManager() {
+        return this.colm;
+    }
+
+
+    public static boolean isEntityToBeDebug(String debugFilter, String name) {
+        return false;
+    }
+
 }
