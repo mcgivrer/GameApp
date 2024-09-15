@@ -1947,7 +1947,7 @@ public class GameApp implements KeyListener, MouseListener, MouseWheelListener, 
         }
 
         public void add(String name, String filePath) {
-            soundClips.put(name,getResource(filePath));
+            soundClips.put(name, getResource(filePath));
         }
 
         public void play(String name) {
@@ -1974,6 +1974,14 @@ public class GameApp implements KeyListener, MouseListener, MouseWheelListener, 
                     clip.setFramePosition(0);
                 }
             }
+        }
+
+        public void init(GameApp gameApp) {
+            soundClips.clear();
+        }
+
+        public void dispose() {
+            soundClips.clear();
         }
     }
 
@@ -2060,8 +2068,9 @@ public class GameApp implements KeyListener, MouseListener, MouseWheelListener, 
      */
     private World world = new World("earth", 0.981, new Rectangle2D.Double(), Material.DEFAULT);
 
-
     private Renderer renderer;
+
+    private SoundManager sounds;
 
     /**
      * Create the {@link GameApp} instance and detect the current java context.
@@ -2097,7 +2106,8 @@ public class GameApp implements KeyListener, MouseListener, MouseWheelListener, 
         info("Configuration applied: %s", config.stringPropertyNames().stream()
                 .map(key -> key + "=" + config.getProperty(key))
                 .collect(Collectors.joining(", ")));
-
+        sounds = new SoundManager(this);
+        sounds.init(this);
         renderer = new Renderer(this);
         renderer.init(this);
     }
@@ -2577,12 +2587,12 @@ public class GameApp implements KeyListener, MouseListener, MouseWheelListener, 
         return debug >= debugLevel;
     }
 
-    /*----- objects rendering -----*/
-
     /*----- releasing objects and resources -----*/
 
     public void dispose() {
         renderer.dispose();
+        sounds.dispose();
+
         info("End of application ");
     }
 
@@ -2794,5 +2804,9 @@ public class GameApp implements KeyListener, MouseListener, MouseWheelListener, 
 
     public static void setPause(boolean p) {
         pause = p;
+    }
+
+    public SoundManager getSoundManager() {
+        return this.sounds;
     }
 }
