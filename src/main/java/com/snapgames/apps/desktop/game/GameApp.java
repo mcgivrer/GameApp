@@ -59,12 +59,6 @@ import static com.snapgames.apps.desktop.game.GameApp.Renderer.buffer;
  */
 public class GameApp implements KeyListener, MouseListener, MouseWheelListener, MouseMotionListener {
 
-    public enum PhysicNature {
-        STATIC,
-        DYNAMIC,
-        NONE;
-    }
-
     /**
      * <p>The {@link Entity} class is the Core object for any Scene.</p>
      *
@@ -94,7 +88,14 @@ public class GameApp implements KeyListener, MouseListener, MouseWheelListener, 
      * @see Renderer#draw(Scene, Map)
      * @since 1.0.0
      */
+    public enum PhysicNature {
+        STATIC,
+        DYNAMIC,
+        NONE;
+    }
+
     public static class Entity extends Rectangle2D.Double {
+
         public static int index = 0;
         public int id = index++;
         public String name = "entity_" + id;
@@ -137,6 +138,8 @@ public class GameApp implements KeyListener, MouseListener, MouseWheelListener, 
 
         // add any attribute object to this entity.
         private Map<String, Object> attributes = new HashMap<>();
+
+        private Map<String, Object> debugInfo = new HashMap<>();
 
         public Shape shape = new Rectangle2D.Double();
 
@@ -317,8 +320,23 @@ public class GameApp implements KeyListener, MouseListener, MouseWheelListener, 
             return lifespan;
         }
 
-        public Map<String, String> getDebugInfo() {
-            return new HashMap<>();
+        public Map<String, Object> getDebugInfo() {
+            debugInfo.clear();
+            debugInfo.put("1|1|id", "#" + this.getId());
+            debugInfo.put("1|2|name", getName());
+            debugInfo.put("2|3|pos", x + "," + y);
+            debugInfo.put("2|4|vel", dx + "," + dy);
+            debugInfo.put("2|5|acc", ax + "," + ay);
+            debugInfo.put("2|6|ctc", "" + getContact());
+            debugInfo.put("2|7|dur", getDuration() + "ms");
+            if (getDuration() > -1) {
+                debugInfo.put("2|8|dur", getLifeSpan() + "ms");
+            }
+            return debugInfo;
+        }
+
+        private int getId() {
+            return this.id;
         }
 
         public Entity setCollisionActive(boolean b) {
@@ -1940,6 +1958,11 @@ public class GameApp implements KeyListener, MouseListener, MouseWheelListener, 
             });
         }
 
+
+        private boolean isEntityToBeDebug(String debugFilter, String name) {
+            return Arrays.stream(debugFilter.split(",")).anyMatch(name::contains);
+        }
+
         private void drawDebugInfo(Graphics2D rbg, Entity go) {
             if (debug > 0) {
                 if (go.getContact() > 0) {
@@ -2638,7 +2661,8 @@ public class GameApp implements KeyListener, MouseListener, MouseWheelListener, 
         // define debug output level, on console.
         debug = Integer.parseInt(config.getProperty("app.debug.level", "0"));
         // Retrieve debug filtering configuration. Only listed status will be sent to console output.
-        debugFilter = config.getProperty("app.debug.level", "WARN,ERROR");
+        loggerFilter = config.getProperty("app.debug.logger.filter", "WARN,ERROR");
+        debugFilter = config.getProperty("app.debug.entity.filter", "");
         // world size
         world.playArea = new Rectangle2D.Double(0, 0,
                 Integer.parseInt(config.getProperty("app.world.play.area.width", "320")),
@@ -3267,11 +3291,6 @@ public class GameApp implements KeyListener, MouseListener, MouseWheelListener, 
 
     public CollisionManager getCollisionManager() {
         return this.colm;
-    }
-
-
-    public static boolean isEntityToBeDebug(String debugFilter, String name) {
-        return false;
     }
 
 }
