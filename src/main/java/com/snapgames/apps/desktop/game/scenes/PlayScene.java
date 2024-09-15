@@ -43,7 +43,7 @@ public class PlayScene extends GameApp.AbstractScene {
         add(new GameApp.ImageObject("forest")
                 .setImage(getResource("/images/backgrounds/forest.jpg"))
                 .setPosition(0, 0)
-                .setSize(app.getWorld().playArea.getWidth(), app.getWorld().playArea.getHeight())
+                .setSize(app.getWorld().getPlayArea().getWidth(), app.getWorld().getPlayArea().getHeight())
         );
 
         add(new GameApp.TextObject("score")
@@ -86,8 +86,8 @@ public class PlayScene extends GameApp.AbstractScene {
 
         GameApp.GameObject player = (GameApp.GameObject) new GameApp.GameObject("player")
                 .setNature(GameApp.GameObjectNature.RECTANGLE)
-                .setPosition(app.getWorld().playArea.getWidth() * 0.5,
-                        app.getWorld().playArea.getHeight() * 0.5)
+                .setPosition(app.getWorld().getPlayArea().getWidth() * 0.5,
+                        app.getWorld().getPlayArea().getHeight() * 0.5)
                 .setSize(16, 16).setPriority(200)
                 .setMaterial(new GameApp.Material("Player_MAT", 1.0, 0.998, 0.98))
                 .setMass(10.0)
@@ -250,8 +250,8 @@ public class PlayScene extends GameApp.AbstractScene {
         for (int i = 0; i < nbEntities; i++) {
             add(new GameApp.GameObject(rootName + GameApp.Entity.index)
                     .setNature(GameApp.GameObjectNature.ELLIPSE)
-                    .setPosition(app.getWorld().playArea.getWidth() * Math.random(),
-                            app.getWorld().playArea.getHeight() * Math.random())
+                    .setPosition(app.getWorld().getPlayArea().getWidth() * Math.random(),
+                            app.getWorld().getPlayArea().getHeight() * Math.random())
                     .setSize(8, 8)
                     .setPriority(100 + i)
                     .setFillColor(Color.RED)

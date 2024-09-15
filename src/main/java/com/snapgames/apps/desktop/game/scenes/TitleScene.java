@@ -34,7 +34,7 @@ public class TitleScene extends GameApp.AbstractScene {
         add(new GameApp.ImageObject("forest")
                 .setImage(getResource("/images/backgrounds/forest.jpg"))
                 .setPosition(0, 0)
-                .setSize(app.getWorld().playArea.getWidth(), app.getWorld().playArea.getHeight())
+                .setSize(app.getWorld().getPlayArea().getWidth(), app.getWorld().getPlayArea().getHeight())
         );
         add(new GameApp.TextObject("game-title")
                 .setText(messages.getString("app.scene.title.game.title"))
