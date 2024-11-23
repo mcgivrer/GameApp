@@ -56,7 +56,7 @@ public class MenuObject extends TextObject implements UIObject {
                         ItemObject io = ((ItemObject) child.get(itemIndex));
                         mo.selectedValue = io.getValue();
 
-                        mo.behaviors.forEach(b -> b.onSelected(app, mo));
+                        mo.getBehaviors().forEach(b -> b.onSelected(app, mo));
                     }
                 }
             }

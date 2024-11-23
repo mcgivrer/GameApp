@@ -29,4 +29,8 @@ public class World {
         this.playArea = playArea;
         this.material = playAreaLimitMaterial;
     }
+
+    public Rectangle2D getPlayArea() {
+        return playArea;
+    }
 }

@@ -8,6 +8,7 @@ import com.snapgames.apps.desktop.game.entity.ui.DialogBox;
 import com.snapgames.apps.desktop.game.entity.ui.UIObject;
 import com.snapgames.apps.desktop.game.entity.util.Align;
 import com.snapgames.apps.desktop.game.physic.Material;
+import com.snapgames.apps.desktop.game.physic.PhysicNature;
 import com.snapgames.apps.desktop.game.scene.AbstractScene;
 
 import java.awt.*;

@@ -206,7 +206,7 @@ public class Renderer {
 
         // draw all Behaviors about active camera.
         if (Optional.ofNullable(currentScene.getActiveCamera()).isPresent()) {
-            currentScene.getActiveCamera().behaviors.forEach(b -> {
+            currentScene.getActiveCamera().getBehaviors().forEach(b -> {
                 b.draw(app, currentScene.getActiveCamera(), g);
             });
         }
@@ -275,7 +275,7 @@ public class Renderer {
         } else {
             error("Unknown drawing method/plugin for '%s' type %s", e.getName(), e.getClass());
         }
-        e.behaviors.forEach(b -> {
+        e.getBehaviors().forEach(b -> {
             b.draw(app, e, g);
         });
         e.child.forEach(c -> {

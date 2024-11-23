@@ -5,6 +5,8 @@ import com.snapgames.apps.desktop.game.behaviors.Behavior;
 import com.snapgames.apps.desktop.game.gfx.Renderer;
 import com.snapgames.apps.desktop.game.physic.CollisionEvent;
 import com.snapgames.apps.desktop.game.physic.Material;
+import com.snapgames.apps.desktop.game.physic.PhysicEngine;
+import com.snapgames.apps.desktop.game.physic.PhysicNature;
 import com.snapgames.apps.desktop.game.scene.Scene;
 
 import java.awt.*;
@@ -38,7 +40,7 @@ import java.util.List;
  *
  * @author Frédéric Delorme
  * @see Behavior
- * @see Game#update(double)
+ * @see PhysicEngine#update(Scene, double)
  * @see Renderer#draw(Scene, Map)
  * @since 1.0.0
  */
@@ -72,8 +74,11 @@ public class Entity extends Rectangle2D.Double {
     public boolean relativeToParent = false;
 
     // Enhance Entity with behaviors
-    public java.util.List<Behavior> behaviors = new ArrayList<>();
-    public List<CollisionEvent> collisions = new ArrayList<>();
+    private List<Behavior> behaviors = new ArrayList<>();
+
+    // Collision management
+    private List<CollisionEvent> collisions = new ArrayList<>();
+    public boolean collisionActive = true;
 
     // add any attribute object to this entity.
     private Map<String, Object> attributes = new HashMap<>();
@@ -83,6 +88,7 @@ public class Entity extends Rectangle2D.Double {
     // this entity has children!
     public List<Entity> child = new ArrayList<>();
     private Entity parent;
+    private PhysicNature physicNature = PhysicNature.DYNAMIC;
 
     /**
      * Create a brand new {@link Entity} with its name.
@@ -226,5 +232,31 @@ public class Entity extends Rectangle2D.Double {
 
     public Collection<Behavior> getBehaviors() {
         return this.behaviors;
+    }
+
+    public Collection<CollisionEvent> getCollisions() {
+        return this.collisions;
+    }
+
+    public Collection<Entity> getChild() {
+        return child;
+    }
+
+    public boolean isCollisionActivated() {
+        return collisionActive;
+    }
+
+    public Entity setCollisionActive(boolean activate) {
+        this.collisionActive = activate;
+        return this;
+    }
+
+    public Entity setPhysicNature(PhysicNature physicNature) {
+        this.physicNature = physicNature;
+        return this;
+    }
+
+    public PhysicNature getPhysicNature() {
+        return physicNature;
     }
 }

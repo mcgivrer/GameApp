@@ -1,6 +1,8 @@
 package com.snapgames.apps.desktop.game.physic;
 
-import com.snapgames.apps.desktop.game.GameApp;
+import com.snapgames.apps.desktop.game.Game;
+import com.snapgames.apps.desktop.game.scene.Scene;
+import com.snapgames.apps.desktop.game.entity.Entity;
 
 import java.awt.*;
 import java.awt.geom.Rectangle2D;
@@ -31,7 +33,7 @@ public class SpacePartition extends Rectangle2D.Double {
     /**
      * Contained objects by the cell
      */
-    private final List<GameApp.Entity> objects;
+    private final List<Entity> objects;
     /**
      * All the child sub-cells known as nodes.
      */
@@ -63,9 +65,9 @@ public class SpacePartition extends Rectangle2D.Double {
      * </ul>
      * </p>
      *
-     * @param world the {@link GameApp.World} object for the {@link GameApp} instance.
+     * @param world the {@link World} object for the {@link Game} instance.
      */
-    public SpacePartition(GameApp.World world, int maxObjectPerNode, int maxTreeLevels) {
+    public SpacePartition(World world, int maxObjectPerNode, int maxTreeLevels) {
         this(0, world.getPlayArea().getBounds());
         this.maxObjectsPerNode = maxObjectPerNode;
         this.maxTreeLevels = maxTreeLevels;
@@ -75,13 +77,13 @@ public class SpacePartition extends Rectangle2D.Double {
      * Dispatch all the active entities into the Space partitioning system to reduce collision
      * detections and optimize processing.
      *
-     * @param scene the parent {@link GameApp.Scene } instance
+     * @param scene the parent {@link Scene} instance
      * @param d     the elapsed time since previous call.
      */
-    public synchronized void cullingProcess(GameApp.Scene scene, double d) {
+    public synchronized void cullingProcess(Scene scene, double d) {
         clear();
         scene.getEntities().values().stream()
-                .filter(GameApp.Entity::isActive)
+                .filter(Entity::isActive)
                 .forEach(this::insert);
     }
 
@@ -113,15 +115,15 @@ public class SpacePartition extends Rectangle2D.Double {
     }
 
     /**
-     * Determine which {@link SpacePartition} node the {@link GameApp.Entity} belongs to.
+     * Determine which {@link SpacePartition} node the {@link Entity} belongs to.
      *
-     * @param pRect the {@link GameApp.Entity} to search in the {@link SpacePartition}'s
+     * @param pRect the {@link Entity} to search in the {@link SpacePartition}'s
      *              tree.
-     * @return the depth level of the {@link GameApp.Entity}; -1 means object can’t
+     * @return the depth level of the {@link Entity}; -1 means object can’t
      * completely fit
      * within a child node and is part of the parent node
      */
-    private int getIndex(GameApp.Entity pRect) {
+    private int getIndex(Entity pRect) {
         int index = -1;
         double verticalMidpoint = getX() + (getWidth() / 2);
         double horizontalMidpoint = getY() + (getHeight() / 2);
@@ -150,13 +152,13 @@ public class SpacePartition extends Rectangle2D.Double {
     }
 
     /**
-     * Insert the {@link GameApp.Entity} into the {@link SpacePartition} tree. If the node
+     * Insert the {@link Entity} into the {@link SpacePartition} tree. If the node
      * exceeds the capacity, it will split and add all
      * objects to their corresponding nodes.
      *
-     * @param pRect the {@link GameApp.Entity} to insert into the tree.
+     * @param pRect the {@link Entity} to insert into the tree.
      */
-    public void insert(GameApp.Entity pRect) {
+    public void insert(Entity pRect) {
         if (nodes[0] != null) {
             int index = getIndex(pRect);
             if (index != -1) {
@@ -184,21 +186,21 @@ public class SpacePartition extends Rectangle2D.Double {
     }
 
     /**
-     * Find the {@link GameApp.Entity} into the {@link SpacePartition} tree and return the
+     * Find the {@link Entity} into the {@link SpacePartition} tree and return the
      * list of neighbour's entities.
      *
      * @param e the Entity to find.
      * @return a list of neighbour's entities.
      */
-    public List<GameApp.Entity> find(GameApp.Entity e) {
-        List<GameApp.Entity> list = new ArrayList<>();
+    public List<Entity> find(Entity e) {
+        List<Entity> list = new ArrayList<>();
         return find(list, e);
     }
 
     /*
      * Return all objects that could collide with the given object
      */
-    private List<GameApp.Entity> find(List<GameApp.Entity> returnObjects, GameApp.Entity pRect) {
+    private List<Entity> find(List<Entity> returnObjects, Entity pRect) {
         int index = getIndex(pRect);
         if (index != -1 && nodes[0] != null) {
             nodes[index].find(returnObjects, pRect);
@@ -208,18 +210,18 @@ public class SpacePartition extends Rectangle2D.Double {
     }
 
     /**
-     * Dispatch all the {@link GameApp.Scene} {@link GameApp.Entity}'s into the
+     * Dispatch all the {@link Scene} {@link Entity}'s into the
      * {@link SpacePartition} tree.
      *
      * @param scene   the Scene to be processed.
      * @param elapsed the elapsed time since previous call (not used here).
      */
-    public void update(GameApp.Scene scene, double elapsed) {
+    public void update(Scene scene, double elapsed) {
         this.clear();
         scene.getEntities().forEach((k, v) -> insert(v));
     }
 
-    public void initialize(GameApp app) {
+    public void initialize(Game app) {
         this.root = this;
     }
 

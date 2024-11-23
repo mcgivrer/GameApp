@@ -1,7 +1,6 @@
 package com.snapgames.apps.desktop.game.physic;
 
 import com.snapgames.apps.desktop.game.Game;
-import com.snapgames.apps.desktop.game.GameApp;
 import com.snapgames.apps.desktop.game.entity.Entity;
 
 import java.util.ArrayList;
@@ -11,7 +10,7 @@ import java.util.List;
 /**
  * <p>{@link CollisionManager} is used to detect and resolve collision<p>
  * </p>This manager will detect all the collision between all active {@link Entity}
- * into the current active {@link GameApp.Scene}.</p>
+ * into the current active {@link com.snapgames.apps.desktop.game.scene.Scene}.</p>
  *
  * @author Frédéric Delorme
  * @see CollisionEvent
@@ -34,7 +33,7 @@ public class CollisionManager {
     public void update(double elapsed) {
         // remove all previous collision.
         collisionEvents.clear();
-        parent.getSceneManager().getCurrentScene().getEntities().values().forEach(o -> o.collisions.clear());
+        parent.getSceneManager().getCurrentScene().getEntities().values().forEach(o -> o.getCollisions().clear());
         // detect new possible collision on active objects only.
         parent.getSceneManager().getCurrentScene().getEntities().values().stream().
                 filter(e -> e.isActive() && e.isCollisionActivated()).
@@ -57,13 +56,13 @@ public class CollisionManager {
     public void addCollisionEvent(Entity o1, Entity o2) {
         CollisionEvent ce = new CollisionEvent(o1, o2);
         collisionEvents.add(ce);
-        pprocessCollisionBehaviorFor(o1, ce);
-        pprocessCollisionBehaviorFor(o2, ce);
+        processCollisionBehaviorFor(o1, ce);
+        processCollisionBehaviorFor(o2, ce);
 
     }
 
-    private void pprocessCollisionBehaviorFor(Entity o1, CollisionEvent ce) {
-        o1.collisions.add(ce);
+    private void processCollisionBehaviorFor(Entity o1, CollisionEvent ce) {
+        o1.getCollisions().add(ce);
         o1.getBehaviors().forEach(b -> b.onCollide(parent, parent.getSceneManager().getCurrentScene(), o1, ce));
     }
 

@@ -54,7 +54,7 @@ public abstract class AbstractScene implements Scene {
      * @param entity the new {@link Entity} to be added to the current scene.
      */
     public void add(Entity entity) {
-        entity.behaviors.forEach(b -> {
+        entity.getBehaviors().forEach(b -> {
             b.create(app, entity);
         });
         entities.put(entity.name, entity);

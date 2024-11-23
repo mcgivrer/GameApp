@@ -34,24 +34,30 @@ public class PhysicEngine {
      *
      * @param delay The elapsed time since previous call.
      */
-    public void update(Scene currentScene, double delay) {
+    public void update(Scene currentScene, double elapsed) {
+        // update all entities not stick to activeCamera.
+        app.getSpacePartition().update(currentScene, elapsed);
         // update all entities not stick to activeCamera.
         currentScene.getEntities().values()
                 .forEach(e -> {
-                    updateEntity(delay, e);
+                    updateEntity(elapsed, e);
                 });
+        app.getCollisionManager().update(elapsed);
+        app.getCollisionManager().getCollisions().forEach(ce -> {
+            ce.o1().setContact(ce.o1().getContact() + 16);
+            ce.o2().setContact(ce.o2().getContact() + 16);
+        });
         // update camera position
         if (Optional.ofNullable(currentScene.getActiveCamera()).isPresent()) {
-            currentScene.getActiveCamera().update(delay);
+            currentScene.getActiveCamera().update(elapsed);
             currentScene.getActiveCamera().behaviors.forEach(b -> {
-                b.update(app, currentScene.getActiveCamera(), delay);
+                b.update(this, currentScene.getActiveCamera(), elapsed);
             });
         }
-
         // update camera position
         if (Optional.ofNullable(currentScene.getActiveCamera()).isPresent()) {
             currentScene.getActiveCamera().update(delay);
-            currentScene.getActiveCamera().behaviors.forEach(b -> {
+            currentScene.getActiveCamera().getBehaviors().forEach(b -> {
                 b.update(app, currentScene.getActiveCamera(), delay);
             });
         }
@@ -66,12 +72,20 @@ public class PhysicEngine {
      * @param e     the {@link Entity} instance to be updated.
      */
     private void updateEntity(double delay, Entity e) {
+        if (!e.isRelativeToCamera() && !Game.isPause()) {
+            if (e.getPhysicNature().equals(PhysicNature.DYNAMIC)) {
+                applyPhysics(app.getWorld(), delay, e);
+                if (e.isCollisionActivated()) {
+                    controlPlayAreaBoundaries(app.getWorld(), e);
+                }
+            }
+        }
         if (!e.isRelativeToCamera() && !app.isPause()) {
             applyPhysics(app.getWorld(), delay, e);
             controlPlayAreaBoundaries(app.getWorld(), e);
         }
         e.update(app, delay);
-        e.behaviors.forEach(b -> {
+        e.getBehaviors().forEach(b -> {
             b.update(app, e, delay);
         });
         // proceed with child entities (if any).
@@ -179,11 +193,11 @@ public class PhysicEngine {
         e.setActive(visible);
         e.setChildVisible(visible);
         if (!visible) {
-            e.behaviors.forEach(c -> c.onDeactivate(app, e));
-            e.child.forEach(c -> c.behaviors.forEach(b -> b.onDeactivate(app, e)));
+            e.getBehaviors().forEach(c -> c.onDeactivate(app, e));
+            e.child.forEach(c -> c.getBehaviors().forEach(b -> b.onDeactivate(app, e)));
         } else {
-            e.behaviors.forEach(c -> c.onActivate(app, e));
-            e.child.forEach(c -> c.behaviors.forEach(b -> b.onActivate(app, e)));
+            e.getBehaviors().forEach(c -> c.onActivate(app, e));
+            e.child.forEach(c -> c.getBehaviors().forEach(b -> b.onActivate(app, e)));
         }
     }
 }

@@ -8,6 +8,7 @@ import com.snapgames.apps.desktop.game.entity.TextObject;
 import com.snapgames.apps.desktop.game.entity.ui.ItemObject;
 import com.snapgames.apps.desktop.game.entity.ui.MenuObject;
 import com.snapgames.apps.desktop.game.entity.util.Align;
+import com.snapgames.apps.desktop.game.physic.PhysicNature;
 import com.snapgames.apps.desktop.game.scene.AbstractScene;
 
 import java.awt.*;
@@ -44,7 +45,7 @@ public class TitleScene extends AbstractScene {
                 .setPosition(0, 0)
                 .setSize(app.getWorld().getPlayArea().getWidth(), app.getWorld().getPlayArea().getHeight())
                 .setCollisionActive(false)
-                .setPhysicNature(GameApp.PhysicNature.STATIC)
+                .setPhysicNature(PhysicNature.STATIC)
         );
         add(new TextObject("game-title")
                 .setText(messages.getString("app.scene.title.game.title"))

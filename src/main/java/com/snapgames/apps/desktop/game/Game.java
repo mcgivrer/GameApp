@@ -189,6 +189,8 @@ public class Game implements KeyListener, MouseListener, MouseWheelListener, Mou
         physicEngine = new PhysicEngine(this);
         sceneManager = new SceneManager(this);
         collisionManager = new CollisionManager(this);
+        collisionManager.init(this);
+        spacePartition = new SpacePartition(getWorld(), 10, 5);
     }
 
     /**
@@ -350,7 +352,7 @@ public class Game implements KeyListener, MouseListener, MouseWheelListener, Mou
 
     public void activateEntity(Entity e, boolean a) {
         e.setActive(a);
-        e.behaviors.forEach(b -> b.onActivate(this, e));
+        e.getBehaviors().forEach(b -> b.onActivate(this, e));
         e.child.forEach(c -> {
             activateEntity(c, a);
         });
@@ -433,7 +435,7 @@ public class Game implements KeyListener, MouseListener, MouseWheelListener, Mou
      * @param e the {@link Entity} to be processed abut input management.
      */
     private void processInputBehaviorForEntity(Entity e) {
-        e.behaviors.forEach(b -> {
+        e.getBehaviors().forEach(b -> {
             b.input(this, e);
         });
         e.child.forEach(this::processInputBehaviorForEntity);
@@ -487,9 +489,9 @@ public class Game implements KeyListener, MouseListener, MouseWheelListener, Mou
         keys[k.getKeyCode()] = true;
         sceneManager.getCurrentScene().getEntities().values().stream()
                 .filter(Entity::isActive)
-                .filter(e -> !e.behaviors.isEmpty())
+                .filter(e -> !e.getBehaviors().isEmpty())
                 .forEach(e -> {
-                    e.behaviors.forEach(b -> {
+                    e.getBehaviors().forEach(b -> {
                         b.onKeyPressed(this, e, k);
                     });
                 });
@@ -506,9 +508,9 @@ public class Game implements KeyListener, MouseListener, MouseWheelListener, Mou
         keys[k.getKeyCode()] = false;
         sceneManager.getCurrentScene().getEntities().values().stream()
                 .filter(Entity::isActive)
-                .filter(e -> !e.behaviors.isEmpty())
+                .filter(e -> !e.getBehaviors().isEmpty())
                 .forEach(e -> {
-                    e.behaviors.forEach(b -> {
+                    e.getBehaviors().forEach(b -> {
                         b.onKeyReleased(this, e, k);
                     });
                 });
@@ -564,7 +566,7 @@ public class Game implements KeyListener, MouseListener, MouseWheelListener, Mou
         if (getEntityUnderMouse(mouseX, mouseY).isPresent()) {
             Entity entityClicked = getEntityUnderMouse(mouseX, mouseY).get();
             debug("Entity %s has been clicked", entityClicked.name);
-            entityClicked.behaviors
+            entityClicked.getBehaviors()
                     .forEach(b -> b.onMouseClick(this, entityClicked, mouseX, mouseY, e.getButton()));
         }
     }
@@ -597,7 +599,7 @@ public class Game implements KeyListener, MouseListener, MouseWheelListener, Mou
         if (getEntityUnderMouse(mouseX, mouseY).isPresent()) {
             Entity entityClicked = getEntityUnderMouse(mouseX, mouseY).get();
             debug("Entity %s has been pressed", entityClicked.name);
-            entityClicked.behaviors
+            entityClicked.getBehaviors()
                     .forEach(b -> b.onMousePressed(this, entityClicked, mouseX, mouseY, e.getButton()));
         }
     }
@@ -614,7 +616,7 @@ public class Game implements KeyListener, MouseListener, MouseWheelListener, Mou
         if (getEntityUnderMouse(mouseX, mouseY).isPresent()) {
             Entity entityClicked = getEntityUnderMouse(mouseX, mouseY).get();
             debug("Entity %s has been released", entityClicked.name);
-            entityClicked.behaviors
+            entityClicked.getBehaviors()
                     .forEach(b -> b.onMouseReleased(this, entityClicked, mouseX, mouseY, e.getButton()));
         }
     }
@@ -661,13 +663,13 @@ public class Game implements KeyListener, MouseListener, MouseWheelListener, Mou
 
                     debug("Mouse is out of the entity  %s (%s)", previousEntity.name, previousEntity.getClass());
                     previousEntity.setAttribute("mouse_hover", false);
-                    previousEntity.behaviors
+                    previousEntity.getBehaviors()
                             .forEach(b -> b.onMouseOut(this, previousEntity, mouseX, mouseY));
                 }
             }
             previousEntity = entityClicked;
             if (entityClicked instanceof Button) {
-                entityClicked.behaviors
+                entityClicked.getBehaviors()
                         .forEach(b -> b.onMouseIn(this, entityClicked, mouseX, mouseY));
                 entityClicked.setAttribute("mouse_hover", true);
             }
@@ -742,6 +744,10 @@ public class Game implements KeyListener, MouseListener, MouseWheelListener, Mou
     }
 
     public SpacePartition getSpacePartition() {
-        return spacePartition
+        return spacePartition;
+    }
+
+    public CollisionManager getCollisionManager() {
+        return collisionManager;
     }
 }
