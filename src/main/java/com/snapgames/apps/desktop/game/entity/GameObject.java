@@ -1,6 +1,6 @@
 package com.snapgames.apps.desktop.game.entity;
 
-import com.snapgames.apps.desktop.game.GameApp;
+import com.snapgames.apps.desktop.game.Game;
 
 import java.awt.*;
 import java.awt.geom.Ellipse2D;
@@ -39,7 +39,7 @@ public class GameObject extends Entity {
     }
 
     @Override
-    public void update(GameApp app, double elapsed) {
+    public void update(Game app, double elapsed) {
         super.update(app, elapsed);
         switch (nature) {
             case ELLIPSE -> {

@@ -1,6 +1,6 @@
 package com.snapgames.apps.desktop.game.behaviors;
 
-import com.snapgames.apps.desktop.game.GameApp;
+import com.snapgames.apps.desktop.game.Game;
 import com.snapgames.apps.desktop.game.entity.Entity;
 import com.snapgames.apps.desktop.game.entity.TextObject;
 import com.snapgames.apps.desktop.game.entity.ui.Button;
@@ -16,7 +16,7 @@ import com.snapgames.apps.desktop.game.entity.util.Align;
  */
 public class AlignBehavior implements Behavior {
     @Override
-    public void update(GameApp app, Entity e, double elapsed) {
+    public void update(Game app, Entity e, double elapsed) {
         e.child.forEach(c -> {
             switch (c.getClass().getSimpleName()) {
                 case "Button", "TextBox" -> {

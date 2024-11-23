@@ -1,6 +1,6 @@
 package com.snapgames.apps.desktop.game.entity.ui;
 
-import com.snapgames.apps.desktop.game.GameApp;
+import com.snapgames.apps.desktop.game.Game;
 import com.snapgames.apps.desktop.game.behaviors.Behavior;
 import com.snapgames.apps.desktop.game.entity.Entity;
 
@@ -58,7 +58,7 @@ public interface UIObject extends Behavior {
     Color mouseReleasedTextColor = Color.WHITE;
 
     @Override
-    default void onMousePressed(GameApp app, Entity e, double mouseX, double mouseY, int buttonId) {
+    default void onMousePressed(Game app, Entity e, double mouseX, double mouseY, int buttonId) {
         e.setFillColor(mousePressedColor);
         if (e instanceof Button || e instanceof ItemObject) {
             Button bt = (Button) e;
@@ -67,7 +67,7 @@ public interface UIObject extends Behavior {
     }
 
     @Override
-    default void onMouseReleased(GameApp app, Entity e, double mouseX, double mouseY, int buttonId) {
+    default void onMouseReleased(Game app, Entity e, double mouseX, double mouseY, int buttonId) {
         e.setFillColor(mouseReleasedColor);
         if (e instanceof Button || e instanceof ItemObject) {
             Button bt = (Button) e;
@@ -76,13 +76,13 @@ public interface UIObject extends Behavior {
     }
 
     @Override
-    default void onMouseIn(GameApp app, Entity e, double mouseX, double mouseY) {
+    default void onMouseIn(Game app, Entity e, double mouseX, double mouseY) {
         e.setFillColor(mouseOnColor);
         e.setBorderColor(mouseOnBorderColor);
     }
 
     @Override
-    default void onMouseOut(GameApp app, Entity e, double mouseX, double mouseY) {
+    default void onMouseOut(Game app, Entity e, double mouseX, double mouseY) {
         e.setFillColor(mouseOutColor);
         e.setBorderColor(mouseOutBorderColor);
     }

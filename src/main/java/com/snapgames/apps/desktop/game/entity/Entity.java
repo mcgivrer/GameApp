@@ -1,6 +1,6 @@
 package com.snapgames.apps.desktop.game.entity;
 
-import com.snapgames.apps.desktop.game.GameApp;
+import com.snapgames.apps.desktop.game.Game;
 import com.snapgames.apps.desktop.game.behaviors.Behavior;
 import com.snapgames.apps.desktop.game.gfx.Renderer;
 import com.snapgames.apps.desktop.game.physic.Material;
@@ -39,7 +39,7 @@ import java.util.Map;
  *
  * @author Frédéric Delorme
  * @see Behavior
- * @see GameApp#update(double)
+ * @see Game#update(double)
  * @see Renderer#draw(Scene, Map)
  * @since 1.0.0
  */
@@ -93,7 +93,7 @@ public class Entity extends Rectangle2D.Double {
         this.name = name;
     }
 
-    public void update(GameApp app, double elapsed) {
+    public void update(Game app, double elapsed) {
 
     }
 

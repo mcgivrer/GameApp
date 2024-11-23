@@ -1,6 +1,6 @@
 package com.snapgames.apps.desktop.game.scenes;
 
-import com.snapgames.apps.desktop.game.GameApp;
+import com.snapgames.apps.desktop.game.Game;
 import com.snapgames.apps.desktop.game.behaviors.Behavior;
 import com.snapgames.apps.desktop.game.entity.Camera;
 import com.snapgames.apps.desktop.game.entity.Entity;
@@ -17,28 +17,28 @@ import java.util.Map;
  */
 public interface Scene {
 
-    default void load(GameApp app) {
+    default void load(Game app) {
     }
 
-    void create(GameApp app);
+    void create(Game app);
 
-    default void initialize(GameApp app) {
+    default void initialize(Game app) {
     }
 
-    void activate(GameApp app);
+    void activate(Game app);
 
-    default void input(GameApp app) {
+    default void input(Game app) {
     }
 
-    default void update(GameApp app, double elapsed) {
+    default void update(Game app, double elapsed) {
     }
 
-    default void draw(GameApp app, Graphics2D g) {
+    default void draw(Game app, Graphics2D g) {
     }
 
-    void deactivate(GameApp app);
+    void deactivate(Game app);
 
-    void dispose(GameApp app);
+    void dispose(Game app);
 
     List<Behavior> getBehaviors();
 

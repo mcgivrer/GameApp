@@ -1,6 +1,6 @@
 package com.snapgames.apps.desktop.game.gfx.plugins;
 
-import com.snapgames.apps.desktop.game.GameApp;
+import com.snapgames.apps.desktop.game.Game;
 import com.snapgames.apps.desktop.game.entity.Entity;
 
 import java.awt.*;
@@ -38,7 +38,7 @@ public interface RendererPlugin<T> {
     void draw(Graphics2D g, Entity e);
 
     default void drawVisualDebugInformation(Graphics2D g, Entity te, int offsetX) {
-        if (GameApp.debug > 2) {
+        if (Game.debug > 2) {
             g.setColor(Color.YELLOW);
             g.setFont(g.getFont().deriveFont(8.0f));
             g.drawString("#" + te.id + ":" + te.name, (int) te.getX() - 10, (int) te.getY() - 10);

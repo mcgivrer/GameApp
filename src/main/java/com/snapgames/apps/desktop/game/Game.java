@@ -35,7 +35,7 @@ import java.util.stream.Collectors;
 import static com.snapgames.apps.desktop.game.gfx.Renderer.buffer;
 
 /**
- * Main class for Project {@link GameApp}
+ * Main class for Project {@link Game}
  *
  * <p>This class is the main class for a java game template.
  * It initialize default components and services
@@ -66,7 +66,7 @@ import static com.snapgames.apps.desktop.game.gfx.Renderer.buffer;
  * @author Frédéric Delorme frederic.delorme@gmail.com
  * @since 1.0.0
  */
-public class GameApp implements KeyListener, MouseListener, MouseWheelListener, MouseMotionListener {
+public class Game implements KeyListener, MouseListener, MouseWheelListener, MouseMotionListener {
 
     /*------ Application properties -----*/
 
@@ -155,9 +155,9 @@ public class GameApp implements KeyListener, MouseListener, MouseWheelListener, 
     private com.snapgames.apps.desktop.game.gfx.Renderer renderer;
 
     /**
-     * Create the {@link GameApp} instance and detect the current java context.
+     * Create the {@link Game} instance and detect the current java context.
      */
-    public GameApp() {
+    public Game() {
         info("Initialization application %s (%s); running on JDK %s; at %s; with classpath = %s",
                 messages.getString("app.name"),
                 messages.getString("app.version"),
@@ -194,9 +194,9 @@ public class GameApp implements KeyListener, MouseListener, MouseWheelListener, 
     }
 
     /**
-     * Parse all the arguments from <code>args</code> and set default values into {@link GameApp#config} as a configuration set.
+     * Parse all the arguments from <code>args</code> and set default values into {@link Game#config} as a configuration set.
      *
-     * @param args the list of arguments to parse and set as default in the {@link GameApp#config}.
+     * @param args the list of arguments to parse and set as default in the {@link Game#config}.
      */
     private void parseCliArguments(String[] args) {
         List<String> lArgs = Arrays.asList(args);
@@ -276,7 +276,7 @@ public class GameApp implements KeyListener, MouseListener, MouseWheelListener, 
      */
     public void loadConfiguration(String configFilePath) {
         try {
-            Path rootPath = Paths.get(GameApp.class.getProtectionDomain().getCodeSource().getLocation().toURI()).getParent();
+            Path rootPath = Paths.get(Game.class.getProtectionDomain().getCodeSource().getLocation().toURI()).getParent();
             File propertyFile = new File(rootPath.toFile(), configFilePath);
             if (propertyFile.exists()) {
                 try (InputStream input = new FileInputStream(propertyFile)) {
@@ -340,8 +340,8 @@ public class GameApp implements KeyListener, MouseListener, MouseWheelListener, 
      * <p>The {@link Entity} and its child are set to active, and the corresponding behaviors for the
      * {@link Entity} and all its child will be applied</p>
      * <ul>
-     *     <li>{@link Behavior#onActivate(GameApp, Entity)} if {@link Entity} is set to visible,</li>
-     *      <li>{@link Behavior#onDeactivate(GameApp, Entity)} if visibility of the {@link Entity} is unset.</li>
+     *     <li>{@link Behavior#onActivate(Game, Entity)} if {@link Entity} is set to visible,</li>
+     *      <li>{@link Behavior#onDeactivate(Game, Entity)} if visibility of the {@link Entity} is unset.</li>
      * </ul>
      *
      * @param e       the {@link Entity} to set as visible.
@@ -386,12 +386,12 @@ public class GameApp implements KeyListener, MouseListener, MouseWheelListener, 
                 case "ttf" -> {
                     return (T) Font.createFont(
                             Font.TRUETYPE_FONT,
-                            GameApp.class.getResourceAsStream(path));
+                            Game.class.getResourceAsStream(path));
                 }
                 case "png", "jpg" -> {
                     if (path.contains("|")) {
                         String filePath = path.substring(0, path.lastIndexOf("|"));
-                        BufferedImage img = ImageIO.read(Objects.requireNonNull(GameApp.class.getResourceAsStream(filePath)));
+                        BufferedImage img = ImageIO.read(Objects.requireNonNull(Game.class.getResourceAsStream(filePath)));
                         String slice = path.substring(path.lastIndexOf("|") + 1);
                         String[] slices = slice.split(",");
                         return (T) img.getSubimage(
@@ -401,7 +401,7 @@ public class GameApp implements KeyListener, MouseListener, MouseWheelListener, 
                                 Integer.parseInt(slices[3])
                         );
                     } else {
-                        return (T) ImageIO.read(GameApp.class.getResourceAsStream(path));
+                        return (T) ImageIO.read(Game.class.getResourceAsStream(path));
                     }
                 }
                 default -> {
@@ -565,7 +565,7 @@ public class GameApp implements KeyListener, MouseListener, MouseWheelListener, 
     }
 
     /**
-     * The {@link GameApp#applyPhysics(double, Entity)} method updates the
+     * The {@link Game#applyPhysics(double, Entity)} method updates the
      * physics properties of an {@link Entity} object based on the forces acting
      * on it, the delay time, and the {@link Entity}'s material properties.
      *
@@ -670,7 +670,7 @@ public class GameApp implements KeyListener, MouseListener, MouseWheelListener, 
     /*----- Game start entry point -----*/
 
     public static void main(String[] argc) {
-        GameApp app = new GameApp();
+        Game app = new Game();
         app.run(argc);
     }
 

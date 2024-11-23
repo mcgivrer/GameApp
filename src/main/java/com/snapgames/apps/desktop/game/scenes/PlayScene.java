@@ -1,6 +1,6 @@
 package com.snapgames.apps.desktop.game.scenes;
 
-import com.snapgames.apps.desktop.game.GameApp;
+import com.snapgames.apps.desktop.game.Game;
 import com.snapgames.apps.desktop.game.behaviors.Behavior;
 import com.snapgames.apps.desktop.game.entity.*;
 import com.snapgames.apps.desktop.game.entity.ui.Button;
@@ -14,7 +14,7 @@ import java.awt.*;
 import java.awt.event.KeyEvent;
 import java.awt.geom.Point2D;
 
-import static com.snapgames.apps.desktop.game.GameApp.*;
+import static com.snapgames.apps.desktop.game.Game.*;
 
 public class PlayScene extends AbstractScene {
 
@@ -32,18 +32,18 @@ public class PlayScene extends AbstractScene {
 
     Font textFont;
 
-    public PlayScene(GameApp app, String name) {
+    public PlayScene(Game app, String name) {
         super(app, name);
     }
 
     @Override
-    public void load(GameApp app) {
+    public void load(Game app) {
         scoreFont = getResource("/fonts/upheavtt.ttf");
         textFont = getResource("/fonts/Minecraftia-Regular.ttf");
     }
 
     @Override
-    public void create(GameApp app) {
+    public void create(Game app) {
 
         Font scoreFont = getResource("/fonts/upheavtt.ttf");
         Font textFont = getResource("/fonts/Minecraftia-Regular.ttf");
@@ -63,7 +63,7 @@ public class PlayScene extends AbstractScene {
                 .setRelativeToCamera(true)
                 .add(new Behavior() {
                     @Override
-                    public void input(GameApp app, Entity e) {
+                    public void input(Game app, Entity e) {
                         ((TextObject) e).setValue(score);
                     }
                 })
@@ -84,7 +84,7 @@ public class PlayScene extends AbstractScene {
                 .setRelativeToCamera(true)
                 .add(new Behavior() {
                     @Override
-                    public void input(GameApp app, Entity e) {
+                    public void input(Game app, Entity e) {
                         ((TextObject) e).setValue(lifeCount);
                     }
                 })
@@ -101,7 +101,7 @@ public class PlayScene extends AbstractScene {
                 .setMass(10.0)
                 .add(new Behavior() {
                     @Override
-                    public void input(GameApp app, Entity player) {
+                    public void input(Game app, Entity player) {
                         double speed = 0.025;
                         if (app.isKeyPressed(KeyEvent.VK_UP)) {
                             player.forces.add(new Point2D.Double(0, -(speed * 2.0)));
@@ -128,14 +128,14 @@ public class PlayScene extends AbstractScene {
                         .setSize(app.getBuffer().getWidth(), app.getBuffer().getHeight())
                         .add(new Behavior() {
                             @Override
-                            public void draw(GameApp app, Entity e, Graphics2D g) {
+                            public void draw(Game app, Entity e, Graphics2D g) {
                                 if (app.isDebugAtLeast(2)) {
                                     g.setColor(Color.ORANGE);
                                     g.setFont(textFont.deriveFont(8.0f));
-                                    String camName = GameApp.messages.getString("app.camera.name");
+                                    String camName = Game.messages.getString("app.camera.name");
                                     g.getFontMetrics().stringWidth(camName);
                                     g.drawString(
-                                            GameApp.messages.getString("app.camera.name"),
+                                            Game.messages.getString("app.camera.name"),
                                             (int) app.getBuffer().getWidth() - g.getFontMetrics().stringWidth(camName)-10,
                                             (int) app.getBuffer().getHeight() - 10);
                                     Stroke s = g.getStroke();
@@ -158,18 +158,18 @@ public class PlayScene extends AbstractScene {
                 .setPriority(10)
                 .add(new Behavior() {
                     @Override
-                    public void onActivate(GameApp app, Entity e) {
+                    public void onActivate(Game app, Entity e) {
                         setPause(true);
                     }
 
                     @Override
-                    public void onDeactivate(GameApp app, Entity e) {
+                    public void onDeactivate(Game app, Entity e) {
                         setPause(false);
                     }
                 })
                 .add(new UIObject() {
                     @Override
-                    public void onKeyReleased(GameApp app, Entity e, KeyEvent k) {
+                    public void onKeyReleased(Game app, Entity e, KeyEvent k) {
                         if (k.getKeyCode() == KeyEvent.VK_Y || k.getKeyCode() == KeyEvent.VK_SPACE) {
                             app.setExitRequest(true);
                         }
@@ -193,7 +193,7 @@ public class PlayScene extends AbstractScene {
                 .setPriority(20)
                 .add(new UIObject() {
                     @Override
-                    public void onMouseClick(GameApp app, Entity e, double mouseX, double mouseY, int buttonId) {
+                    public void onMouseClick(Game app, Entity e, double mouseX, double mouseY, int buttonId) {
                         app.setExitRequest(true);
                         e.setFillColor(Color.CYAN);
                     }
@@ -211,7 +211,7 @@ public class PlayScene extends AbstractScene {
                 .setPriority(20)
                 .add(new UIObject() {
                     @Override
-                    public void onMouseClick(GameApp app, Entity e, double mouseX, double mouseY, int buttonId) {
+                    public void onMouseClick(Game app, Entity e, double mouseX, double mouseY, int buttonId) {
                         app.setExitRequest(false);
                         DialogBox db = (DialogBox) getEntity("exitConfirmBox");
                         db.setVisible(false);
@@ -227,7 +227,7 @@ public class PlayScene extends AbstractScene {
 
         add(new Behavior() {
             @Override
-            public void onKeyReleased(GameApp app, Entity e, KeyEvent k) {
+            public void onKeyReleased(Game app, Entity e, KeyEvent k) {
                 switch (k.getKeyCode()) {
                     // exit application on ESCAPE
                     case KeyEvent.VK_ESCAPE -> {
@@ -254,7 +254,7 @@ public class PlayScene extends AbstractScene {
     }
 
 
-    private void generateEntities(GameApp app, String rootName, int nbEntities) {
+    private void generateEntities(Game app, String rootName, int nbEntities) {
         for (int i = 0; i < nbEntities; i++) {
             add(new GameObject(rootName + Entity.index)
                     .setNature(GameObjectNature.ELLIPSE)

@@ -1,6 +1,6 @@
 package com.snapgames.apps.desktop.game.behaviors;
 
-import com.snapgames.apps.desktop.game.GameApp;
+import com.snapgames.apps.desktop.game.Game;
 import com.snapgames.apps.desktop.game.entity.Entity;
 
 import java.awt.*;
@@ -21,7 +21,7 @@ public interface Behavior<T extends Entity> {
      *
      * @param app
      */
-    default void create(GameApp app, T e) {
+    default void create(Game app, T e) {
     }
 
     /**
@@ -30,7 +30,7 @@ public interface Behavior<T extends Entity> {
      * @param app the parent application
      * @param e   the concerned {@link Entity}
      */
-    default void input(GameApp app, T e) {
+    default void input(Game app, T e) {
     }
 
     /**
@@ -39,7 +39,7 @@ public interface Behavior<T extends Entity> {
      * @param app the parent application
      * @param e   the concerned {@link Entity}
      */
-    default void update(GameApp app, T e, double elapsed) {
+    default void update(Game app, T e, double elapsed) {
     }
 
     /**
@@ -49,7 +49,7 @@ public interface Behavior<T extends Entity> {
      * @param e   the concerned {@link Entity}.
      * @param g   the {@link Graphics2D} API to use.
      */
-    default void draw(GameApp app, T e, Graphics2D g) {
+    default void draw(Game app, T e, Graphics2D g) {
     }
 
     /**
@@ -59,7 +59,7 @@ public interface Behavior<T extends Entity> {
      * @param e   the concerned {@link Entity}
      * @param k   the {@link KeyEvent} to be processed.
      */
-    default void onKeyPressed(GameApp app, T e, KeyEvent k) {
+    default void onKeyPressed(Game app, T e, KeyEvent k) {
     }
 
     /**
@@ -69,7 +69,7 @@ public interface Behavior<T extends Entity> {
      * @param e   the concerned {@link Entity}
      * @param k   the {@link KeyEvent} to be processed.
      */
-    default void onKeyReleased(GameApp app, T e, KeyEvent k) {
+    default void onKeyReleased(Game app, T e, KeyEvent k) {
     }
 
     /**
@@ -78,7 +78,7 @@ public interface Behavior<T extends Entity> {
      * @param app the parent application
      * @param e   the concerned {@link Entity}
      */
-    default void onActivate(GameApp app, T e) {
+    default void onActivate(Game app, T e) {
     }
 
     /**
@@ -87,7 +87,7 @@ public interface Behavior<T extends Entity> {
      * @param app the parent application
      * @param e   the concerned {@link Entity}
      */
-    default void onDeactivate(GameApp app, T e) {
+    default void onDeactivate(Game app, T e) {
     }
 
     /**
@@ -98,7 +98,7 @@ public interface Behavior<T extends Entity> {
      * @param mouseX mouse X position
      * @param mouseY mouse y position
      */
-    default void onMouseIn(GameApp app, T e, double mouseX, double mouseY) {
+    default void onMouseIn(Game app, T e, double mouseX, double mouseY) {
     }
 
     /**
@@ -109,7 +109,7 @@ public interface Behavior<T extends Entity> {
      * @param mouseX mouse X position
      * @param mouseY mouse y position
      */
-    default void onMouseOut(GameApp app, T e, double mouseX, double mouseY) {
+    default void onMouseOut(Game app, T e, double mouseX, double mouseY) {
     }
 
     /**
@@ -121,7 +121,7 @@ public interface Behavior<T extends Entity> {
      * @param mouseY   mouse y position
      * @param buttonId the button number that has been clicked.
      */
-    default void onMouseClick(GameApp app, T e, double mouseX, double mouseY, int buttonId) {
+    default void onMouseClick(Game app, T e, double mouseX, double mouseY, int buttonId) {
     }
 
     /**
@@ -133,7 +133,7 @@ public interface Behavior<T extends Entity> {
      * @param mouseY   mouse y position
      * @param buttonId the button number that has been clicked.
      */
-    default void onMousePressed(GameApp app, T e, double mouseX, double mouseY, int buttonId) {
+    default void onMousePressed(Game app, T e, double mouseX, double mouseY, int buttonId) {
     }
 
     /**
@@ -145,7 +145,7 @@ public interface Behavior<T extends Entity> {
      * @param mouseY   mouse y position
      * @param buttonId the button number that has been clicked.
      */
-    default void onMouseReleased(GameApp app, T e, double mouseX, double mouseY, int buttonId) {
+    default void onMouseReleased(Game app, T e, double mouseX, double mouseY, int buttonId) {
     }
 
     /**
@@ -154,6 +154,6 @@ public interface Behavior<T extends Entity> {
      * @param app the parent application
      * @param e   the concerned {@link Entity}
      */
-    default void onSelected(GameApp app, T e) {
+    default void onSelected(Game app, T e) {
     }
 }

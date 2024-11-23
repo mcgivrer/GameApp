@@ -1,6 +1,6 @@
 package com.snapgames.apps.desktop.game.gfx;
 
-import com.snapgames.apps.desktop.game.GameApp;
+import com.snapgames.apps.desktop.game.Game;
 import com.snapgames.apps.desktop.game.entity.Entity;
 import com.snapgames.apps.desktop.game.gfx.plugins.*;
 import com.snapgames.apps.desktop.game.physic.World;
@@ -33,7 +33,7 @@ import java.util.Optional;
  * @since 1.0.0
  */
 public class Renderer {
-    private GameApp app;
+    private Game app;
 
     /**
      * The window containing the all Game display.
@@ -54,7 +54,7 @@ public class Renderer {
 
     private Map<Class<? extends Entity>, RendererPlugin<? extends Entity>> plugins = new HashMap<>();
 
-    public Renderer(GameApp app) {
+    public Renderer(Game app) {
         this.app = app;
     }
 
@@ -63,11 +63,11 @@ public class Renderer {
     }
 
     /**
-     * Initialize the window and the rendering buffer according to configuration properties from {@link GameApp}.
+     * Initialize the window and the rendering buffer according to configuration properties from {@link Game}.
      *
-     * @param app the parent {@link GameApp} instance.
+     * @param app the parent {@link Game} instance.
      */
-    public void init(GameApp app) {
+    public void init(Game app) {
         // create the drawing buffer
         buffer = new BufferedImage(
                 Integer.parseInt(app.getConfig().getProperty("app.render.buffer.width", "320")),
@@ -109,7 +109,7 @@ public class Renderer {
             window.setUndecorated(true);
         }
         window.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
-        window.setIconImage(GameApp.getResource("/images/thor-hammer.png"));
+        window.setIconImage(Game.getResource("/images/thor-hammer.png"));
         window.pack();
         // processing keyboard input
         window.addKeyListener(app);
@@ -212,7 +212,7 @@ public class Renderer {
                 g2s.setColor(Color.ORANGE);
                 g2s.drawString(
                         String.format("[ dbg:%01d / fps:%03d ups:%03d ft:%03d / obj:%04d active:%04d / scn:%s ]",
-                                GameApp.debug,
+                                Game.debug,
                                 stats.get("fps"),
                                 stats.get("ups"),
                                 stats.get("ft"),
@@ -244,7 +244,7 @@ public class Renderer {
             //plugins.get(e.getClass()).drawVisualDebugInformation(g, e, 0);
             e.setAttribute("renderedBy", plugins.get(e.getClass()).getClass());
         } else {
-            GameApp.error("Unknown drawing method/plugin for '%s' type %s", e.getName(), e.getClass());
+            Game.error("Unknown drawing method/plugin for '%s' type %s", e.getName(), e.getClass());
         }
         e.behaviors.forEach(b -> {
             b.draw(app, e, g);

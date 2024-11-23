@@ -1,6 +1,6 @@
 package com.snapgames.apps.desktop.game.scenes;
 
-import com.snapgames.apps.desktop.game.GameApp;
+import com.snapgames.apps.desktop.game.Game;
 import com.snapgames.apps.desktop.game.behaviors.Behavior;
 import com.snapgames.apps.desktop.game.entity.Entity;
 import com.snapgames.apps.desktop.game.entity.ImageObject;
@@ -12,8 +12,8 @@ import com.snapgames.apps.desktop.game.scene.AbstractScene;
 
 import java.awt.*;
 
-import static com.snapgames.apps.desktop.game.GameApp.getResource;
-import static com.snapgames.apps.desktop.game.GameApp.messages;
+import static com.snapgames.apps.desktop.game.Game.getResource;
+import static com.snapgames.apps.desktop.game.Game.messages;
 
 public class TitleScene extends AbstractScene {
 
@@ -23,21 +23,21 @@ public class TitleScene extends AbstractScene {
     /**
      * Create a new {@link TitleScene} with a <code>name</code> and a parent <code>app</code>.
      *
-     * @param app  the parent application {@link GameApp}
+     * @param app  the parent application {@link Game}
      * @param name thename opf this new {@link TitleScene}
      */
-    public TitleScene(GameApp app, String name) {
+    public TitleScene(Game app, String name) {
         super(app, name);
     }
 
     @Override
-    public void load(GameApp app) {
+    public void load(Game app) {
         scoreFont = getResource("/fonts/upheavtt.ttf");
         textFont = getResource("/fonts/Minecraftia-Regular.ttf");
     }
 
     @Override
-    public void create(GameApp app) {
+    public void create(Game app) {
 
         add(new ImageObject("forest")
                 .setImage(getResource("/images/backgrounds/forest.jpg"))
@@ -86,7 +86,7 @@ public class TitleScene extends AbstractScene {
 
         mo.add(new Behavior<MenuObject>() {
             @Override
-            public void onSelected(GameApp app, MenuObject e) {
+            public void onSelected(Game app, MenuObject e) {
                 int vio = (int) ((ItemObject) e.child.get(e.getItemIndex())).getValue();
                 if (vio == 1) {
                     app.activateScene("play");

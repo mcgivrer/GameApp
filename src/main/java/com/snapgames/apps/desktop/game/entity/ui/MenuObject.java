@@ -1,6 +1,6 @@
 package com.snapgames.apps.desktop.game.entity.ui;
 
-import com.snapgames.apps.desktop.game.GameApp;
+import com.snapgames.apps.desktop.game.Game;
 import com.snapgames.apps.desktop.game.behaviors.AlignBehavior;
 import com.snapgames.apps.desktop.game.behaviors.Behavior;
 import com.snapgames.apps.desktop.game.entity.Entity;
@@ -43,7 +43,7 @@ public class MenuObject extends TextObject implements UIObject {
         add(new AlignBehavior());
         add(new Behavior() {
             @Override
-            public void onKeyReleased(GameApp app, Entity e, KeyEvent k) {
+            public void onKeyReleased(Game app, Entity e, KeyEvent k) {
                 MenuObject mo = (MenuObject) e;
                 switch (k.getKeyCode()) {
                     case KeyEvent.VK_DOWN -> {
@@ -78,7 +78,7 @@ public class MenuObject extends TextObject implements UIObject {
     }
 
     @Override
-    public void update(GameApp app, double elapsed) {
+    public void update(Game app, double elapsed) {
         super.update(app, elapsed);
         for (int i = 0; i < child.size(); i++) {
             ((ItemObject) child.get(i)).setHighLight(i == itemIndex);

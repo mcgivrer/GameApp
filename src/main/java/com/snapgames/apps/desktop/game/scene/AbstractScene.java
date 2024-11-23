@@ -1,6 +1,6 @@
 package com.snapgames.apps.desktop.game.scene;
 
-import com.snapgames.apps.desktop.game.GameApp;
+import com.snapgames.apps.desktop.game.Game;
 import com.snapgames.apps.desktop.game.behaviors.Behavior;
 import com.snapgames.apps.desktop.game.entity.Camera;
 import com.snapgames.apps.desktop.game.entity.Entity;
@@ -20,7 +20,7 @@ import java.util.concurrent.CopyOnWriteArrayList;
 public abstract class AbstractScene implements Scene {
     private static long index = 0;
     private final long id = index++;
-    private final GameApp app;
+    private final Game app;
     private String name = "scene_" + id;
     private List<Behavior> behaviors = new CopyOnWriteArrayList<>();
 
@@ -36,10 +36,10 @@ public abstract class AbstractScene implements Scene {
     /**
      * Create a new {@link AbstractScene} with a <code>name</code> and a parent <code>app</code>.
      *
-     * @param app  the parent application {@link GameApp}
+     * @param app  the parent application {@link Game}
      * @param name thename opf this new {@link AbstractScene}
      */
-    public AbstractScene(GameApp app, String name) {
+    public AbstractScene(Game app, String name) {
         this.name = name;
         this.app = app;
     }
@@ -106,17 +106,17 @@ public abstract class AbstractScene implements Scene {
     }
 
     @Override
-    public void activate(GameApp app) {
+    public void activate(Game app) {
         // nothing to do by default.
     }
 
     @Override
-    public void deactivate(GameApp app) {
+    public void deactivate(Game app) {
         getEntities().values().forEach(e -> e.setActive(false));
     }
 
     @Override
-    public void dispose(GameApp app) {
+    public void dispose(Game app) {
 
     }
 }

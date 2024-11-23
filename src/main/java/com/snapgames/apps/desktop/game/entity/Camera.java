@@ -1,7 +1,5 @@
 package com.snapgames.apps.desktop.game.entity;
 
-import com.snapgames.apps.desktop.game.GameApp;
-
 import java.awt.geom.Rectangle2D;
 import java.util.Optional;
 
