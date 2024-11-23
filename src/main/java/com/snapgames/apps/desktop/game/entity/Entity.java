@@ -4,7 +4,7 @@ import com.snapgames.apps.desktop.game.Game;
 import com.snapgames.apps.desktop.game.behaviors.Behavior;
 import com.snapgames.apps.desktop.game.gfx.Renderer;
 import com.snapgames.apps.desktop.game.physic.Material;
-import com.snapgames.apps.desktop.game.scenes.Scene;
+import com.snapgames.apps.desktop.game.scene.Scene;
 
 import java.awt.*;
 import java.awt.geom.Point2D;

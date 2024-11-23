@@ -4,7 +4,6 @@ import com.snapgames.apps.desktop.game.Game;
 import com.snapgames.apps.desktop.game.behaviors.Behavior;
 import com.snapgames.apps.desktop.game.entity.Camera;
 import com.snapgames.apps.desktop.game.entity.Entity;
-import com.snapgames.apps.desktop.game.scenes.Scene;
 
 import java.util.List;
 import java.util.Map;

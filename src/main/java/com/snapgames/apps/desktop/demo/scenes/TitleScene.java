@@ -1,4 +1,4 @@
-package com.snapgames.apps.desktop.game.scenes;
+package com.snapgames.apps.desktop.demo.scenes;
 
 import com.snapgames.apps.desktop.game.Game;
 import com.snapgames.apps.desktop.game.behaviors.Behavior;

@@ -4,7 +4,7 @@ import com.snapgames.apps.desktop.game.Game;
 import com.snapgames.apps.desktop.game.entity.Entity;
 import com.snapgames.apps.desktop.game.gfx.plugins.*;
 import com.snapgames.apps.desktop.game.physic.World;
-import com.snapgames.apps.desktop.game.scenes.Scene;
+import com.snapgames.apps.desktop.game.scene.Scene;
 
 import javax.swing.*;
 import java.awt.*;
