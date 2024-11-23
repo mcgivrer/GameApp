@@ -175,7 +175,7 @@ public class PlayScene extends AbstractScene {
                         }
                         if (k.getKeyCode() == KeyEvent.VK_N || k.getKeyCode() == KeyEvent.VK_BACK_SPACE) {
                             app.setExitRequest(false);
-                            app.setVisible(e, false);
+                            app.getPhysicEngine().setVisible(e, false);
                         }
                     }
                 });
@@ -243,7 +243,7 @@ public class PlayScene extends AbstractScene {
                         }
                     }
                     case KeyEvent.VK_F12 -> {
-                        app.activateScene("title");
+                        app.getSceneManager().activateScene("title");
                     }
                     default -> {
                         // no action !

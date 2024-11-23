@@ -14,6 +14,8 @@ import java.util.HashMap;
 import java.util.Map;
 import java.util.Optional;
 
+import static com.snapgames.apps.desktop.game.utils.Log.error;
+
 /**
  * The new {@link Renderer} service is responsible for drawing the current state of
  * the game onto the screen. It prepares the graphics context,
@@ -33,6 +35,11 @@ import java.util.Optional;
  * @since 1.0.0
  */
 public class Renderer {
+    /**
+     * A reference to the parent Game instance that owns and coordinates this Renderer.
+     * This variable is used throughout the Renderer class to access game-wide configurations,
+     * initiate various rendering tasks, and manage the overall rendering lifecycle.
+     */
     private Game app;
 
     /**
@@ -50,14 +57,28 @@ public class Renderer {
     /**
      * Default background buffer color for rendering processing.
      */
-    private Color backGroundColor = Color.BLACK;
+    private final Color backGroundColor = Color.BLACK;
 
-    private Map<Class<? extends Entity>, RendererPlugin<? extends Entity>> plugins = new HashMap<>();
+    /**
+     * A map that associates each specific Entity class with its corresponding RendererPlugin.
+     * This is used to determine which plugin should be used to render a given entity.
+     */
+    private final Map<Class<? extends Entity>, RendererPlugin<? extends Entity>> plugins = new HashMap<>();
 
+    /**
+     * Constructs a Renderer with the specified parent Game instance.
+     *
+     * @param app the parent Game instance
+     */
     public Renderer(Game app) {
         this.app = app;
     }
 
+    /**
+     * Registers a RendererPlugin, associating it with its corresponding entity class.
+     *
+     * @param rp the RendererPlugin to be registered, which is associated with a specific class of Entity
+     */
     public void register(RendererPlugin<? extends Entity> rp) {
         plugins.put(rp.getEntityClass(), rp);
     }
@@ -127,10 +148,10 @@ public class Renderer {
     }
 
     /**
-     * Draw the current active {@link Scene}
+     * Renders the specified scene and updates relevant statistics.
      *
-     * @param currentScene the current active scene
-     * @param stats        the map with stats to be updated.
+     * @param currentScene the Scene to be drawn
+     * @param stats a Map containing various statistics about the rendering process
      */
     public void draw(Scene currentScene, Map<String, Object> stats) {
         Graphics2D g = buffer.createGraphics();
@@ -237,6 +258,14 @@ public class Renderer {
 
     /*----- objects rendering -----*/
 
+    /**
+     * Draws the specified entity using the given graphics context. This method first attempts to use
+     * a plugin to draw the entity. If a suitable plugin is not found, an error is logged. This method
+     * also traverses and draws the entity's child entities.
+     *
+     * @param e the entity to be drawn
+     * @param g the graphics context to use for drawing
+     */
     public void drawEntity(Entity e, Graphics2D g) {
 
         if (plugins.containsKey(e.getClass())) {
@@ -244,7 +273,7 @@ public class Renderer {
             //plugins.get(e.getClass()).drawVisualDebugInformation(g, e, 0);
             e.setAttribute("renderedBy", plugins.get(e.getClass()).getClass());
         } else {
-            Game.error("Unknown drawing method/plugin for '%s' type %s", e.getName(), e.getClass());
+            error("Unknown drawing method/plugin for '%s' type %s", e.getName(), e.getClass());
         }
         e.behaviors.forEach(b -> {
             b.draw(app, e, g);
@@ -254,10 +283,26 @@ public class Renderer {
         });
     }
 
+    /**
+     * Draws the edge of the rectangle representing the given entity using the specified graphics context.
+     * This method uses the fill color of the entity to render the edge.
+     *
+     * @param g the graphics context to use for drawing
+     * @param te the entity whose edge rectangle is to be drawn
+     */
     public static void drawEdgeRectangle(Graphics2D g, Entity te) {
         drawEdgeRectangle(g, te, te.fillColor);
     }
 
+    /**
+     * Draws a rectangle representing the given entity using the specified graphics context.
+     * The rectangle is filled with the provided color, and different edges of the rectangle
+     * are drawn with specific colors to highlight the entity's outline.
+     *
+     * @param g the graphics context to use for drawing
+     * @param te the entity whose rectangle is to be drawn
+     * @param fill the color to fill the rectangle with
+     */
     public static void drawEdgeRectangle(Graphics2D g, Entity te, Color fill) {
 
         int x = (int) ((Optional.ofNullable(te.getParent()).isPresent() && te.isRelativeToParent())
@@ -295,7 +340,8 @@ public class Renderer {
     }
 
     /**
-     * release all resources from Renderer system.
+     * Disposes of the resources used by the Renderer instance.
+     * This includes disposing of the window and setting the buffer to null.
      */
     public void dispose() {
         window.dispose();
@@ -303,7 +349,9 @@ public class Renderer {
     }
 
     /**
-     * switch from windowed to full screen display.
+     * Toggles the full screen mode of the application.
+     * This method switches the state of the fullScreenStatus field and
+     * reinitializes the display to reflect the new full-screen status.
      */
     public void switchFullScreen() {
         fullScreenStatus = !fullScreenStatus;

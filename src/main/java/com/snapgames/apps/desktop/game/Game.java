@@ -3,6 +3,7 @@ package com.snapgames.apps.desktop.game;
 import com.snapgames.apps.desktop.game.behaviors.Behavior;
 import com.snapgames.apps.desktop.game.entity.Entity;
 import com.snapgames.apps.desktop.game.entity.ui.Button;
+import com.snapgames.apps.desktop.game.entity.ui.DialogBox;
 import com.snapgames.apps.desktop.game.entity.ui.UIObject;
 import com.snapgames.apps.desktop.game.gfx.Renderer;
 import com.snapgames.apps.desktop.game.physic.Material;
@@ -11,6 +12,7 @@ import com.snapgames.apps.desktop.game.physic.World;
 import com.snapgames.apps.desktop.demo.scenes.PlayScene;
 import com.snapgames.apps.desktop.game.scene.Scene;
 import com.snapgames.apps.desktop.demo.scenes.TitleScene;
+import com.snapgames.apps.desktop.game.scene.SceneManager;
 
 import javax.imageio.ImageIO;
 import javax.swing.*;
@@ -33,6 +35,7 @@ import java.util.concurrent.ConcurrentHashMap;
 import java.util.stream.Collectors;
 
 import static com.snapgames.apps.desktop.game.gfx.Renderer.buffer;
+import static com.snapgames.apps.desktop.game.utils.Log.*;
 
 /**
  * Main class for Project {@link Game}
@@ -101,10 +104,7 @@ public class Game implements KeyListener, MouseListener, MouseWheelListener, Mou
      * (No used) Internal debug filtering on {@link Entity}'s name.
      */
     private static String debugFilter = "";
-    /**
-     * Filtering debug information output on console based on debug info level.
-     */
-    private static String loggerFilter = "ERROR,WARN,INFO";
+
 
     /**
      * Frame Per Second rate
@@ -134,14 +134,7 @@ public class Game implements KeyListener, MouseListener, MouseWheelListener, Mou
      * Previously focused {@link Entity} by mouse cursor.
      */
     private static Entity previousEntity = null;
-    /**
-     * A Map of all game's {@link Scene}.
-     */
-    private Map<String, Scene> scenes = new ConcurrentHashMap<>();
-    /**
-     * current Active scene.
-     */
-    private Scene currentScene;
+
     /**
      * Internal buffer for key states
      */
@@ -154,6 +147,7 @@ public class Game implements KeyListener, MouseListener, MouseWheelListener, Mou
 
     private Renderer renderer;
     private PhysicEngine physicEngine;
+    private SceneManager sceneManager;
 
     /**
      * Create the {@link Game} instance and detect the current java context.
@@ -170,7 +164,7 @@ public class Game implements KeyListener, MouseListener, MouseWheelListener, Mou
     public void run(String[] args) {
         init(args);
         renderer.prepareDisplay();
-        createScene();
+        sceneManager.createScene();
         loop();
         dispose();
     }
@@ -193,6 +187,7 @@ public class Game implements KeyListener, MouseListener, MouseWheelListener, Mou
         renderer = new Renderer(this);
         renderer.init(this);
         physicEngine = new PhysicEngine(this);
+        sceneManager = new SceneManager(this);
     }
 
     /**
@@ -296,71 +291,6 @@ public class Game implements KeyListener, MouseListener, MouseWheelListener, Mou
 
     /*----- Manage current Scene -----*/
 
-    public void createScene() {
-        add(new PlayScene(this, "play"));
-        add(new TitleScene(this, "title"));
-        activateScene("title");
-    }
-
-    /**
-     * Add a new {@link Scene} implementation to the Game.
-     *
-     * @param scene the new {@link Scene}.
-     */
-    private void add(Scene scene) {
-
-        scenes.put(scene.getName(), scene);
-        scene.load(this);
-    }
-
-    /**
-     * set the current active {@link Scene}.
-     *
-     * @param scene the implementation {@link Scene}.
-     */
-    private void setCurrentScene(Scene scene) {
-        this.currentScene = scene;
-    }
-
-    /**
-     * Activate the {@link Scene} named <code>sceneName</code>.
-     *
-     * @param sceneName the name of the {@link Scene} to be activated.
-     */
-    public void activateScene(String sceneName) {
-        if (Optional.ofNullable(currentScene).isPresent()) {
-            currentScene.deactivate(this);
-        }
-        setCurrentScene(scenes.get(sceneName));
-        currentScene.create(this);
-        currentScene.activate(this);
-    }
-
-    /**
-     * Switch visibility of the {@link Entity} <code>e</code> to the required <code>visible</code> status.
-     *
-     * <p>The {@link Entity} and its child are set to active, and the corresponding behaviors for the
-     * {@link Entity} and all its child will be applied</p>
-     * <ul>
-     *     <li>{@link Behavior#onActivate(Game, Entity)} if {@link Entity} is set to visible,</li>
-     *      <li>{@link Behavior#onDeactivate(Game, Entity)} if visibility of the {@link Entity} is unset.</li>
-     * </ul>
-     *
-     * @param e       the {@link Entity} to set as visible.
-     * @param visible if true, the {@link Entity} <code>e</code> will be visible.
-     */
-    public void setVisible(Entity e, boolean visible) {
-        e.setActive(visible);
-        e.setChildVisible(visible);
-        if (!visible) {
-            e.behaviors.forEach(c -> c.onDeactivate(this, e));
-            e.child.forEach(c -> c.behaviors.forEach(b -> b.onDeactivate(this, e)));
-        } else {
-            e.behaviors.forEach(c -> c.onActivate(this, e));
-            e.child.forEach(c -> c.behaviors.forEach(b -> b.onActivate(this, e)));
-        }
-    }
-
 
     /**
      * Retrieve a resource from a path.
@@ -416,13 +346,6 @@ public class Game implements KeyListener, MouseListener, MouseWheelListener, Mou
         return null;
     }
 
-    /**
-     * Reset current Scene.
-     */
-    public void resetScene() {
-        currentScene.reset();
-        createScene();
-    }
 
     public void activateEntity(Entity e, boolean a) {
         e.setActive(a);
@@ -459,7 +382,7 @@ public class Game implements KeyListener, MouseListener, MouseWheelListener, Mou
                 updateFrames++;
 
             }
-            physicEngine.update(currentScene, delay);
+            physicEngine.update(sceneManager.getCurrentScene(), delay);
 
             renderTime += delay;
             if (renderTime > 1000) {
@@ -469,7 +392,7 @@ public class Game implements KeyListener, MouseListener, MouseWheelListener, Mou
             } else {
                 renderFrames++;
             }
-            renderer.draw(currentScene, stats);
+            renderer.draw(sceneManager.getCurrentScene(), stats);
 
             try {
                 Thread.sleep(delay > 1000 / UPS ? 1 : 1000 / UPS - delay);
@@ -498,7 +421,7 @@ public class Game implements KeyListener, MouseListener, MouseWheelListener, Mou
      * Process all input management on the current scene {@link Entity}'s.
      */
     public void input() {
-        currentScene.getEntities().values()
+        sceneManager.getCurrentScene().getEntities().values()
                 .stream().filter(Entity::isActive)
                 .forEach(this::processInputBehaviorForEntity);
     }
@@ -545,28 +468,7 @@ public class Game implements KeyListener, MouseListener, MouseWheelListener, Mou
 
     /*----- Logger API -----*/
 
-    public static void log(String level, String message, Object... args) {
-        if (loggerFilter.contains(level)) {
-            String dateFormatted = DateTimeFormatter.ISO_LOCAL_DATE_TIME.format(LocalDateTime.now());
-            System.out.printf(dateFormatted + "|" + level + "|" + message + "%n", args);
-        }
-    }
 
-    public static void debug(String message, Object... args) {
-        log("DEBUG", message, args);
-    }
-
-    public static void info(String message, Object... args) {
-        log("INFO", message, args);
-    }
-
-    public static void warn(String message, Object... args) {
-        log("WARN", message, args);
-    }
-
-    public static void error(String message, Object... args) {
-        log("ERROR", message, args);
-    }
 
 
     /*----- manage keys input -----*/
@@ -575,10 +477,16 @@ public class Game implements KeyListener, MouseListener, MouseWheelListener, Mou
 
     }
 
+    /**
+     * Handles the event when a key is pressed. Updates the key state, processes behaviors of active entities,
+     * and triggers behaviors associated with the entities.
+     *
+     * @param k the KeyEvent triggered when a key is pressed
+     */
     @Override
     public void keyPressed(KeyEvent k) {
         keys[k.getKeyCode()] = true;
-        currentScene.getEntities().values().stream()
+        sceneManager.getCurrentScene().getEntities().values().stream()
                 .filter(Entity::isActive)
                 .filter(e -> !e.behaviors.isEmpty())
                 .forEach(e -> {
@@ -588,10 +496,16 @@ public class Game implements KeyListener, MouseListener, MouseWheelListener, Mou
                 });
     }
 
+    /**
+     * Handles the event when a key is released. Updates the key state, processes behaviors of active entities,
+     * and executes global scene behaviors. Also checks for specific key combinations to trigger certain game actions.
+     *
+     * @param k the KeyEvent triggered when a key is released
+     */
     @Override
     public void keyReleased(KeyEvent k) {
         keys[k.getKeyCode()] = false;
-        currentScene.getEntities().values().stream()
+        sceneManager.getCurrentScene().getEntities().values().stream()
                 .filter(Entity::isActive)
                 .filter(e -> !e.behaviors.isEmpty())
                 .forEach(e -> {
@@ -599,12 +513,12 @@ public class Game implements KeyListener, MouseListener, MouseWheelListener, Mou
                         b.onKeyReleased(this, e, k);
                     });
                 });
-        currentScene.getBehaviors().forEach(b -> b.onKeyReleased(this, null, k));
+        sceneManager.getCurrentScene().getBehaviors().forEach(b -> b.onKeyReleased(this, null, k));
         switch (k.getKeyCode()) {
             // reset the scene on CTRL+Z
             case KeyEvent.VK_Z -> {
                 if (k.isControlDown()) {
-                    resetScene();
+                    sceneManager.resetScene();
                 }
             }
 
@@ -628,12 +542,24 @@ public class Game implements KeyListener, MouseListener, MouseWheelListener, Mou
 
     }
 
+    /**
+     * Checks if a specific key is pressed based on the provided key code.
+     *
+     * @param keyCode the code of the key to check
+     * @return true if the specified key is pressed, false otherwise
+     */
     public boolean isKeyPressed(int keyCode) {
         return keys[keyCode];
     }
 
     /*----- Mouse event management -----*/
 
+    /**
+     * Handles the mouse clicked event. If an entity is detected under the current mouse coordinates,
+     * it triggers the onMouseClick behavior for that entity and logs the entity click event.
+     *
+     * @param e the MouseEvent triggered when the mouse button is clicked
+     */
     @Override
     public void mouseClicked(MouseEvent e) {
         if (getEntityUnderMouse(mouseX, mouseY).isPresent()) {
@@ -644,8 +570,16 @@ public class Game implements KeyListener, MouseListener, MouseWheelListener, Mou
         }
     }
 
+    /**
+     * Determines if there is any entity under the given mouse coordinates and returns the entity
+     * with the highest priority.
+     *
+     * @param mouseX the X coordinate of the mouse cursor
+     * @param mouseY the Y coordinate of the mouse cursor
+     * @return an Optional containing the entity under the mouse cursor if present, otherwise an empty Optional
+     */
     private Optional<Entity> getEntityUnderMouse(double mouseX, double mouseY) {
-        Optional<Entity> entityClicked = currentScene.getEntities().values().stream()
+        Optional<Entity> entityClicked = sceneManager.getCurrentScene().getEntities().values().stream()
                 .filter(entity -> Arrays.stream(entity.getClass().getInterfaces()).filter(i -> i.equals(UIObject.class)).findFirst().isPresent()
                         && entity.isActive()
                         && entity.contains(mouseX, mouseY)).sorted((a, b) -> Integer.compare(b.priority, a.priority)).findFirst();
@@ -653,6 +587,12 @@ public class Game implements KeyListener, MouseListener, MouseWheelListener, Mou
         return entityClicked;
     }
 
+    /**
+     * Handles the event when a mouse button is pressed. If an entity is detected under the current mouse coordinates,
+     * triggers the onMousePressed behavior for that entity and logs the entity press event.
+     *
+     * @param e the MouseEvent triggered when the mouse button is pressed
+     */
     @Override
     public void mousePressed(MouseEvent e) {
         if (getEntityUnderMouse(mouseX, mouseY).isPresent()) {
@@ -663,6 +603,13 @@ public class Game implements KeyListener, MouseListener, MouseWheelListener, Mou
         }
     }
 
+    /**
+     * Invoked when a mouse button has been released on a component.
+     * If an entity is detected under the mouse at the current coordinates,
+     * it triggers the onMouseReleased behavior for that entity.
+     *
+     * @param e the MouseEvent triggered when the mouse button is released
+     */
     @Override
     public void mouseReleased(MouseEvent e) {
         if (getEntityUnderMouse(mouseX, mouseY).isPresent()) {
@@ -691,6 +638,12 @@ public class Game implements KeyListener, MouseListener, MouseWheelListener, Mou
 
     }
 
+    /**
+     * Handles the mouse moved event, updating the current mouse coordinates,
+     * detecting the entity under the mouse, and triggering appropriate mouse-in and mouse-out behaviors.
+     *
+     * @param e the MouseEvent triggered when the mouse is moved
+     */
     @Override
     public void mouseMoved(MouseEvent e) {
         JFrame window = renderer.getWindow();
@@ -725,23 +678,67 @@ public class Game implements KeyListener, MouseListener, MouseWheelListener, Mou
     }
 
     /*----- getters and setters -----*/
+
+    /**
+     * Retrieves the configuration properties for the game.
+     *
+     * @return the configuration properties as a {@link Properties} object.
+     */
     public Properties getConfig() {
         return config;
     }
 
+    /**
+     * Retrieves the current buffer image.
+     *
+     * @return the current {@link BufferedImage} used in the game.
+     */
     public BufferedImage getBuffer() {
         return buffer;
     }
 
+    /**
+     * Retrieves the current World instance associated with the game.
+     *
+     * @return the World instance managing the game's context, including play area and gravity.
+     */
     public World getWorld() {
         return this.world;
     }
 
+    /**
+     * Sets the exit request flag for the game.
+     *
+     * @param x a boolean value representing whether an exit has been requested
+     */
     public void setExitRequest(boolean x) {
         exit = x;
     }
 
+    /**
+     * Sets the pause state for the game.
+     *
+     * @param p a boolean flag indicating whether the game should be paused (true) or not (false)
+     */
     public static void setPause(boolean p) {
         pause = p;
+    }
+
+    /**
+     * Retrieves the SceneManager instance associated with the game.
+     *
+     * @return the SceneManager instance managing the game's scenes
+     */
+    public SceneManager getSceneManager() {
+        return sceneManager;
+    }
+
+    /**
+     * Retrieves the PhysicEngine instance associated with the game.
+     *
+     * @return the PhysicEngine instance managing the game's physics.
+     */
+    public PhysicEngine getPhysicEngine() {
+        return this.physicEngine;
     }
 }

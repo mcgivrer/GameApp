@@ -1,6 +1,7 @@
 package com.snapgames.apps.desktop.game.physic;
 
 import com.snapgames.apps.desktop.game.Game;
+import com.snapgames.apps.desktop.game.behaviors.Behavior;
 import com.snapgames.apps.desktop.game.entity.Entity;
 import com.snapgames.apps.desktop.game.scene.Scene;
 
@@ -158,6 +159,31 @@ public class PhysicEngine {
                 e.dy = -e.dy * e.material.elasticity * world.material.roughness * world.material.elasticity;
                 e.ay = -e.ay;
             }
+        }
+    }
+
+    /**
+     * Switch visibility of the {@link Entity} <code>e</code> to the required <code>visible</code> status.
+     *
+     * <p>The {@link Entity} and its child are set to active, and the corresponding behaviors for the
+     * {@link Entity} and all its child will be applied</p>
+     * <ul>
+     *     <li>{@link Behavior#onActivate(Game, Entity)} if {@link Entity} is set to visible,</li>
+     *      <li>{@link Behavior#onDeactivate(Game, Entity)} if visibility of the {@link Entity} is unset.</li>
+     * </ul>
+     *
+     * @param e       the {@link Entity} to set as visible.
+     * @param visible if true, the {@link Entity} <code>e</code> will be visible.
+     */
+    public void setVisible(Entity e, boolean visible) {
+        e.setActive(visible);
+        e.setChildVisible(visible);
+        if (!visible) {
+            e.behaviors.forEach(c -> c.onDeactivate(app, e));
+            e.child.forEach(c -> c.behaviors.forEach(b -> b.onDeactivate(app, e)));
+        } else {
+            e.behaviors.forEach(c -> c.onActivate(app, e));
+            e.child.forEach(c -> c.behaviors.forEach(b -> b.onActivate(app, e)));
         }
     }
 }

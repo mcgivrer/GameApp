@@ -89,7 +89,7 @@ public class TitleScene extends AbstractScene {
             public void onSelected(Game app, MenuObject e) {
                 int vio = (int) ((ItemObject) e.child.get(e.getItemIndex())).getValue();
                 if (vio == 1) {
-                    app.activateScene("play");
+                    app.getSceneManager().activateScene("play");
                 } else if (vio == 2) {
                     app.setExitRequest(true);
                 }
