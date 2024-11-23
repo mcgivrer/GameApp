@@ -102,7 +102,7 @@ To use the `Demo01Frame` class, create an instance of it and add it to a JFrame:
 ```java
 public class GameApp {
     public static void main(String[] args) {
-        JFrame frame = new JFrame("GameApp Game");
+        JFrame frame = new JFrame("Game Game");
         Demo01Frame demo = new Demo01Frame();
         frame.add(demo);
         frame.setSize(800, 600);
