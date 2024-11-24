@@ -9,10 +9,7 @@ import com.snapgames.apps.desktop.game.scene.Scene;
 import javax.swing.*;
 import java.awt.*;
 import java.awt.image.BufferedImage;
-import java.util.Comparator;
-import java.util.HashMap;
-import java.util.Map;
-import java.util.Optional;
+import java.util.*;
 
 import static com.snapgames.apps.desktop.game.utils.Log.error;
 
@@ -60,6 +57,11 @@ public class Renderer {
     private final Color backGroundColor = Color.BLACK;
 
     /**
+     * (No used) Internal debug filtering on {@link Entity}'s name.
+     */
+    private static String debugFilter = "";
+
+    /**
      * A map that associates each specific Entity class with its corresponding RendererPlugin.
      * This is used to determine which plugin should be used to render a given entity.
      */
@@ -84,9 +86,9 @@ public class Renderer {
     }
 
     /**
-     * Initialize the window and the rendering buffer according to configuration properties from {@link Game}.
+     * Initializes the Renderer with various settings and default plugins from the provided Game application.
      *
-     * @param app the parent {@link Game} instance.
+     * @param app the Game application instance used to retrieve configuration settings.
      */
     public void init(Game app) {
         // create the drawing buffer
@@ -95,7 +97,10 @@ public class Renderer {
                 Integer.parseInt(app.getConfig().getProperty("app.render.buffer.height", "240")),
                 BufferedImage.TYPE_INT_ARGB
         );
+
         fullScreenStatus = Boolean.parseBoolean(app.getConfig().getProperty("app.window.full.screen", "false"));
+        debugFilter = app.getConfig().getProperty("app.debug.entity.filter", "");
+
         // add default Plugins implementation
         register(new GameObjectRendererPlugin());
         register(new ImageObjectRendererPlugin());
@@ -151,7 +156,7 @@ public class Renderer {
      * Renders the specified scene and updates relevant statistics.
      *
      * @param currentScene the Scene to be drawn
-     * @param stats a Map containing various statistics about the rendering process
+     * @param stats        a Map containing various statistics about the rendering process
      */
     public void draw(Scene currentScene, Map<String, Object> stats) {
         Graphics2D g = buffer.createGraphics();
@@ -178,14 +183,13 @@ public class Renderer {
                 .sorted(Comparator.comparingInt(a -> a.priority))
                 .forEach(e -> {
                     drawEntity(e, g);
-                    if (app.isDebugAtLeast(3)) {
-                        g.setColor(Color.ORANGE);
-                        g.drawRect(
-                                (int) e.getX(), (int) e.getY(),
-                                (int) e.getWidth(), (int) e.getHeight());
-
-                    }
+                    drawDebugInfo(g, e);
                 });
+        // draw space partitioning
+        if (app.isDebugAtLeast(4)) {
+            g.setColor(Color.ORANGE);
+            app.getSpacePartition().draw(g, 0.8f);
+        }
 
         // draw play area limits in debug mode
         if (app.isDebugAtLeast(1)) {
@@ -202,6 +206,7 @@ public class Renderer {
                 .sorted(Comparator.comparingInt(a -> a.priority))
                 .forEach(e -> {
                     drawEntity(e, g);
+                    drawDebugInfo(g, e);
                 });
 
         // draw all Behaviors about active camera.
@@ -287,7 +292,7 @@ public class Renderer {
      * Draws the edge of the rectangle representing the given entity using the specified graphics context.
      * This method uses the fill color of the entity to render the edge.
      *
-     * @param g the graphics context to use for drawing
+     * @param g  the graphics context to use for drawing
      * @param te the entity whose edge rectangle is to be drawn
      */
     public static void drawEdgeRectangle(Graphics2D g, Entity te) {
@@ -299,8 +304,8 @@ public class Renderer {
      * The rectangle is filled with the provided color, and different edges of the rectangle
      * are drawn with specific colors to highlight the entity's outline.
      *
-     * @param g the graphics context to use for drawing
-     * @param te the entity whose rectangle is to be drawn
+     * @param g    the graphics context to use for drawing
+     * @param te   the entity whose rectangle is to be drawn
      * @param fill the color to fill the rectangle with
      */
     public static void drawEdgeRectangle(Graphics2D g, Entity te, Color fill) {
@@ -339,6 +344,104 @@ public class Renderer {
                 (int) (te.getX()), (int) (te.getY() + te.getHeight()));
     }
 
+
+    /**
+     * Draws debug information for a given entity on the provided graphics context.
+     * This method visualizes various aspects of the entity such as contact points,
+     * bounding boxes, velocity, acceleration, forces, lifespan, and custom debugging info.
+     * The level of detail to be drawn depends on the current debugging level set in the application.
+     *
+     * @param rbg the graphics context to use for drawing the debug information
+     * @param entity the entity for which the debug information is to be drawn
+     */
+    private void drawDebugInfo(Graphics2D rbg, Entity entity) {
+        if (app.isDebugAtLeast(1)) {
+            if (entity.getContact() > 0) {
+                rbg.setColor(Color.YELLOW);
+                if (entity.getContact() << 1 != 0) {
+                    rbg.drawLine((int) entity.x, (int) entity.y, (int) entity.x, (int) (entity.y + entity.getHeight()));
+                }
+                if (entity.getContact() << 2 != 0) {
+                    rbg.drawLine((int) (entity.x + entity.getWidth()), (int) entity.y, (int) (entity.x + entity.getWidth()), (int) (entity.y + entity.getHeight()));
+                }
+                if (entity.getContact() << 3 != 0) {
+                    rbg.drawLine((int) (entity.x), (int) entity.y, (int) (entity.x + entity.getWidth()), (int) (entity.y));
+                }
+                if (entity.getContact() << 4 != 0) {
+                    rbg.drawLine((int) (entity.x), (int) (entity.y + entity.getHeight()), (int) (entity.x + entity.getWidth()), (int) (entity.y + entity.getHeight()));
+                }
+                rbg.setColor(Color.ORANGE);
+                rbg.draw(entity);
+            }
+            if (app.isDebugAtLeast(2)) {
+                int centerX = (int) (entity.x + entity.width * 0.5);
+                int centerY = (int) (entity.y + entity.height * 0.5);
+
+                // draw Bounding box.
+                Stroke b = rbg.getStroke();
+                if (entity.getContact() > 0 || !entity.getCollisions().isEmpty()) {
+                    rbg.setStroke(new BasicStroke(1.0f));
+                    rbg.setColor(Color.RED);
+                } else {
+                    rbg.setStroke(new BasicStroke(0.5f));
+                    rbg.setColor(Color.WHITE);
+                }
+                rbg.draw(entity);
+                rbg.setStroke(b);
+
+                // draw velocity
+                rbg.setColor(Color.CYAN);
+                rbg.drawLine(
+                        centerX, centerY,
+                        centerX + (int) (entity.dx * 0.1),
+                        centerY + (int) (entity.dy * 0.1));
+
+                // draw acceleration
+                rbg.setColor(Color.YELLOW);
+                rbg.drawLine(
+                        centerX, centerY,
+                        centerX + (int) (entity.ax * 5.0),
+                        centerY + (int) (entity.ay * 5.0));
+
+                // draw forces
+                if (app.isDebugAtLeast(3)) {
+                    rbg.setColor(Color.GREEN);
+                    entity.getForces().forEach(f -> {
+                        rbg.drawLine(
+                                centerX,
+                                centerY,
+                                centerX + (int) (f.getX() * 0.1),
+                                centerY + (int) (f.getY() * 0.1));
+                    });
+                }
+                // draw LifeSpan
+                if (app.isDebugAtLeast(4) && entity.getDuration() > -1 && entity.getLifeSpan() > 0) {
+                    rbg.setColor(Color.RED);
+                    Stroke sBack = rbg.getStroke();
+                    rbg.setStroke(new BasicStroke(2.0f));
+                    rbg.setFont(rbg.getFont().deriveFont(9f));
+                    rbg.drawString("[L]", (int) (entity.x - 12), (int) (entity.y - 4));
+                    int level = (int) (entity.getWidth() * (1.0 - (1.0 * entity.getLifeSpan() / (1.0 * entity.getDuration()))) * 1.5);
+                    rbg.drawLine((int) (entity.x), (int) (entity.y - 8),
+                            (int) (entity.x + level), (int) (entity.y - 8));
+                    rbg.setStroke(sBack);
+                }
+            }
+            if (!debugFilter.isEmpty() && isEntityToBeDebug(debugFilter, entity.getName()) && app.isDebugAtLeast(1)) {
+                rbg.setColor(Color.YELLOW);
+                rbg.setFont(rbg.getFont().deriveFont(9.0f));
+                entity.getDebugInfo().forEach((key, value) -> {
+                    String[] l = key.split("\\|");
+                    int dbg = Integer.parseInt(l[0]);
+                    int idx = Integer.parseInt(l[1]);
+                    if (dbg <= app.getDebugLevel()) {
+                        rbg.drawString(l[2] + ":" + value, (int) (entity.x + entity.width), (int) (entity.y + entity.height) + (idx * 10));
+                    }
+                });
+            }
+        }
+    }
+
     /**
      * Disposes of the resources used by the Renderer instance.
      * This includes disposing of the window and setting the buffer to null.
@@ -358,6 +461,11 @@ public class Renderer {
         prepareDisplay(fullScreenStatus);
     }
 
+    private boolean isEntityToBeDebug(String debugFilter, String name) {
+        return Arrays.stream(debugFilter.split(",")).anyMatch(name::contains);
+    }
+
+
     /**
      * retrieve the current created {@link JFrame} window.
      *
@@ -365,5 +473,9 @@ public class Renderer {
      */
     public JFrame getWindow() {
         return window;
+    }
+
+    public void setDebugFilter(String debugFilter) {
+        Renderer.debugFilter = debugFilter;
     }
 }

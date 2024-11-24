@@ -98,11 +98,26 @@ public class Game implements KeyListener, MouseListener, MouseWheelListener, Mou
      * Internal debug level output to console.
      */
     public static int debug = 0;
-    /**
-     * (No used) Internal debug filtering on {@link Entity}'s name.
-     */
-    private static String debugFilter = "";
 
+    /**
+     * A string variable to filter debug messages.
+     * <p>
+     * This variable can be used to specify certain criteria or keywords
+     * that will be used to filter which debug messages should be displayed
+     * or logged. By setting this variable to different values, you can
+     * control the level or scope of debugging output based on the specified
+     * filter criteria.
+     */
+    public String debugFilter = "";
+
+    /**
+     * A string that determines the filter configuration for the logger.
+     * <p>
+     * The filter can be used to control the output of logging messages
+     * based on specified criteria such as log level or message content.
+     * Default value is an empty string, which means no filter is applied.
+     */
+    private String loggerFilter = "";
 
     /**
      * Frame Per Second rate
@@ -164,6 +179,7 @@ public class Game implements KeyListener, MouseListener, MouseWheelListener, Mou
     public void run(String[] args) {
         init(args);
         renderer.prepareDisplay();
+        renderer.setDebugFilter(debugFilter);
         sceneManager.createScene();
         loop();
         dispose();
@@ -257,7 +273,8 @@ public class Game implements KeyListener, MouseListener, MouseWheelListener, Mou
         // define debug output level, on console.
         debug = Integer.parseInt(config.getProperty("app.debug.level", "0"));
         // Retrieve debug filtering configuration. Only listed status will be sent to console output.
-        debugFilter = config.getProperty("app.debug.level", "WARN,ERROR");
+        debugFilter = config.getProperty("app.debug.entity.filter", "");
+        loggerFilter = config.getProperty("app.logger.filter", "WARN,ERROR");
         // world size
         world.playArea = new Rectangle2D.Double(0, 0,
                 Integer.parseInt(config.getProperty("app.world.play.area.width", "320")),
@@ -350,6 +367,12 @@ public class Game implements KeyListener, MouseListener, MouseWheelListener, Mou
     }
 
 
+    /**
+     * Activates or deactivates an entity and its children, and triggers activation behaviors.
+     *
+     * @param e the entity to activate or deactivate
+     * @param a the activation state; true for activating, false for deactivating
+     */
     public void activateEntity(Entity e, boolean a) {
         e.setActive(a);
         e.getBehaviors().forEach(b -> b.onActivate(this, e));
@@ -358,8 +381,26 @@ public class Game implements KeyListener, MouseListener, MouseWheelListener, Mou
         });
     }
 
-    /*----- Game loop -----*/
-
+    /**
+     * Main game loop responsible for handling input, updating physics, and rendering the scene.
+     * This method continuously runs while the `exit` condition is false.
+     * <p>
+     * The loop measures and limits the update and render cycles to achieve a stable frame rate.
+     * It updates the frame time (FT), updates per second (UPS), and frame per second (FPS) statistics.
+     * <p>
+     * Game loop workflow:
+     * - Process user input.
+     * - Update game logic and physics.
+     * - Render the game scene.
+     * - Sleep to maintain a stable frame rate.
+     * - Update and store performance statistics in a concurrent hash map.
+     * - Loop until exit condition is met.
+     * <p>
+     * The loop ensures that the game updates and renders at a consistent rate by measuring the time taken for each cycle
+     * and adjusting the delay accordingly.
+     * <p>
+     * Performance statistics are collected and stored within the `stats` map for tracking purposes.
+     */
     public void loop() {
         long startTime = System.currentTimeMillis();
         long endTime = startTime;
@@ -452,30 +493,37 @@ public class Game implements KeyListener, MouseListener, MouseWheelListener, Mou
         return debug >= debugLevel;
     }
 
-    /*----- objects rendering -----*/
-
-    /*----- releasing objects and resources -----*/
-
+    /**
+     * Disposes of the resources used by the game. This includes releasing any
+     * resources held by the renderer and logging the end of the application.
+     */
     public void dispose() {
         renderer.dispose();
         info("End of application ");
     }
 
-    /*----- Game start entry point -----*/
-
+    /**
+     * The entry point of the application.
+     * Initializes and runs the game application.
+     *
+     * @param argc array of command line arguments passed to the application
+     */
     public static void main(String[] argc) {
         Game app = new Game();
         app.run(argc);
     }
 
 
-    /*----- Logger API -----*/
-
-
-    /*----- manage keys input -----*/
+    /**
+     * Handles the event when a key is typed. This method is invoked when a key is pressed and then
+     * released, resulting in a single character input. It processes the key typed event and performs any
+     * necessary actions based on the character input.
+     *
+     * @param e the KeyEvent triggered when a key is typed
+     */
     @Override
     public void keyTyped(KeyEvent e) {
-
+        // no processing for this one.
     }
 
     /**
@@ -743,11 +791,31 @@ public class Game implements KeyListener, MouseListener, MouseWheelListener, Mou
         return this.physicEngine;
     }
 
+
+    /**
+     * Retrieves the SpacePartition instance associated with the game.
+     *
+     * @return the SpacePartition instance managing spatial partitioning within the game.
+     */
     public SpacePartition getSpacePartition() {
         return spacePartition;
     }
 
+    /**
+     * Retrieves the CollisionManager instance associated with the game.
+     *
+     * @return the CollisionManager instance responsible for handling collision detection and resolution.
+     */
     public CollisionManager getCollisionManager() {
         return collisionManager;
+    }
+
+    /**
+     * Retrieves the current debug level for the game.
+     *
+     * @return the current debug level as an integer.
+     */
+    public int getDebugLevel() {
+        return debug;
     }
 }

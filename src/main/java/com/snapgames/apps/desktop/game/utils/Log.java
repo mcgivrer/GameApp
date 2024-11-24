@@ -20,9 +20,9 @@ public class Log {
     /**
      * Logs a message to the console at a specified logging level with optional arguments.
      *
-     * @param level the logging level (e.g., DEBUG, INFO, WARN, ERROR)
+     * @param level   the logging level (e.g., DEBUG, INFO, WARN, ERROR)
      * @param message the message to be logged
-     * @param args optional arguments to format the message
+     * @param args    optional arguments to format the message
      */
     public static void log(String level, String message, Object... args) {
         if (loggerFilter.contains(level)) {
@@ -35,7 +35,7 @@ public class Log {
      * Logs a message at the DEBUG level.
      *
      * @param message the message to be logged
-     * @param args optional arguments to format the message
+     * @param args    optional arguments to format the message
      */
     public static void debug(String message, Object... args) {
         log("DEBUG", message, args);
@@ -45,7 +45,7 @@ public class Log {
      * Logs a message at the INFO level.
      *
      * @param message the message to be logged
-     * @param args optional arguments to format the message
+     * @param args    optional arguments to format the message
      */
     public static void info(String message, Object... args) {
         log("INFO", message, args);
@@ -55,7 +55,7 @@ public class Log {
      * Logs a message at the WARN level.
      *
      * @param message the message to be logged
-     * @param args optional arguments to format the message
+     * @param args    optional arguments to format the message
      */
     public static void warn(String message, Object... args) {
         log("WARN", message, args);
@@ -65,11 +65,15 @@ public class Log {
      * Logs a message at the ERROR level.
      *
      * @param message the message to be logged
-     * @param args optional arguments to format the message
+     * @param args    optional arguments to format the message
      */
     public static void error(String message, Object... args) {
         log("ERROR", message, args);
     }
 
+
+    public static void setLoggerFilter(String filter) {
+        loggerFilter = filter;
+    }
 }
 

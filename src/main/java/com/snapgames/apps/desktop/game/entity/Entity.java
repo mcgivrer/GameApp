@@ -58,6 +58,10 @@ public class Entity extends Rectangle2D.Double {
     public Color borderColor = Color.BLACK;
     public Color fillColor = Color.BLUE;
 
+    // lifespan & duration for this Entity.
+    private long lifespan = 0;
+    private long duration = -1;
+
     // acceleration
     public double ax, ay;
     // forces
@@ -77,6 +81,7 @@ public class Entity extends Rectangle2D.Double {
     private List<Behavior> behaviors = new ArrayList<>();
 
     // Collision management
+    private int contact = 0;
     private List<CollisionEvent> collisions = new ArrayList<>();
     public boolean collisionActive = true;
 
@@ -89,6 +94,8 @@ public class Entity extends Rectangle2D.Double {
     public List<Entity> child = new ArrayList<>();
     private Entity parent;
     private PhysicNature physicNature = PhysicNature.DYNAMIC;
+
+    private Map<String, Object> debugInfo = new HashMap<>();
 
     /**
      * Create a brand new {@link Entity} with its name.
@@ -256,7 +263,53 @@ public class Entity extends Rectangle2D.Double {
         return this;
     }
 
+
+    public int getContact() {
+        return contact;
+    }
+
+    public Entity setContact(int contact) {
+        this.contact = contact;
+        return this;
+    }
+
+
     public PhysicNature getPhysicNature() {
         return physicNature;
     }
+
+    public List<Point2D> getForces() {
+        return forces;
+    }
+
+
+    public long getDuration() {
+        return duration;
+    }
+
+    public long getLifeSpan() {
+        return lifespan;
+    }
+
+    public Map<String, Object> getDebugInfo() {
+        debugInfo.clear();
+        debugInfo.put("1|1|id", "#" + getId());
+        debugInfo.put("1|2|name", getName());
+        debugInfo.put("2|3|pos", x + "," + y);
+        debugInfo.put("2|4|vel", dx + "," + dy);
+        debugInfo.put("2|5|acc", ax + "," + ay);
+        debugInfo.put("2|6|ctc", "" + getContact());
+        debugInfo.put("2|7|dur", getDuration() + "ms");
+        if (getDuration() > -1) {
+            debugInfo.put("2|8|dur", getLifeSpan() + "ms");
+        }
+        return debugInfo;
+    }
+
+    private long getId() {
+        return id;
+    }
+
+
 }
+

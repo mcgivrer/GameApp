@@ -32,7 +32,7 @@ public class PhysicEngine {
      *
      * <p>It will refresh their status, position, velocity and acceleration, and active state.</p>
      *
-     * @param delay The elapsed time since previous call.
+     * @param elapsed The elapsed time since previous call.
      */
     public void update(Scene currentScene, double elapsed) {
         // update all entities not stick to activeCamera.
@@ -50,15 +50,15 @@ public class PhysicEngine {
         // update camera position
         if (Optional.ofNullable(currentScene.getActiveCamera()).isPresent()) {
             currentScene.getActiveCamera().update(elapsed);
-            currentScene.getActiveCamera().behaviors.forEach(b -> {
-                b.update(this, currentScene.getActiveCamera(), elapsed);
+            currentScene.getActiveCamera().getBehaviors().forEach(b -> {
+                b.update(app, currentScene.getActiveCamera(), elapsed);
             });
         }
         // update camera position
         if (Optional.ofNullable(currentScene.getActiveCamera()).isPresent()) {
-            currentScene.getActiveCamera().update(delay);
+            currentScene.getActiveCamera().update(elapsed);
             currentScene.getActiveCamera().getBehaviors().forEach(b -> {
-                b.update(app, currentScene.getActiveCamera(), delay);
+                b.update(app, currentScene.getActiveCamera(), elapsed);
             });
         }
     }
@@ -79,10 +79,6 @@ public class PhysicEngine {
                     controlPlayAreaBoundaries(app.getWorld(), e);
                 }
             }
-        }
-        if (!e.isRelativeToCamera() && !app.isPause()) {
-            applyPhysics(app.getWorld(), delay, e);
-            controlPlayAreaBoundaries(app.getWorld(), e);
         }
         e.update(app, delay);
         e.getBehaviors().forEach(b -> {
